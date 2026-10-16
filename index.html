@@ -62,14 +62,15 @@ function maxAffordable(i){
 }
 function tickspeedMult(){return Math.pow(1.125,state.tickspeed);}
 function tickspeedCost(){return TICKSPEED_BASE_COST*Math.pow(10,state.tickspeed);}
-function mult(i){
+function dimensionMult(i){
  let boostMult=1;
  for(let n=1;n<=state.boosts;n++){
   const tier=i+1;
-  if(n<=5 ? tier<=n : tier!==n) boostMult*=2;
+  if(n<=5 ? tier<=n : true) boostMult*=2;
  }
- return 1e6*boostMult*Math.pow(2,Math.floor(state.bought[i]/10))*tickspeedMult();
+ return 1e6*boostMult*Math.pow(2,Math.floor(state.bought[i]/10));
 }
+function mult(i){return dimensionMult(i)*tickspeedMult();}
 function unlocked(i){return i<4||state.boosts>=i-3;}
 function productionRate(){return state.amount[0]*mult(0)*PRODUCTION_BONUS;}
 function boostRequirement(){const n=state.boosts+1;return n<=5?20:15*n-55;}
@@ -102,7 +103,7 @@ function render(){
  for(let i=0;i<8;i++){
   const {d,det,amt,b}=rows[i],open=unlocked(i),c=cost(i);
   d.className='dim'+(open?'':' locked');
-  setText(det,open?'倍率 ×'+fmt(mult(i))+' ・ 10個購入ごとに倍率上昇':'次元ブースト '+(i-3)+' 回で解放');
+  setText(det,open?'倍率 ×'+fmt(dimensionMult(i))+' ・ 10個購入ごとに倍率上昇':'次元ブースト '+(i-3)+' 回で解放');
   setText(amt,'所持数: '+fmt(state.amount[i])+'（累計購入 '+fmt(state.bought[i])+'）');
   const max=state.buyMax?maxAffordable(i):null;
   b.disabled=!open||(state.buyMax?max.count===0:state.matter<c);
