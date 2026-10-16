@@ -62,13 +62,13 @@ function maxAffordable(i){
 }
 function tickspeedMult(){return Math.pow(1.125,state.tickspeed);}
 function tickspeedCost(){return TICKSPEED_BASE_COST*Math.pow(10,state.tickspeed);}
+function dimensionBoostMult(i){
+ // 本家の仕様: 次元dは max(ブースト回数 - (d - 1), 0) 回分の×2を受ける。
+ // 8回目以降は、追加のブーストが全次元に×2を与える。
+ return Math.pow(2, Math.max(state.boosts - i, 0));
+}
 function dimensionMult(i){
- let boostMult=1;
- for(let n=1;n<=state.boosts;n++){
-  const tier=i+1;
-  if(n<=7 ? tier<=n : true) boostMult*=2;
- }
- return 1e6*boostMult*Math.pow(2,Math.floor(state.bought[i]/10));
+ return 1e6*dimensionBoostMult(i)*Math.pow(2,Math.floor(state.bought[i]/10));
 }
 // Dimension欄の表示にはdimensionMult()のみを使用。Tickspeedは生産計算にのみ適用する。
 function productionMult(i){return dimensionMult(i)*tickspeedMult();}
