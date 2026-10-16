@@ -66,7 +66,7 @@ function dimensionMult(i){
  let boostMult=1;
  for(let n=1;n<=state.boosts;n++){
   const tier=i+1;
-  if(n<=5 ? tier<=n : true) boostMult*=2;
+  if(n<=7 ? tier<=n : true) boostMult*=2;
  }
  return 1e6*boostMult*Math.pow(2,Math.floor(state.bought[i]/10));
 }
