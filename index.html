@@ -66,7 +66,7 @@ function mult(i){
  return 1e6*boostMult*Math.pow(2,Math.floor(state.bought[i]/10));
 }
 function unlocked(i){return i<4||state.boosts>=i-3;}
-function productionRate(){return state.amount[0]*mult(0)*1e12;}
+function productionRate(){return state.amount[0]*mult(0)*1e20;}
 function boostRequirement(){const n=state.boosts+1;return n<=5?20:15*n-55;}
 function boostRequirementTier(){const n=state.boosts+1;return n<=5?n+3:8;}
 function canBoost(){const n=state.boosts+1;const tier=boostRequirementTier();return state.bought[tier-1]>=boostRequirement();}
@@ -100,7 +100,7 @@ function render(){
  }
  const n=state.boosts+1,req=boostRequirement(),tier=boostRequirementTier(),can=canBoost();
  $('boostBtn').disabled=!can;
- const effect=n<=5?'第'+n+'次元以下の倍率が2倍になります。':'第'+n+'次元以外の倍率が2倍になります。';
+ const effect=n<=5?'第1～第'+n+'次元の倍率が2倍になります。':'第'+n+'次元を除く全次元の倍率が2倍になります。';
  setText($('boostDesc'),'第'+tier+'次元を '+fmt(req)+' 個購入で実行。'+effect+' 現在の累計購入数: '+fmt(state.bought[tier-1])+' 個。');
  setText($('status'),'ゲームは自動保存されます。');
 }
