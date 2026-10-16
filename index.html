@@ -101,7 +101,7 @@ function render(){
  }
  const n=state.boosts+1,req=boostRequirement(),tier=boostRequirementTier(),can=canBoost();
  $('boostBtn').disabled=!can;
- const effect=n<=5?'第1次元から第'+n+'次元まで、各次元の倍率が2倍になります。':'第'+n+'次元以外のすべての次元の倍率が2倍になります。';
+ const effect=n<=5?'第1次元から第'+n+'次元まで、各次元の倍率が2倍になります。':'第'+n+'次元以下のすべての次元の倍率が2倍になります。';
  setText($('boostDesc'),'第'+tier+'次元を '+fmt(req)+' 個購入で実行。'+effect+' 現在の累計購入数: '+fmt(state.bought[tier-1])+' 個。');
  setText($('status'),'ゲームは自動保存されます。');
 }
