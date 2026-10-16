@@ -70,9 +70,10 @@ function dimensionMult(i){
  }
  return 1e6*boostMult*Math.pow(2,Math.floor(state.bought[i]/10));
 }
-function mult(i){return dimensionMult(i)*tickspeedMult();}
+// Dimension欄の表示にはdimensionMult()のみを使用。Tickspeedは生産計算にのみ適用する。
+function productionMult(i){return dimensionMult(i)*tickspeedMult();}
 function unlocked(i){return i<4||state.boosts>=i-3;}
-function productionRate(){return state.amount[0]*mult(0)*PRODUCTION_BONUS;}
+function productionRate(){return state.amount[0]*productionMult(0)*PRODUCTION_BONUS;}
 function boostRequirement(){const n=state.boosts+1;return n<=5?20:15*n-55;}
 function boostRequirementTier(){const n=state.boosts+1;return n<=5?n+3:8;}
 function canBoost(){const n=state.boosts+1;const tier=boostRequirementTier();return state.bought[tier-1]>=boostRequirement();}
@@ -103,7 +104,7 @@ function render(){
  for(let i=0;i<8;i++){
   const {d,det,amt,b}=rows[i],open=unlocked(i),c=cost(i);
   d.className='dim'+(open?'':' locked');
-  setText(det,open?'倍率 ×'+fmt(dimensionMult(i))+' ・ 10個購入ごとに倍率上昇':'次元ブースト '+(i-3)+' 回で解放');
+  setText(det,open?'次元倍率 ×'+fmt(dimensionMult(i))+' ・ 10個購入ごとに倍率上昇':'次元ブースト '+(i-3)+' 回で解放');
   setText(amt,'所持数: '+fmt(state.amount[i])+'（累計購入 '+fmt(state.bought[i])+'）');
   const max=state.buyMax?maxAffordable(i):null;
   b.disabled=!open||(state.buyMax?max.count===0:state.matter<c);
@@ -144,7 +145,7 @@ load();$('buyModeBtn').textContent=state.buyMax?'購入: 最大購入':'購入: 
 let last=performance.now();
 function tick(now){
  const dt=Math.min(.25,(now-last)/1000);last=now;
- for(let i=7;i>=1;i--)state.amount[i-1]+=state.amount[i]*mult(i)*0.1*dt;
+ for(let i=7;i>=1;i--)state.amount[i-1]+=state.amount[i]*productionMult(i)*0.1*dt;
  state.matter+=productionRate()*dt;
  if(now-lastRender>200){render();lastRender=now;}
  if(now-lastSave>5000){save();lastSave=now;}
