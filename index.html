@@ -39,6 +39,7 @@ const names=['第1次元','第2次元','第3次元','第4次元','第5次元','�
 const baseCosts=[10,100,1e3,1e6,1e9,1e13,1e18,1e24];
 const unlockAt=[0,0,0,0,0,0,0,0];
 const costGrowth=[1e3,1e4,1e5,1e6,1e8,1e10,1e12,1e15];
+const PRODUCTION_BONUS=1e20;
 const state={matter:10,amount:Array(8).fill(0),bought:Array(8).fill(0),boosts:0,buyMax:false,last:Date.now()};
 let lastSave=0,lastRender=0, rows=[];
 function fmt(n){
@@ -66,7 +67,7 @@ function mult(i){
  return 1e6*boostMult*Math.pow(2,Math.floor(state.bought[i]/10));
 }
 function unlocked(i){return i<4||state.boosts>=i-3;}
-function productionRate(){return state.amount[0]*mult(0)*1e20;}
+function productionRate(){return state.amount[0]*mult(0)*PRODUCTION_BONUS;}
 function boostRequirement(){const n=state.boosts+1;return n<=5?20:15*n-55;}
 function boostRequirementTier(){const n=state.boosts+1;return n<=5?n+3:8;}
 function canBoost(){const n=state.boosts+1;const tier=boostRequirementTier();return state.bought[tier-1]>=boostRequirement();}
@@ -100,7 +101,7 @@ function render(){
  }
  const n=state.boosts+1,req=boostRequirement(),tier=boostRequirementTier(),can=canBoost();
  $('boostBtn').disabled=!can;
- const effect=n<=5?'第1～第'+n+'次元の倍率が2倍になります。':'第'+n+'次元を除く全次元の倍率が2倍になります。';
+ const effect=n<=5?'第1次元から第'+n+'次元まで、各次元の倍率が2倍になります。':'第'+n+'次元以外のすべての次元の倍率が2倍になります。';
  setText($('boostDesc'),'第'+tier+'次元を '+fmt(req)+' 個購入で実行。'+effect+' 現在の累計購入数: '+fmt(state.bought[tier-1])+' 個。');
  setText($('status'),'ゲームは自動保存されます。');
 }
