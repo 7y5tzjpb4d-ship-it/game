@@ -63,7 +63,7 @@ function mult(i){
   const tier=i+1;
   if(n<=5 ? tier<=n : tier!==n) boostMult*=2;
  }
- return boostMult*Math.pow(2,Math.floor(state.bought[i]/10));
+ return 1e6*boostMult*Math.pow(2,Math.floor(state.bought[i]/10));
 }
 function unlocked(i){return i<4||state.boosts>=i-3;}
 function productionRate(){return state.amount[0]*mult(0);}
