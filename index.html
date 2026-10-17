@@ -82,7 +82,6 @@ const names=['第1次元','第2次元','第3次元','第4次元','第5次元','�
 const baseCosts=[10,100,1e3,1e6,1e9,1e13,1e18,1e24];
 const unlockAt=[0,0,0,0,0,0,0,0];
 const costGrowth=[1e3,1e4,1e5,1e6,1e8,1e10,1e12,1e15];
-const PRODUCTION_BONUS=1e20;
 const TICKSPEED_BASE_COST=1e3;
 const state={matter:10,amount:Array(8).fill(0),bought:Array(8).fill(0),boosts:0,galaxies:0,buyMax:true,tickspeed:0,sacrificeMult:1,sacrificedFirst:0,ip:0,infinities:0,last:Date.now()};
 const INFINITY=Number.MAX_VALUE;
@@ -120,7 +119,7 @@ function productionMult(i){return dimensionMult(i)*(i===7?state.sacrificeMult:1)
 function sacrificeTotalMultiplier(total){return Math.max(Math.log10(Math.max(total,1))/10,1)**2;}
 function sacrificeGain(){const next=sacrificeTotalMultiplier(state.sacrificedFirst+state.amount[0]);return next/Math.max(1,state.sacrificeMult);}
 function unlocked(i){return i<4||state.boosts>=i-3;}
-function productionRate(){return state.amount[0]*productionMult(0)*PRODUCTION_BONUS;}
+function productionRate(){return state.amount[0]*productionMult(0);}
 function boostRequirement(){const n=state.boosts+1;return n<=5?20:15*n-55;}
 function boostRequirementTier(){const n=state.boosts+1;return n<=5?n+3:8;}
 function canBoost(){const n=state.boosts+1;const tier=boostRequirementTier();return state.bought[tier-1]>=boostRequirement();}
