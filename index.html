@@ -95,7 +95,9 @@ function dimensionMult(i){
  return 1e6*dimensionBoostMult(i)*Math.pow(2,Math.floor(state.bought[i]/10));
 }
 // Dimension欄の表示にはdimensionMult()のみを使用。Tickspeedは生産計算にのみ適用する。
-function productionMult(i){return dimensionMult(i)*tickspeedMult()*(i===7?state.sacrificeMult:1);}
+function productionMult(i){return dimensionMult(i)*(i===7?state.sacrificeMult:1)*tickspeedMult();}
+function sacrificeTotalMultiplier(total){return Math.max(Math.log10(Math.max(total,1))/10,1)**2;}
+function sacrificeGain(){const next=sacrificeTotalMultiplier(state.sacrificedFirst+state.amount[0]);return next/Math.max(1,state.sacrificeMult);}
 function unlocked(i){return i<4||state.boosts>=i-3;}
 function productionRate(){return state.amount[0]*productionMult(0)*PRODUCTION_BONUS;}
 function boostRequirement(){const n=state.boosts+1;return n<=5?20:15*n-55;}
@@ -125,9 +127,8 @@ function render(){
  $('sacrificeBtn').disabled=!sacrificeUnlocked||state.amount[0]<=0;
  setText($('sacrificeMultiplier'),'倍率 ×'+fmt(state.sacrificeMult));
  $('sacrificePanel').style.opacity=sacrificeUnlocked?'1':'.65';
- const sacrificeTotal=state.sacrificedFirst+state.amount[0];
- const sacrificeGain=Math.max(Math.log10(Math.max(sacrificeTotal,1))/10,1)**2;
- setText($('sacrificeBtn'),'Sacrifice ×'+fmt(sacrificeGain));
+ const gain=sacrificeGain();
+ setText($('sacrificeBtn'),'Sacrifice ×'+gain.toFixed(2));
  const tsCost=tickspeedCost();
  $('tickspeedBtn').disabled=state.matter<tsCost;
  setText($('tickspeedBtn'),'購入 · '+fmt(tsCost));
@@ -137,7 +138,7 @@ function render(){
  for(let i=0;i<8;i++){
   const {d,det,amt,b}=rows[i],open=unlocked(i),c=cost(i);
   d.className='dim'+(open?'':' locked');
-  setText(det,open?'倍率 ×'+fmt(dimensionMult(i)):'ブースト '+(i-3)+' 回で解放');
+  setText(det,open?'倍率 ×'+fmt(dimensionMult(i)*(i===7?state.sacrificeMult:1)):'ブースト '+(i-3)+' 回で解放');
   setText(amt,'購入 '+fmt(state.bought[i]));
   const max=state.buyMax?maxAffordable(i):null;
   b.disabled=!open||(state.buyMax?max.count===0:state.matter<c);
@@ -194,9 +195,9 @@ function boost(){
 }
 function sacrifice(){
  if(state.boosts<5||state.amount[0]<=0)return;
+ const gain=sacrificeGain();
  state.sacrificedFirst+=state.amount[0];
- const n=state.sacrificedFirst;
- state.sacrificeMult=Math.max(Math.log10(Math.max(n,1))/10,1)**2;
+ state.sacrificeMult*=gain;
  for(let i=0;i<7;i++)state.amount[i]=0;
  render();save();
 }
