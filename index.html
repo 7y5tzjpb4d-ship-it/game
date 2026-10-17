@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Antimatter: First Steps</title>
 <style>
 :root{color-scheme:dark;--bg:#10131b;--panel:#1b2230;--line:#344156;--text:#eef3ff;--muted:#aab6ca;--blue:#4b91ff;--green:#36c98a;--gold:#e8b84f}
@@ -288,5 +288,10 @@ requestAnimationFrame(tick);window.addEventListener('beforeunload',save);
 #dimensions .dim{min-height:39px!important;height:39px!important;padding:3px 5px!important;gap:5px!important;box-sizing:border-box!important;}
 #dimensions .dim .buy{height:32px!important;min-height:32px!important;max-height:32px!important;padding:2px!important;line-height:1.1!important;}
 @media(max-width:600px){#dimensions .dim{min-height:36px!important;height:36px!important;padding:2px 4px!important;}#dimensions .dim .buy{height:30px!important;min-height:30px!important;max-height:30px!important;}}
+</style>
+<style id="prevent-button-double-tap-zoom">
+/* Prevent iOS double-tap zoom when rapidly pressing game controls. */
+button, .buy, .mobile-bottom-actions { touch-action: manipulation; }
+html { -webkit-text-size-adjust: 100%; }
 </style>
 </body></html>
