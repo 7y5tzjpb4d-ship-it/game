@@ -40,10 +40,14 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 86px;max-width:560px
 </section>
 <div class="quick-actions"><button type="button" id="quickMaxAllBtn" class="quick-maxall">Max All</button><button type="button" id="quickBoostBtn" class="quick-boost">次元ブースト</button><button type="button" id="quickTickspeedBtn">Tickspeed購入</button><button type="button" id="quickBuyModeBtn">購入: 1個ずつ</button></div>
 </div>
-<nav class="mobile-bottom-actions" aria-label="クイック操作"><button type="button" class="mobile-max" id="mobileMaxAllBtn">Max All</button><button type="button" class="mobile-boost" id="mobileBoostBtn">ブースト</button><button type="button" id="mobileTickspeedBtn">Tickspeed</button><button type="button" id="mobileBuyModeBtn">購入: 1個</button></nav>
+<div class="mobile-reset-actions" aria-label="リセット操作"><button type="button" class="mobile-boost" id="mobileBoostBtn">ブースト</button><button type="button" class="mobile-galaxy" id="mobileGalaxyBtn">Galaxy</button></div>
+<nav class="mobile-bottom-actions" aria-label="クイック操作"><button type="button" class="mobile-max" id="mobileMaxAllBtn">Max All</button><button type="button" id="mobileTickspeedBtn">Tickspeed</button><button type="button" id="mobileBuyModeBtn">最大購入</button><button type="button" id="mobileSaveBtn">セーブ</button></nav>
 <section class="panel tickspeed-panel"><div class="tickspeed-row"><div><h2 class="section-title">Tickspeed <span id="tickspeedMultiplier">倍率 ×1</span></h2><p id="tickspeedDesc" style="color:var(--muted);font-size:11px;margin:0">Tickspeedを上げると全次元の生産速度が上昇します。</p></div><div class="tickspeed-buttons"><button type="button" class="buy tickspeed-buy" id="tickspeedBtn">購入</button><button type="button" class="buy tickspeed-buy" id="tickspeedMaxBtn">Buy Max</button></div></div></section>
 <section class="panel sacrifice-panel" id="sacrificePanel">
  <div class="sacrifice-row"><div><h2 class="section-title">Dimensional Sacrifice <span id="sacrificeMultiplier">倍率 ×1</span></h2></div><button type="button" class="buy sacrifice-buy" id="sacrificeBtn" disabled>Sacrifice ×1</button></div>
+</section>
+<section class="panel galaxy-panel" id="galaxyPanel">
+ <div class="galaxy-row"><div><h2 class="section-title">Antimatter Galaxy <span id="galaxyCount">0個</span></h2><div class="galaxy-info" id="galaxyRequirement">第8次元を80個購入で実行</div></div><button type="button" class="buy galaxy-buy" id="galaxyBtn" disabled>Galaxy</button></div>
 </section>
 <section class="panel">
  <h2 class="section-title">次元 <span>購入すると反物質を自動生産</span></h2>
@@ -66,7 +70,7 @@ const unlockAt=[0,0,0,0,0,0,0,0];
 const costGrowth=[1e3,1e4,1e5,1e6,1e8,1e10,1e12,1e15];
 const PRODUCTION_BONUS=1e20;
 const TICKSPEED_BASE_COST=1e3;
-const state={matter:10,amount:Array(8).fill(0),bought:Array(8).fill(0),boosts:0,buyMax:true,tickspeed:0,sacrificeMult:1,sacrificedFirst:0,last:Date.now()};
+const state={matter:10,amount:Array(8).fill(0),bought:Array(8).fill(0),boosts:0,galaxies:0,buyMax:true,tickspeed:0,sacrificeMult:1,sacrificedFirst:0,last:Date.now()};
 let lastSave=0,lastRender=0, rows=[];
 function fmt(n){
  if(!Number.isFinite(n))return '∞';
@@ -84,7 +88,8 @@ function maxAffordable(i){
  }
  return {count,spent};
 }
-function tickspeedMult(){return Math.pow(1.125,state.tickspeed);}
+function tickspeedBase(){return 1.125+0.02*state.galaxies;}
+function tickspeedMult(){return Math.pow(tickspeedBase(),state.tickspeed);}
 function tickspeedCost(){return TICKSPEED_BASE_COST*Math.pow(10,state.tickspeed);}
 function dimensionBoostMult(i){
  // 本家の仕様: 次元dは max(ブースト回数 - (d - 1), 0) 回分の×2を受ける。
@@ -103,6 +108,8 @@ function productionRate(){return state.amount[0]*productionMult(0)*PRODUCTION_BO
 function boostRequirement(){const n=state.boosts+1;return n<=5?20:15*n-55;}
 function boostRequirementTier(){const n=state.boosts+1;return n<=5?n+3:8;}
 function canBoost(){const n=state.boosts+1;const tier=boostRequirementTier();return state.bought[tier-1]>=boostRequirement();}
+function galaxyRequirement(){return 80+60*state.galaxies;}
+function canGalaxy(){return state.bought[7]>=galaxyRequirement();}
 function buildRows(){
  const root=$('dimensions');root.innerHTML='';rows=[];
  for(let i=0;i<8;i++){
@@ -122,6 +129,11 @@ function render(){
  setText($('rate'),fmt(productionRate()));
  setText($('boostCount'),fmt(state.boosts));
  setText($('tickspeedMultiplier'),'購入 '+fmt(state.tickspeed)+'回 · 倍率 ×'+fmt(tickspeedMult()));
+ setText($('galaxyCount'),fmt(state.galaxies)+'個');
+ setText($('galaxyRequirement'),'条件：第8次元を '+fmt(galaxyRequirement())+' 個購入（現在 '+fmt(state.bought[7])+' 個） · Tickspeed基礎倍率 ×'+fmt(tickspeedBase()));
+ $('galaxyBtn').disabled=!canGalaxy();
+ setText($('galaxyBtn'),'Galaxy '+(state.galaxies+1));
+ $('galaxyPanel').style.opacity=canGalaxy()?'1':'.78';
  setText($('tickspeedDesc'),'');
  const sacrificeUnlocked=state.boosts>=5;
  $('sacrificeBtn').disabled=!sacrificeUnlocked||state.amount[0]<=0||sacrificeGain()<1.01;
@@ -152,11 +164,12 @@ function render(){
  setText($('quickTickspeedBtn'),'Tickspeed · '+fmt(tsCost));
  $('quickMaxAllBtn').disabled=!canBuyAnything();
  setText($('quickBuyModeBtn'),'最大購入');
- $('mobileBoostBtn').disabled=!can;setText($('mobileBoostBtn'),can?'ブースト実行':'ブースト');
+ $('mobileBoostBtn').disabled=!can;setText($('mobileBoostBtn'),'ブースト\n第'+tier+'次元 '+fmt(req)+'個');
+ $('mobileGalaxyBtn').disabled=!canGalaxy();setText($('mobileGalaxyBtn'),'Galaxy '+state.galaxies+'\n第8次元 '+fmt(galaxyRequirement())+'個');
  $('mobileTickspeedBtn').disabled=state.matter<tsCost;setText($('mobileTickspeedBtn'),'Tickspeed');
  setText($('mobileBuyModeBtn'),'最大購入');
  const effect=n===1?'第1次元の倍率が2倍になります。':(n<=6?'第'+n+'次元以下の倍率が2倍になります。':'全ての次元の倍率が2倍になります。');
- setText($('boostDesc'),'第'+tier+'次元を '+fmt(req)+' 個購入で実行。'+effect+' 現在の累計購入数: '+fmt(state.bought[tier-1])+' 個。');
+ setText($('boostDesc'),'条件：第'+tier+'次元を '+fmt(req)+' 個購入（現在 '+fmt(state.bought[tier-1])+' 個）。'+effect);
  setText($('status'),'ゲームは自動保存されます。');
 }
 function buy(i){
@@ -196,9 +209,22 @@ function boost(){
 function sacrifice(){
  if(state.boosts<5||state.amount[0]<=0)return;
  const gain=sacrificeGain();
+ if(gain<1.01)return;
  state.sacrificedFirst+=state.amount[0];
  state.sacrificeMult*=gain;
  for(let i=0;i<7;i++)state.amount[i]=0;
+ render();save();
+}
+function galaxy(){
+ if(!canGalaxy())return;
+ state.galaxies++;
+ state.matter=10;
+ state.amount=Array(8).fill(0);
+ state.bought=Array(8).fill(0);
+ state.boosts=0;
+ state.tickspeed=0;
+ state.sacrificeMult=1;
+ state.sacrificedFirst=0;
  render();save();
 }
 function save(){try{localStorage.setItem('antimatterFirstSteps',JSON.stringify({...state,last:Date.now()}));}catch(e){}}
@@ -206,7 +232,7 @@ function load(){
  try{const s=JSON.parse(localStorage.getItem('antimatterFirstSteps'));if(s&&Array.isArray(s.amount)&&s.amount.length===8){
   state.matter=Math.max(0,Number(s.matter)||10);state.amount=s.amount.map(x=>Math.max(0,Number(x)||0));
   if(Array.isArray(s.bought)&&s.bought.length===8)state.bought=s.bought.map(x=>Math.max(0,Number(x)||0));
-  state.boosts=Math.max(0,Number(s.boosts)||0);state.buyMax=true;state.tickspeed=Math.max(0,Math.floor(Number(s.tickspeed)||0));
+  state.boosts=Math.max(0,Number(s.boosts)||0);state.galaxies=Math.max(0,Math.floor(Number(s.galaxies)||0));state.buyMax=true;state.tickspeed=Math.max(0,Math.floor(Number(s.tickspeed)||0));
   state.sacrificeMult=Math.max(1,Number(s.sacrificeMult)||1);state.sacrificedFirst=Math.max(0,Number(s.sacrificedFirst)||0);
   const elapsed=Math.min(3600,Math.max(0,(Date.now()-(Number(s.last)||Date.now()))/1000));
   state.matter+=productionRate()*elapsed;
@@ -214,9 +240,12 @@ function load(){
 }
 $('boostBtn').onclick=boost;
 $('sacrificeBtn').onclick=sacrifice;
+$('galaxyBtn').onclick=galaxy;
 $('quickMaxAllBtn').onclick=maxAll;
 $('mobileMaxAllBtn').onclick=maxAll;
 $('mobileBoostBtn').onclick=boost;
+$('mobileGalaxyBtn').onclick=galaxy;
+$('mobileSaveBtn').onclick=()=>{save();$('status').textContent='セーブしました';};
 $('mobileTickspeedBtn').onclick=()=>$('tickspeedBtn').click();
 $('mobileBuyModeBtn').onclick=()=>{state.buyMax=true;render();save();};
 $('quickBoostBtn').onclick=()=>$('boostBtn').click();
@@ -226,7 +255,7 @@ $('tickspeedBtn').onclick=()=>{const c=tickspeedCost();if(state.matter<c)return;
 $('tickspeedMaxBtn').onclick=()=>{let guard=0;while(guard<10000){const c=tickspeedCost();if(!Number.isFinite(c)||state.matter<c)break;state.matter-=c;state.tickspeed++;guard++;}render();save();};
 $('buyModeBtn').onclick=()=>{state.buyMax=true;render();save();};
 $('saveBtn').onclick=()=>{save();$('status').textContent='セーブしました';};
-$('resetBtn').onclick=()=>{if(confirm('セーブデータを消して最初からやり直しますか？')){localStorage.removeItem('antimatterFirstSteps');state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.buyMax=true;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;$('buyModeBtn').textContent='購入: 最大購入';render();save();}};
+$('resetBtn').onclick=()=>{if(confirm('セーブデータを消して最初からやり直しますか？')){localStorage.removeItem('antimatterFirstSteps');state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.buyMax=true;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;$('buyModeBtn').textContent='購入: 最大購入';render();save();}};
 load();state.buyMax=true;$('buyModeBtn').textContent='最大購入';$('quickBuyModeBtn').textContent='最大購入';$('mobileBuyModeBtn').textContent='最大購入';buildRows();render();
 let last=performance.now();
 function tick(now){
@@ -294,4 +323,30 @@ requestAnimationFrame(tick);window.addEventListener('beforeunload',save);
 button, .buy, .mobile-bottom-actions { touch-action: manipulation; }
 html { -webkit-text-size-adjust: 100%; }
 </style>
+<style id="galaxy-panel-style">
+.galaxy-panel{margin:0 0 6px;padding:5px 7px;border-radius:4px;background:#1b2420;border-color:#41634d;box-shadow:none}.galaxy-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.galaxy-row>div{min-width:0;flex:1}.galaxy-panel .section-title{margin:0 0 1px;font-size:12px}.galaxy-panel .section-title span{font-size:10px}.galaxy-info{font-size:10px;color:var(--muted)}.galaxy-buy{flex:0 0 auto;width:100px!important;min-width:100px!important;height:34px!important;min-height:34px!important;padding:3px!important;font-size:10px!important;background:#244a36!important;border-color:#56866a!important;white-space:nowrap}.galaxy-buy:disabled{opacity:.35!important}@media(max-width:540px){.galaxy-panel{padding:4px 5px!important;margin-bottom:5px!important}.galaxy-panel .section-title{font-size:11px!important}.galaxy-info{font-size:9px!important}.galaxy-buy{width:78px!important;min-width:78px!important;height:30px!important;min-height:30px!important;font-size:9px!important}}
+</style>
+<style id="mobile-boost-galaxy-placement">
+@media(max-width:540px){
+.mobile-reset-actions{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom));z-index:49;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 8px;background:transparent;pointer-events:none}
+.mobile-reset-actions button{pointer-events:auto;width:100%;height:76px;min-height:76px;border:1px solid #8a3434;border-radius:5px;background:#4b1717;color:#fff;font-size:14px;font-weight:800;box-shadow:0 2px 8px #0005}
+.mobile-reset-actions .mobile-galaxy{background:#25134f;border-color:#4d2b9a}
+.mobile-reset-actions button{white-space:pre-line;line-height:1.25;font-size:12px}.mobile-reset-actions button:disabled{opacity:.35}
+.mobile-bottom-actions{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+main{padding-bottom:155px!important}
+}
+@media(min-width:541px){.mobile-reset-actions{display:none}}
+</style>
 </body></html>
+
+<style id="mobile-boost-galaxy-placement">
+@media(max-width:540px){
+.mobile-reset-actions{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom));z-index:49;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 8px;background:transparent;pointer-events:none}
+.mobile-reset-actions button{pointer-events:auto;width:100%;height:76px;min-height:76px;border:1px solid #8a3434;border-radius:5px;background:#4b1717;color:#fff;font-size:14px;font-weight:800;box-shadow:0 2px 8px #0005}
+.mobile-reset-actions .mobile-galaxy{background:#25134f;border-color:#4d2b9a}
+.mobile-reset-actions button{white-space:pre-line;line-height:1.25;font-size:12px}.mobile-reset-actions button:disabled{opacity:.35}
+.mobile-bottom-actions{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+main{padding-bottom:155px!important}
+}
+@media(min-width:541px){.mobile-reset-actions{display:none}}
+</style>
