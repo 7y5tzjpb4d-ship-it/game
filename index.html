@@ -94,7 +94,7 @@ function buildRows(){
   const nm=document.createElement('div');nm.className='dim-name';nm.textContent=names[i];
   const det=document.createElement('div');det.className='dim-info';
   const amt=document.createElement('div');amt.className='dim-amount';
-  info.append(nm,det,amt);
+  info.append(nm,det,amt);info.style.display='contents';
   const b=document.createElement('button');b.className='buy';b.type='button';b.onclick=()=>buy(i);
   d.append(tier,info,b);root.append(d);rows.push({d,det,amt,b});
  }
@@ -212,15 +212,15 @@ requestAnimationFrame(tick);window.addEventListener('beforeunload',save);
 /* Fixed purchase controls and explicit cost labels */
 .dim{grid-template-columns:27px minmax(0,1fr) 112px!important;align-items:center!important;}
 .dim>div:nth-child(2){display:block!important;min-width:0!important;}
-.dim-name,.dim-info,.dim-amount{display:block!important;grid-column:auto!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dim-name,.dim-info,.dim-amount{display:block!important;grid-column:auto!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;align-self:center;margin:0!important}.dim{grid-template-columns:27px minmax(100px,1.05fr) minmax(115px,1.2fr) minmax(80px,.8fr) minmax(150px,34%)!important}.dim .buy{grid-column:5!important}.dim-info,.dim-amount{font-size:12px!important;}
 .dim .buy{grid-column:3!important;width:112px!important;min-width:112px!important;height:44px!important;min-height:44px!important;max-height:44px!important;flex:none!important;display:flex;align-items:center;justify-content:center;text-align:center;white-space:pre-line!important;overflow:hidden;overflow-wrap:anywhere;line-height:1.15;font-size:10px!important;padding:3px!important;}
 .tickspeed-buttons{display:flex!important;flex:0 0 auto;gap:5px!important;}
 .tickspeed-buy{width:92px!important;min-width:92px!important;height:40px!important;min-height:40px!important;max-height:40px!important;white-space:pre-line!important;line-height:1.15!important;font-size:10px!important;padding:3px!important;}
 #buyModeBtn{font-size:12px!important;}
 @media(max-width:540px){
  main{padding-bottom:76px!important;}
- .dim{grid-template-columns:23px minmax(0,1fr) 96px!important;gap:4px!important;padding:3px!important;min-height:48px!important;}
- .dim .buy{grid-column:3!important;width:96px!important;min-width:96px!important;height:40px!important;min-height:40px!important;max-height:40px!important;font-size:9px!important;}
+ .dim{grid-template-columns:23px minmax(65px,1fr) minmax(85px,1.1fr) minmax(58px,.8fr) 96px!important;gap:4px!important;padding:3px!important;min-height:48px!important;}
+ .dim .buy{grid-column:5!important;width:96px!important;min-width:96px!important;height:40px!important;min-height:40px!important;max-height:40px!important;font-size:9px!important;}
  .dim-name{font-size:10px!important;}
  .dim-info,.dim-amount{font-size:9px!important;}
  .tickspeed-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:5px!important;}
