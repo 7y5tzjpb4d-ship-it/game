@@ -228,3 +228,18 @@ requestAnimationFrame(tick);window.addEventListener('beforeunload',save);
  .mobile-bottom-actions button{min-height:34px;font-size:10px}
 }
 </style>
+<style>
+/* Evenly distribute controls and information across each row */
+@media(max-width:540px){
+ .tickspeed-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;justify-content:initial;gap:8px}
+ .tickspeed-row>div:first-child{min-width:0}
+ .tickspeed-buttons{display:grid;grid-template-columns:repeat(2,minmax(54px,1fr));gap:5px;justify-self:end}
+ .tickspeed-buy{width:100%!important;min-width:54px!important;box-sizing:border-box}
+ .dim{grid-template-columns:24px minmax(0,1fr) minmax(104px,34%);}
+ .dim>div:nth-child(2){display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center;min-width:0}
+ .dim-name{grid-column:1;white-space:nowrap;margin-right:0}
+ .dim-info{grid-column:2;justify-self:start;margin-right:0!important}
+ .dim-amount{grid-column:3;justify-self:end;white-space:nowrap;margin-left:0}
+ .dim .buy{grid-column:4;}
+}
+</style>
