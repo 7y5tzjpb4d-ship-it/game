@@ -83,7 +83,7 @@ const baseCosts=[10,100,1e3,1e6,1e9,1e13,1e18,1e24];
 const unlockAt=[0,0,0,0,0,0,0,0];
 const costGrowth=[1e3,1e4,1e5,1e6,1e8,1e10,1e12,1e15];
 const TICKSPEED_BASE_COST=1e3;
-const state={matter:10,amount:Array(8).fill(0),bought:Array(8).fill(0),boosts:0,galaxies:0,buyMax:true,tickspeed:0,sacrificeMult:1,sacrificedFirst:0,ip:0,infinities:0,last:Date.now()};
+const state={matter:10,amount:Array(8).fill(0),bought:Array(8).fill(0),boosts:0,galaxies:2,buyMax:true,tickspeed:0,sacrificeMult:1,sacrificedFirst:0,ip:0,infinities:0,last:Date.now()};
 const INFINITY=Number.MAX_VALUE;
 function atInfinity(){return state.matter>=INFINITY*0.999;}
 let lastSave=0,lastRender=0, rows=[];
@@ -283,7 +283,7 @@ $('tickspeedBtn').onclick=()=>{const c=tickspeedCost();if(state.matter<c)return;
 $('tickspeedMaxBtn').onclick=()=>{let guard=0;while(guard<10000){const c=tickspeedCost();if(!Number.isFinite(c)||state.matter<c)break;state.matter-=c;state.tickspeed++;guard++;}render();save();};
 $('buyModeBtn').onclick=()=>{state.buyMax=true;render();save();};
 $('saveBtn').onclick=()=>{save();$('status').textContent='セーブしました';};
-$('resetBtn').onclick=()=>{if(confirm('セーブデータを消して最初からやり直しますか？')){localStorage.removeItem('antimatterFirstSteps');state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.buyMax=true;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.ip=0;state.infinities=0;$('buyModeBtn').textContent='購入: 最大購入';render();save();}};
+$('resetBtn').onclick=()=>{if(confirm('セーブデータを消して最初からやり直しますか？')){localStorage.removeItem('antimatterFirstSteps');state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=2;state.buyMax=true;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.ip=0;state.infinities=0;$('buyModeBtn').textContent='購入: 最大購入';render();save();}};
 load();
 state.buyMax=true;$('buyModeBtn').textContent='最大購入';$('quickBuyModeBtn').textContent='最大購入';$('mobileBuyModeBtn').textContent='最大購入';buildRows();render();
 let last=performance.now();
