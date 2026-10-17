@@ -273,7 +273,10 @@ $('tickspeedMaxBtn').onclick=()=>{let guard=0;while(guard<10000){const c=tickspe
 $('buyModeBtn').onclick=()=>{state.buyMax=true;render();save();};
 $('saveBtn').onclick=()=>{save();$('status').textContent='セーブしました';};
 $('resetBtn').onclick=()=>{if(confirm('セーブデータを消して最初からやり直しますか？')){localStorage.removeItem('antimatterFirstSteps');state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.buyMax=true;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.ip=0;state.infinities=0;$('buyModeBtn').textContent='購入: 最大購入';render();save();}};
-load();state.buyMax=true;$('buyModeBtn').textContent='最大購入';$('quickBuyModeBtn').textContent='最大購入';$('mobileBuyModeBtn').textContent='最大購入';buildRows();render();
+load();
+// テスト用初期状態：Dimension Boostを5回実行済み
+state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=5;state.galaxies=0;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.ip=0;state.infinities=0;save();
+state.buyMax=true;$('buyModeBtn').textContent='最大購入';$('quickBuyModeBtn').textContent='最大購入';$('mobileBuyModeBtn').textContent='最大購入';buildRows();render();
 let last=performance.now();
 function tick(now){
  const dt=Math.min(.25,(now-last)/1000);last=now;
