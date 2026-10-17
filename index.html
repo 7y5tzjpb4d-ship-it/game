@@ -152,11 +152,11 @@ function render(){
  setText($('tickspeedMultiplier'),'購入 '+fmt(state.tickspeed)+'回 · 倍率 ×'+fmt(tickspeedMult()));
  setText($('tickspeedDesc'),'');
  const sacrificeUnlocked=state.boosts>=5;
- $('sacrificeBtn').disabled=!sacrificeUnlocked||state.amount[0]<=0||sacrificeGain()<1.01;
+ $('sacrificeBtn').disabled=!sacrificeUnlocked||state.amount[7]<1||state.amount[0]<=0||sacrificeGain()<1.01;
  setText($('sacrificeMultiplier'),'倍率 ×'+fmt(state.sacrificeMult));
  $('sacrificePanel').style.opacity=sacrificeUnlocked?'1':'.65';
  const gain=sacrificeGain();
- setText($('sacrificeBtn'),'Sacrifice ×'+gain.toFixed(2));
+ setText($('sacrificeBtn'),$('sacrificeBtn').disabled?'ロック中':'Sacrifice ×'+gain.toFixed(2));
  const tsCost=tickspeedCost();
  $('tickspeedBtn').disabled=state.matter<tsCost;
  setText($('tickspeedBtn'),'購入 · '+fmt(tsCost));
@@ -223,7 +223,7 @@ function boost(){
  state.boosts++;state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;render();save();
 }
 function sacrifice(){
- if(state.boosts<5||state.amount[0]<=0)return;
+ if(state.boosts<5||state.amount[7]<1||state.amount[0]<=0)return;
  const gain=sacrificeGain();
  if(gain<1.01)return;
  state.sacrificedFirst+=state.amount[0];
