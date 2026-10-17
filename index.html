@@ -31,6 +31,21 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 86px;max-width:560px
 .sacrifice-panel{margin:0 0 6px;padding:5px 7px;border-radius:4px;background:#211b25;border-color:#60435e;box-shadow:none}.sacrifice-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.sacrifice-row>div{min-width:0;flex:1}.sacrifice-panel .section-title{margin:0 0 1px;font-size:12px}.sacrifice-panel .section-title span{font-size:10px}.sacrifice-panel p{color:var(--muted);font-size:10px;margin:0}.sacrifice-buy{flex:0 0 auto;width:200px!important;min-width:200px!important;height:34px!important;min-height:34px!important;padding:3px!important;font-size:10px!important;background:#493047!important;border-color:#96658c!important;white-space:nowrap}.sacrifice-buy:disabled{opacity:.35!important}
 @media(max-width:540px){.sacrifice-panel{padding:4px 5px!important;margin-bottom:5px!important}.sacrifice-panel .section-title{font-size:11px!important}.sacrifice-panel p{font-size:9px!important}.sacrifice-buy{width:156px!important;min-width:156px!important;height:30px!important;min-height:30px!important;font-size:9px!important}}
 </style>
+<style id="big-crunch-focus-ui">
+body.crunch-ready main{padding-bottom:12px!important;}
+body.crunch-ready .sticky-tools .stats,
+body.crunch-ready .quick-actions,
+body.crunch-ready main > .mobile-bottom-actions,
+body.crunch-ready main > .tickspeed-panel,
+body.crunch-ready main > .sacrifice-panel,
+body.crunch-ready main > .panel:not(.infinity-panel),
+body.crunch-ready main > .mobile-reset-actions,
+body.crunch-ready main > .actions,
+body.crunch-ready main > .bottom,
+body.crunch-ready main > .notice{display:none!important;}
+body.crunch-ready .sticky-tools{margin:0!important;padding:0!important;border:0!important;}
+body.crunch-ready .infinity-panel{display:block!important;margin:20vh auto 0!important;max-width:520px!important;padding:24px!important;}
+</style>
 </head>
 <body><main>
 <div class="sticky-tools">
@@ -129,7 +144,9 @@ function render(){
  setText($('matter'),fmt(state.matter));
  setText($('rate'),fmt(productionRate()));
  setText($('boostCount'),fmt(state.boosts));
- $('infinityPanel').style.display=atInfinity()?'block':'none';
+ const infinityReady=atInfinity();
+ document.body.classList.toggle('crunch-ready',infinityReady);
+ $('infinityPanel').style.display=infinityReady?'block':'none';
  setText($('ipCount'),fmt(state.ip));setText($('infinityCount'),fmt(state.infinities));
  setText($('tickspeedMultiplier'),'購入 '+fmt(state.tickspeed)+'回 · 倍率 ×'+fmt(tickspeedMult()));
  setText($('tickspeedDesc'),'');
