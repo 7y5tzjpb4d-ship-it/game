@@ -347,6 +347,16 @@ main{padding-bottom:155px!important}
 }
 @media(min-width:541px){.mobile-reset-actions{display:none!important}}
 </style>
+
+<style id="remove-bottom-actions-restore-galaxy">
+@media(max-width:540px){
+  .mobile-bottom-actions{display:none!important;}
+  #mobileGalaxyBtn{display:block!important;visibility:visible!important;}
+  .mobile-reset-actions{grid-template-columns:1fr 1fr!important;}
+}
+.bottom,.notice{display:none!important;}
+</style>
+
 </body></html>
 
 <style id="mobile-boost-galaxy-placement">
@@ -359,4 +369,9 @@ main{padding-bottom:155px!important}
 main{padding-bottom:155px!important}
 }
 @media(min-width:541px){.mobile-reset-actions{display:none}}
+</style>
+
+<style id="final-reset-button-layout">
+@media(max-width:540px){.mobile-bottom-actions{display:none!important}.mobile-reset-actions{position:static!important;left:auto!important;right:auto!important;bottom:auto!important;z-index:auto!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin:8px 0 12px!important;padding:0 4px!important;background:transparent!important;pointer-events:auto!important}.mobile-reset-actions button{display:block!important;visibility:visible!important;width:100%!important;height:76px!important;min-height:76px!important;pointer-events:auto!important}.mobile-reset-actions .mobile-boost{background:#4b1717!important;border-color:#8a3434!important}.mobile-reset-actions .mobile-galaxy{background:#25134f!important;border-color:#4d2b9a!important}main{padding-bottom:86px!important}}@media(min-width:541px){.mobile-reset-actions{display:none!important}}
+.bottom,.notice{display:none!important}
 </style>
