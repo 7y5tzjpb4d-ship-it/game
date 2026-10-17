@@ -112,7 +112,7 @@ function dimensionBoostMult(i){
  return Math.pow(2, Math.max(state.boosts - i, 0));
 }
 function dimensionMult(i){
- return 1e6*dimensionBoostMult(i)*Math.pow(2,Math.floor(state.bought[i]/10));
+ return dimensionBoostMult(i)*Math.pow(2,Math.floor(state.bought[i]/10));
 }
 // Dimension欄の表示にはdimensionMult()のみを使用。Tickspeedは生産計算にのみ適用する。
 function productionMult(i){return dimensionMult(i)*(i===7?state.sacrificeMult:1)*tickspeedMult();}
