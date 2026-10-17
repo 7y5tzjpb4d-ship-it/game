@@ -253,6 +253,9 @@ requestAnimationFrame(tick);window.addEventListener('beforeunload',save);
  .dim .dim-amount{grid-column:4;grid-row:1;margin:0!important;white-space:nowrap;font-size:10px!important}
  .dim .buy{grid-column:5;grid-row:1;width:100%;min-width:0;height:36px;min-height:36px!important;white-space:pre-line;overflow-wrap:normal;font-size:9px!important;line-height:1.15;padding:3px 2px!important}
 }
+/* 次元カードの横幅を少し縮め、列配置は維持 */
+#dimensions .dim{width:calc(100% - 12px)!important;max-width:100%!important;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box!important;}
+@media(max-width:600px){#dimensions .dim{width:calc(100% - 8px)!important;}}
 </style>
 
 </body></html>
