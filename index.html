@@ -45,9 +45,6 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 86px;max-width:560px
 <section class="panel sacrifice-panel" id="sacrificePanel">
  <div class="sacrifice-row"><div><h2 class="section-title">Dimensional Sacrifice <span id="sacrificeMultiplier">倍率 ×1</span></h2></div><button type="button" class="buy sacrifice-buy" id="sacrificeBtn" disabled>Sacrifice ×1</button></div>
 </section>
-<section class="panel galaxy-panel" id="galaxyPanel">
- <div class="galaxy-row"><div><h2 class="section-title">Antimatter Galaxy <span id="galaxyCount">0個</span></h2><div class="galaxy-info" id="galaxyRequirement">第8次元を80個購入で実行</div></div><button type="button" class="buy galaxy-buy" id="galaxyBtn" disabled>Galaxy</button></div>
-</section>
 <section class="panel">
  <h2 class="section-title">次元 <span>購入すると反物質を自動生産</span></h2>
  <div class="dimensions" id="dimensions"></div>
@@ -129,11 +126,6 @@ function render(){
  setText($('rate'),fmt(productionRate()));
  setText($('boostCount'),fmt(state.boosts));
  setText($('tickspeedMultiplier'),'購入 '+fmt(state.tickspeed)+'回 · 倍率 ×'+fmt(tickspeedMult()));
- setText($('galaxyCount'),fmt(state.galaxies)+'個');
- setText($('galaxyRequirement'),'条件：第8次元を '+fmt(galaxyRequirement())+' 個購入（現在 '+fmt(state.bought[7])+' 個） · Tickspeed基礎倍率 ×'+fmt(tickspeedBase()));
- $('galaxyBtn').disabled=!canGalaxy();
- setText($('galaxyBtn'),'Galaxy '+(state.galaxies+1));
- $('galaxyPanel').style.opacity=canGalaxy()?'1':'.78';
  setText($('tickspeedDesc'),'');
  const sacrificeUnlocked=state.boosts>=5;
  $('sacrificeBtn').disabled=!sacrificeUnlocked||state.amount[0]<=0||sacrificeGain()<1.01;
@@ -240,7 +232,6 @@ function load(){
 }
 $('boostBtn').onclick=boost;
 $('sacrificeBtn').onclick=sacrifice;
-$('galaxyBtn').onclick=galaxy;
 $('quickMaxAllBtn').onclick=maxAll;
 $('mobileMaxAllBtn').onclick=maxAll;
 $('mobileBoostBtn').onclick=boost;
@@ -359,9 +350,9 @@ main{padding-bottom:155px!important}
 
 <style id="restore-maxall-and-boost-count">
 @media(max-width:540px){
- .mobile-bottom-actions{display:none!important;}
+ .mobile-bottom-actions{display:grid!important;visibility:visible!important;position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:50!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;}
  .mobile-reset-actions{margin-bottom:8px!important;}
- main{padding-bottom:12px!important;}
+ main{padding-bottom:110px!important;}
 }
 </style>
 </body></html>
