@@ -220,7 +220,7 @@ function maxAll(){
 }
 function boost(){
  if(!canBoost())return;
- state.boosts++;state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);render();save();
+ state.boosts++;state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;render();save();
 }
 function sacrifice(){
  if(state.boosts<5||state.amount[0]<=0)return;
