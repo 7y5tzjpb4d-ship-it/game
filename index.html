@@ -40,7 +40,7 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 86px;max-width:560px
 </section>
 <div class="quick-actions"><button type="button" id="quickMaxAllBtn" class="quick-maxall">Max All</button><button type="button" id="quickBoostBtn" class="quick-boost">次元ブースト</button><button type="button" id="quickTickspeedBtn">Tickspeed購入</button><button type="button" id="quickBuyModeBtn">購入: 1個ずつ</button></div>
 </div>
-<nav class="mobile-bottom-actions" aria-label="クイック操作"><button type="button" class="mobile-max" id="mobileMaxAllBtn">Max All</button><button type="button" id="mobileTickspeedBtn">Tickspeed</button><button type="button" id="mobileBuyModeBtn">最大購入</button><button type="button" id="mobileSaveBtn">セーブ</button></nav>
+<nav class="mobile-bottom-actions" aria-label="クイック操作"><button type="button" class="mobile-max" id="mobileMaxAllBtn">Max All</button><button type="button" id="mobileTickspeedBtn">Tickspeed</button><button type="button" id="mobileBuyModeBtn">最大購入</button><button type="button" id="mobileSaveBtn">リセット</button></nav>
 <section class="panel tickspeed-panel"><div class="tickspeed-row"><div><h2 class="section-title">Tickspeed <span id="tickspeedMultiplier">倍率 ×1</span></h2><p id="tickspeedDesc" style="color:var(--muted);font-size:11px;margin:0">Tickspeedを上げると全次元の生産速度が上昇します。</p></div><div class="tickspeed-buttons"><button type="button" class="buy tickspeed-buy" id="tickspeedBtn">購入</button><button type="button" class="buy tickspeed-buy" id="tickspeedMaxBtn">Buy Max</button></div></div></section>
 <section class="panel sacrifice-panel" id="sacrificePanel">
  <div class="sacrifice-row"><div><h2 class="section-title">Dimensional Sacrifice <span id="sacrificeMultiplier">倍率 ×1</span></h2></div><button type="button" class="buy sacrifice-buy" id="sacrificeBtn" disabled>Sacrifice ×1</button></div>
@@ -164,7 +164,7 @@ function render(){
  setText($('quickTickspeedBtn'),'Tickspeed · '+fmt(tsCost));
  $('quickMaxAllBtn').disabled=!canBuyAnything();
  setText($('quickBuyModeBtn'),'最大購入');
- $('mobileBoostBtn').disabled=!can;setText($('mobileBoostBtn'),'Boost\n第'+tier+'次元 '+fmt(req)+'個');
+ $('mobileBoostBtn').disabled=!can;setText($('mobileBoostBtn'),'Boost '+fmt(state.boosts)+'\n第'+tier+'次元 '+fmt(req)+'個');
  $('mobileGalaxyBtn').disabled=!canGalaxy();setText($('mobileGalaxyBtn'),'Galaxy '+state.galaxies+'\n第8次元 '+fmt(galaxyRequirement())+'個');
  $('mobileTickspeedBtn').disabled=state.matter<tsCost;setText($('mobileTickspeedBtn'),'Tickspeed');
  setText($('mobileBuyModeBtn'),'最大購入');
@@ -245,7 +245,7 @@ $('quickMaxAllBtn').onclick=maxAll;
 $('mobileMaxAllBtn').onclick=maxAll;
 $('mobileBoostBtn').onclick=boost;
 $('mobileGalaxyBtn').onclick=galaxy;
-$('mobileSaveBtn').onclick=()=>{save();$('status').textContent='セーブしました';};
+$('mobileSaveBtn').onclick=()=>$('resetBtn').click();
 $('mobileTickspeedBtn').onclick=()=>$('tickspeedBtn').click();
 $('mobileBuyModeBtn').onclick=()=>{state.buyMax=true;render();save();};
 $('quickBoostBtn').onclick=()=>$('boostBtn').click();
@@ -357,21 +357,11 @@ main{padding-bottom:155px!important}
 .bottom,.notice{display:none!important;}
 </style>
 
-</body></html>
-
-<style id="mobile-boost-galaxy-placement">
+<style id="restore-maxall-and-boost-count">
 @media(max-width:540px){
-.mobile-reset-actions{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom));z-index:49;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 8px;background:transparent;pointer-events:none}
-.mobile-reset-actions button{pointer-events:auto;width:100%;height:76px;min-height:76px;border:1px solid #8a3434;border-radius:5px;background:#4b1717;color:#fff;font-size:14px;font-weight:800;box-shadow:0 2px 8px #0005}
-.mobile-reset-actions .mobile-galaxy{background:#25134f;border-color:#4d2b9a}
-.mobile-reset-actions button{white-space:pre-line;line-height:1.25;font-size:12px}.mobile-reset-actions button:disabled{opacity:.35}
-.mobile-bottom-actions{grid-template-columns:repeat(4,minmax(0,1fr))!important}
-main{padding-bottom:155px!important}
+ .mobile-bottom-actions{display:grid!important;visibility:visible!important;position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:50!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;}
+ .mobile-reset-actions{margin-bottom:8px!important;}
+ main{padding-bottom:110px!important;}
 }
-@media(min-width:541px){.mobile-reset-actions{display:none}}
 </style>
-
-<style id="final-reset-button-layout">
-@media(max-width:540px){.mobile-bottom-actions{display:none!important}.mobile-reset-actions{position:static!important;left:auto!important;right:auto!important;bottom:auto!important;z-index:auto!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin:8px 0 12px!important;padding:0 4px!important;background:transparent!important;pointer-events:auto!important}.mobile-reset-actions button{display:block!important;visibility:visible!important;width:100%!important;height:76px!important;min-height:76px!important;pointer-events:auto!important}.mobile-reset-actions .mobile-boost{background:#4b1717!important;border-color:#8a3434!important}.mobile-reset-actions .mobile-galaxy{background:#25134f!important;border-color:#4d2b9a!important}main{padding-bottom:86px!important}}@media(min-width:541px){.mobile-reset-actions{display:none!important}}
-.bottom,.notice{display:none!important}
-</style>
+</body></html>
