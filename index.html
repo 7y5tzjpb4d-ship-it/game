@@ -106,7 +106,7 @@ function render(){
  setText($('tickspeedDesc'),'');
  const tsCost=tickspeedCost();
  $('tickspeedBtn').disabled=state.matter<tsCost;
- setText($('tickspeedBtn'),'購入');
+ setText($('tickspeedBtn'),'購入 · '+fmt(tsCost));
  $('tickspeedMaxBtn').disabled=state.matter<tsCost;
  setText($('tickspeedMaxBtn'),'Buy Max');
  if(rows.length!==8)buildRows();
@@ -173,7 +173,7 @@ function load(){
  try{const s=JSON.parse(localStorage.getItem('antimatterFirstSteps'));if(s&&Array.isArray(s.amount)&&s.amount.length===8){
   state.matter=Math.max(0,Number(s.matter)||10);state.amount=s.amount.map(x=>Math.max(0,Number(x)||0));
   if(Array.isArray(s.bought)&&s.bought.length===8)state.bought=s.bought.map(x=>Math.max(0,Number(x)||0));
-  state.boosts=Math.max(0,Number(s.boosts)||0);state.buyMax=!!s.buyMax;state.tickspeed=Math.max(0,Math.floor(Number(s.tickspeed)||0));
+  state.boosts=Math.max(0,Number(s.boosts)||0);state.buyMax=true;state.tickspeed=Math.max(0,Math.floor(Number(s.tickspeed)||0));
   const elapsed=Math.min(3600,Math.max(0,(Date.now()-(Number(s.last)||Date.now()))/1000));
   state.matter+=productionRate()*elapsed;
  }}catch(e){}
@@ -191,7 +191,7 @@ $('tickspeedBtn').onclick=()=>{const c=tickspeedCost();if(state.matter<c)return;
 $('tickspeedMaxBtn').onclick=()=>{let guard=0;while(guard<10000){const c=tickspeedCost();if(!Number.isFinite(c)||state.matter<c)break;state.matter-=c;state.tickspeed++;guard++;}render();save();};
 $('buyModeBtn').onclick=()=>{state.buyMax=!state.buyMax;$('buyModeBtn').textContent=state.buyMax?'購入: 最大購入':'購入: 1個ずつ';render();save();};
 $('saveBtn').onclick=()=>{save();$('status').textContent='セーブしました';};
-$('resetBtn').onclick=()=>{if(confirm('セーブデータを消して最初からやり直しますか？')){localStorage.removeItem('antimatterFirstSteps');state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.buyMax=false;state.tickspeed=0;$('buyModeBtn').textContent='購入: 1個ずつ';render();save();}};
+$('resetBtn').onclick=()=>{if(confirm('セーブデータを消して最初からやり直しますか？')){localStorage.removeItem('antimatterFirstSteps');state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.buyMax=true;state.tickspeed=0;$('buyModeBtn').textContent='購入: 最大購入';render();save();}};
 load();state.buyMax=true;$('buyModeBtn').textContent='購入: 最大購入';buildRows();render();
 let last=performance.now();
 function tick(now){
@@ -205,6 +205,17 @@ function tick(now){
 requestAnimationFrame(tick);window.addEventListener('beforeunload',save);
 })();
 </script>
+
+<style>
+/* Final requested sizing and spacing */
+.tickspeed-buy{min-width:82px!important;min-height:38px!important;padding:6px 8px!important;font-size:11px!important;white-space:normal!important}
+.dim .buy{min-height:44px!important;height:44px!important;font-size:11px!important;padding:5px 7px!important}
+@media(max-width:540px){
+ .tickspeed-buttons{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;min-width:150px}
+ .tickspeed-buy{min-width:72px!important;min-height:34px!important;font-size:10px!important;padding:4px!important}
+ .dim .buy{min-height:40px!important;height:40px!important;font-size:10px!important}
+}
+</style>
 </body></html>
 <style>
 /* Compact one-line mobile layout to reduce vertical scrolling */
