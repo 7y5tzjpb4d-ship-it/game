@@ -291,7 +291,7 @@ function tick(now){
  const dt=Math.min(.25,(now-last)/1000);last=now;
  for(let i=7;i>=1;i--){const v=state.amount[i-1]+state.amount[i]*productionMult(i)*0.1*dt;state.amount[i-1]=Number.isFinite(v)?Math.min(v,INFINITY):INFINITY;}
  const matterNext=state.matter+productionRate()*dt;state.matter=Number.isFinite(matterNext)?Math.min(matterNext,INFINITY):INFINITY;
- if(now-lastRender>200){render();lastRender=now;}
+ if(now-lastRender>=1000/60){render();lastRender=now;}
  if(now-lastSave>5000){save();lastSave=now;}
  requestAnimationFrame(tick);
 }
