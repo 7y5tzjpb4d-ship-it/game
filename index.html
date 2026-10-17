@@ -52,7 +52,7 @@ body.crunch-ready .infinity-panel{display:block!important;margin:20vh auto 0!imp
 <section class="stats">
  <div class="stat"><small>反物質 / ANTIMATTER</small><strong id="matter">10</strong></div>
  <div class="stat"><small>毎秒の生産量</small><strong id="rate">0</strong></div>
- <div class="stat"><small>次元ブースト</small><strong id="boostCount">0</strong></div>
+ <div class="stat" id="ipStat" style="display:none"><small>所持IP</small><strong id="topIpCount">0</strong></div>
 </section>
 <section class="panel infinity-panel" id="infinityPanel"><h2>INFINITY</h2><p>反物質がInfinityに到達しました。<br>Infinity Point: <strong id="ipCount">0</strong> · Infinities: <strong id="infinityCount">0</strong></p><button type="button" class="big-crunch-btn" id="bigCrunchBtn">Big Crunch (+1 IP)</button></section>
 <div class="quick-actions"><button type="button" id="quickMaxAllBtn" class="quick-maxall">Max All</button><button type="button" id="quickBoostBtn" class="quick-boost">次元ブースト</button><button type="button" id="quickTickspeedBtn">Tickspeed購入</button><button type="button" id="quickBuyModeBtn">購入: 1個ずつ</button></div>
@@ -143,7 +143,9 @@ function buildRows(){
 function render(){
  setText($('matter'),fmt(state.matter));
  setText($('rate'),fmt(productionRate()));
- setText($('boostCount'),fmt(state.boosts));
+ $('ipStat').style.display=state.infinities>0?'block':'none';
+ $('ipStat').parentElement.style.gridTemplateColumns=state.infinities>0?'repeat(3,minmax(0,1fr))':'repeat(2,minmax(0,1fr))';
+ setText($('topIpCount'),fmt(state.ip));
  const infinityReady=atInfinity();
  document.body.classList.toggle('crunch-ready',infinityReady);
  $('infinityPanel').style.display=infinityReady?'block':'none';
