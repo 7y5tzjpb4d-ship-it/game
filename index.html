@@ -43,7 +43,7 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 86px;max-width:560px
 <nav class="mobile-bottom-actions" aria-label="クイック操作"><button type="button" class="mobile-max" id="mobileMaxAllBtn">Max All</button><button type="button" class="mobile-boost" id="mobileBoostBtn">ブースト</button><button type="button" id="mobileTickspeedBtn">Tickspeed</button><button type="button" id="mobileBuyModeBtn">購入: 1個</button></nav>
 <section class="panel tickspeed-panel"><div class="tickspeed-row"><div><h2 class="section-title">Tickspeed <span id="tickspeedMultiplier">倍率 ×1</span></h2><p id="tickspeedDesc" style="color:var(--muted);font-size:11px;margin:0">Tickspeedを上げると全次元の生産速度が上昇します。</p></div><div class="tickspeed-buttons"><button type="button" class="buy tickspeed-buy" id="tickspeedBtn">購入</button><button type="button" class="buy tickspeed-buy" id="tickspeedMaxBtn">Buy Max</button></div></div></section>
 <section class="panel sacrifice-panel" id="sacrificePanel">
- <div class="sacrifice-row"><div><h2 class="section-title">Dimensional Sacrifice <span id="sacrificeMultiplier">倍率 ×1</span></h2><p id="sacrificeDesc">次元ブースト5回で解放</p></div><button type="button" class="buy sacrifice-buy" id="sacrificeBtn" disabled>Sacrifice</button></div>
+ <div class="sacrifice-row"><div><h2 class="section-title">Dimensional Sacrifice <span id="sacrificeMultiplier">倍率 ×1</span></h2></div><button type="button" class="buy sacrifice-buy" id="sacrificeBtn" disabled>Sacrifice ×1</button></div>
 </section>
 <section class="panel">
  <h2 class="section-title">次元 <span>購入すると反物質を自動生産</span></h2>
@@ -124,9 +124,10 @@ function render(){
  const sacrificeUnlocked=state.boosts>=5;
  $('sacrificeBtn').disabled=!sacrificeUnlocked||state.amount[0]<=0;
  setText($('sacrificeMultiplier'),'倍率 ×'+fmt(state.sacrificeMult));
- setText($('sacrificeDesc'),sacrificeUnlocked?'第1次元の所持量を犠牲にして、第8次元の倍率を強化します。累計犠牲量: '+fmt(state.sacrificedFirst):'次元ブースト5回で解放');
  $('sacrificePanel').style.opacity=sacrificeUnlocked?'1':'.65';
- setText($('sacrificeBtn'),'Sacrifice');
+ const sacrificeTotal=state.sacrificedFirst+state.amount[0];
+ const sacrificeGain=Math.max(Math.log10(Math.max(sacrificeTotal,1))/10,1)**2;
+ setText($('sacrificeBtn'),'Sacrifice ×'+fmt(sacrificeGain));
  const tsCost=tickspeedCost();
  $('tickspeedBtn').disabled=state.matter<tsCost;
  setText($('tickspeedBtn'),'購入 · '+fmt(tsCost));
