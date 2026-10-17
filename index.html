@@ -14,7 +14,8 @@ main{max-width:900px;margin:auto;padding:22px 14px 40px}.head{text-align:center;
 /* Smartphone-style layout: full-width dimension rows and persistent bottom action buttons */
 body{background:#101014;font-size:14px}main{padding:6px 7px 86px;max-width:560px}.head{padding:3px 0 8px}.eyebrow{font-size:9px}.head h1{font-size:19px;letter-spacing:.02em}.head p{font-size:11px}.sticky-tools{position:relative;top:auto;background:#101014;backdrop-filter:none;border-bottom:0;margin:0 0 7px;padding:2px 0 5px}.stats{gap:4px}.stat{background:#1c1c22;border:1px solid #36363d;box-shadow:none;padding:6px 2px}.stat small{font-size:9px}.stat strong{font-size:15px}.quick-actions{display:none}.panel{background:#18181e;border:1px solid #35353d;border-radius:3px;padding:7px;box-shadow:none}.section-title{font-size:14px;margin-bottom:6px}.section-title span{font-size:9px}.dimensions{display:flex;flex-direction:column;gap:3px}.dim{display:grid;grid-template-columns:27px minmax(0,1fr) minmax(96px,34%);gap:6px;background:#222229;border:1px solid #393941;border-radius:2px;padding:5px;min-height:57px}.tier{height:25px;width:25px;border-radius:2px}.dim-name{font-size:12px}.dim-info{font-size:10px;line-height:1.15}.dim-amount{font-size:10px;line-height:1.15}.dim .buy{grid-column:auto;width:100%;height:100%;min-height:44px;padding:4px 3px;border-radius:2px;font-size:10px;background:#252b3a;border-color:#547db4}.actions{display:none}.bottom{margin-top:10px;font-size:10px}.mobile-bottom-actions{position:fixed;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;left:0;right:0;bottom:0;z-index:50;padding:7px max(7px,env(safe-area-inset-left)) calc(7px + env(safe-area-inset-bottom));background:#111116;border-top:1px solid #41414a;box-shadow:0 -5px 18px #0007}.mobile-bottom-actions button{min-width:0;min-height:42px;padding:5px 2px;border:1px solid #454550;border-radius:3px;background:#292932;color:#f1f1f6;font-size:11px;font-weight:800}.mobile-bottom-actions .mobile-max{background:#234d36;border-color:#43865e}.mobile-bottom-actions .mobile-boost{background:#4b3b20;border-color:#8a6c32}.mobile-bottom-actions button:disabled{opacity:.35}.notice{font-size:10px}}
 /* Tickspeed placed between antimatter stats and dimensions, with a compact inline purchase button */
-.tickspeed-panel{margin:0 0 8px;padding:8px 10px;border-radius:4px;background:#18181e;border-color:#35353d;box-shadow:none}.tickspeed-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.tickspeed-row>div{min-width:0;flex:1}.tickspeed-panel .section-title{margin:0 0 2px;font-size:13px}.tickspeed-panel .section-title span{font-size:10px}.tickspeed-buttons{display:flex;gap:4px;flex:0 0 auto}.tickspeed-buy{flex:0 0 auto;width:auto!important;min-width:66px;min-height:34px!important;padding:5px 8px!important;font-size:10px!important;border-radius:3px!important;white-space:nowrap}
+.tickspeed-panel{margin:0 0 8px;padding:8px 10px;border-radius:4px;background:#18181e;border-color:#35353d;box-shadow:none}.tickspeed-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.tickspeed-row>div{min-width:0;flex:1}.tickspeed-panel .section-title{margin:0 0 2px;font-size:13px}.tickspeed-panel .section-title span{font-size:10px}.tickspeed-buttons{display:flex;gap:4px;flex:0 0 auto}.tickspeed-buy{flex:0 0 auto;width:auto!important;min-width:112px;min-height:34px!important;padding:5px 8px!important;font-size:10px!important;border-radius:3px!important;white-space:nowrap}
+@media(max-width:540px){.tickspeed-buy{min-width:94px!important;padding:5px 6px!important;font-size:10px!important}}
 </style>
 </head>
 <body><main>
@@ -117,7 +118,7 @@ function render(){
   setText(amt,'購入 '+fmt(state.bought[i]));
   const max=state.buyMax?maxAffordable(i):null;
   b.disabled=!open||(state.buyMax?max.count===0:state.matter<c);
-  setText(b,!open?'ロック中':(state.buyMax?(max.count>0?('最大購入 '+fmt(max.count)+'個 · 消費 '+fmt(max.spent)):('最大購入 0個 · 現在の価格 '+fmt(c))):('購入 · '+fmt(c))));
+  setText(b,!open?'ロック中':(max.count>0?('最大購入 ×'+fmt(max.count)+'\n費用 '+fmt(max.spent)):('最大購入 ×0\n価格 '+fmt(c))));
  }
  const n=state.boosts+1,req=boostRequirement(),tier=boostRequirementTier(),can=canBoost();
  $('boostBtn').disabled=!can;
@@ -126,10 +127,10 @@ function render(){
  $('quickTickspeedBtn').disabled=state.matter<tsCost;
  setText($('quickTickspeedBtn'),'Tickspeed · '+fmt(tsCost));
  $('quickMaxAllBtn').disabled=!canBuyAnything();
- setText($('quickBuyModeBtn'),state.buyMax?'最大購入':'1個ずつ購入');
+ setText($('quickBuyModeBtn'),'最大購入');
  $('mobileBoostBtn').disabled=!can;setText($('mobileBoostBtn'),can?'ブースト実行':'ブースト');
  $('mobileTickspeedBtn').disabled=state.matter<tsCost;setText($('mobileTickspeedBtn'),'Tickspeed');
- setText($('mobileBuyModeBtn'),state.buyMax?'最大購入':'購入: 1個');
+ setText($('mobileBuyModeBtn'),'最大購入');
  const effect=n===1?'第1次元の倍率が2倍になります。':(n<=6?'第'+n+'次元以下の倍率が2倍になります。':'全ての次元の倍率が2倍になります。');
  setText($('boostDesc'),'第'+tier+'次元を '+fmt(req)+' 個購入で実行。'+effect+' 現在の累計購入数: '+fmt(state.bought[tier-1])+' 個。');
  setText($('status'),'ゲームは自動保存されます。');
@@ -183,16 +184,16 @@ $('quickMaxAllBtn').onclick=maxAll;
 $('mobileMaxAllBtn').onclick=maxAll;
 $('mobileBoostBtn').onclick=boost;
 $('mobileTickspeedBtn').onclick=()=>$('tickspeedBtn').click();
-$('mobileBuyModeBtn').onclick=()=>$('buyModeBtn').click();
+$('mobileBuyModeBtn').onclick=()=>{state.buyMax=true;render();save();};
 $('quickBoostBtn').onclick=()=>$('boostBtn').click();
 $('quickTickspeedBtn').onclick=()=>$('tickspeedBtn').click();
-$('quickBuyModeBtn').onclick=()=>$('buyModeBtn').click();
+$('quickBuyModeBtn').onclick=()=>{state.buyMax=true;render();save();};
 $('tickspeedBtn').onclick=()=>{const c=tickspeedCost();if(state.matter<c)return;state.matter-=c;state.tickspeed++;render();save();};
 $('tickspeedMaxBtn').onclick=()=>{let guard=0;while(guard<10000){const c=tickspeedCost();if(!Number.isFinite(c)||state.matter<c)break;state.matter-=c;state.tickspeed++;guard++;}render();save();};
-$('buyModeBtn').onclick=()=>{state.buyMax=!state.buyMax;$('buyModeBtn').textContent=state.buyMax?'購入: 最大購入':'購入: 1個ずつ';render();save();};
+$('buyModeBtn').onclick=()=>{state.buyMax=true;render();save();};
 $('saveBtn').onclick=()=>{save();$('status').textContent='セーブしました';};
 $('resetBtn').onclick=()=>{if(confirm('セーブデータを消して最初からやり直しますか？')){localStorage.removeItem('antimatterFirstSteps');state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.buyMax=true;state.tickspeed=0;$('buyModeBtn').textContent='購入: 最大購入';render();save();}};
-load();state.buyMax=true;$('buyModeBtn').textContent='購入: 最大購入';buildRows();render();
+load();state.buyMax=true;$('buyModeBtn').textContent='最大購入';$('quickBuyModeBtn').textContent='最大購入';$('mobileBuyModeBtn').textContent='最大購入';buildRows();render();
 let last=performance.now();
 function tick(now){
  const dt=Math.min(.25,(now-last)/1000);last=now;
@@ -206,51 +207,27 @@ requestAnimationFrame(tick);window.addEventListener('beforeunload',save);
 })();
 </script>
 
+
 <style>
-/* Final requested sizing and spacing */
-.tickspeed-buy{min-width:82px!important;min-height:38px!important;padding:6px 8px!important;font-size:11px!important;white-space:normal!important}
-.dim .buy{min-height:44px!important;height:44px!important;font-size:11px!important;padding:5px 7px!important}
+/* Fixed purchase controls and explicit cost labels */
+.dim{grid-template-columns:27px minmax(0,1fr) 112px!important;align-items:center!important;}
+.dim>div:nth-child(2){display:block!important;min-width:0!important;}
+.dim-name,.dim-info,.dim-amount{display:block!important;grid-column:auto!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dim .buy{grid-column:3!important;width:112px!important;min-width:112px!important;height:44px!important;min-height:44px!important;max-height:44px!important;flex:none!important;display:flex;align-items:center;justify-content:center;text-align:center;white-space:pre-line!important;overflow:hidden;overflow-wrap:anywhere;line-height:1.15;font-size:10px!important;padding:3px!important;}
+.tickspeed-buttons{display:flex!important;flex:0 0 auto;gap:5px!important;}
+.tickspeed-buy{width:92px!important;min-width:92px!important;height:40px!important;min-height:40px!important;max-height:40px!important;white-space:pre-line!important;line-height:1.15!important;font-size:10px!important;padding:3px!important;}
+#buyModeBtn{font-size:12px!important;}
 @media(max-width:540px){
- .tickspeed-buttons{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:5px!important;min-width:150px}
- .tickspeed-buy{min-width:72px!important;min-height:34px!important;font-size:10px!important;padding:4px!important}
- .dim .buy{min-height:40px!important;height:40px!important;font-size:10px!important}
+ main{padding-bottom:76px!important;}
+ .dim{grid-template-columns:23px minmax(0,1fr) 96px!important;gap:4px!important;padding:3px!important;min-height:48px!important;}
+ .dim .buy{grid-column:3!important;width:96px!important;min-width:96px!important;height:40px!important;min-height:40px!important;max-height:40px!important;font-size:9px!important;}
+ .dim-name{font-size:10px!important;}
+ .dim-info,.dim-amount{font-size:9px!important;}
+ .tickspeed-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:5px!important;}
+ .tickspeed-buttons{display:flex!important;gap:3px!important;}
+ .tickspeed-buy{width:76px!important;min-width:76px!important;height:36px!important;min-height:36px!important;max-height:36px!important;font-size:9px!important;}
+ .mobile-bottom-actions button{min-height:36px!important;}
 }
 </style>
+
 </body></html>
-<style>
-/* Compact one-line mobile layout to reduce vertical scrolling */
-@media(max-width:540px){
- .tickspeed-panel{padding:4px 6px;margin-bottom:4px}
- .tickspeed-row{gap:5px}
- .tickspeed-panel .section-title{display:flex;align-items:center;gap:6px;margin:0;font-size:11px;white-space:nowrap}
- .tickspeed-panel .section-title span{font-size:10px;white-space:nowrap}
- #tickspeedDesc{display:none!important}
- .tickspeed-buttons{gap:3px}.tickspeed-buy{min-width:48px!important;min-height:27px!important;padding:3px 5px!important;font-size:9px!important}.dim-info{margin-right:10px!important}
- .panel:has(#dimensions){padding:4px}
- .panel:has(#dimensions)>.section-title{margin:0 0 4px;font-size:12px}
- .dimensions{gap:2px}
- .dim{grid-template-columns:23px minmax(0,1fr) minmax(78px,30%);gap:4px;padding:3px;min-height:0}
- .tier{width:21px;height:21px;font-size:12px}
- .dim-name{display:inline;font-size:10px;line-height:1.15;margin-right:5px}
- .dim-info,.dim-amount{display:inline;font-size:9px;line-height:1.15;margin:0;white-space:nowrap}
- .dim .buy{min-height:30px;height:30px;padding:2px;font-size:9px;line-height:1.1}
- main{padding-bottom:70px}
- .mobile-bottom-actions{padding-top:4px;padding-bottom:calc(4px + env(safe-area-inset-bottom))}
- .mobile-bottom-actions button{min-height:34px;font-size:10px}
-}
-</style>
-<style>
-/* Evenly distribute controls and information across each row */
-@media(max-width:540px){
- .tickspeed-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;justify-content:initial;gap:8px}
- .tickspeed-row>div:first-child{min-width:0}
- .tickspeed-buttons{display:grid;grid-template-columns:repeat(2,minmax(54px,1fr));gap:5px;justify-self:end}
- .tickspeed-buy{width:100%!important;min-width:54px!important;box-sizing:border-box}
- .dim{grid-template-columns:24px minmax(0,1fr) minmax(104px,34%);}
- .dim>div:nth-child(2){display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center;min-width:0}
- .dim-name{grid-column:1;white-space:nowrap;margin-right:0}
- .dim-info{grid-column:2;justify-self:start;margin-right:0!important}
- .dim-amount{grid-column:3;justify-self:end;white-space:nowrap;margin-left:0}
- .dim .buy{grid-column:4;}
-}
-</style>
