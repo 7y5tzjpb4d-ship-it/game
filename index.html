@@ -118,7 +118,7 @@ function render(){
   setText(amt,'購入 '+fmt(state.bought[i]));
   const max=state.buyMax?maxAffordable(i):null;
   b.disabled=!open||(state.buyMax?max.count===0:state.matter<c);
-  setText(b,!open?'ロック中':(max.count>0?('最大購入 ×'+fmt(max.count)+'\n費用 '+fmt(max.spent)):('最大購入 ×0\n価格 '+fmt(c))));
+  setText(b,!open?'ロック中':(max.count>0?('最大購入 ×'+fmt(max.count)+'\nコスト '+fmt(max.spent)):('最大購入 ×0\nコスト '+fmt(c))));
  }
  const n=state.boosts+1,req=boostRequirement(),tier=boostRequirementTier(),can=canBoost();
  $('boostBtn').disabled=!can;
