@@ -87,6 +87,12 @@ const state={matter:10,amount:Array(8).fill(0),bought:Array(8).fill(0),boosts:0,
 const INFINITY=Number.MAX_VALUE;
 function atInfinity(){return state.matter>=INFINITY*0.999;}
 let lastSave=0,lastRender=0, rows=[];
+function fmtMatter(n){
+ if(!Number.isFinite(n))return '∞';
+ if(n<1000)return Math.max(0,n).toFixed(2);
+ const e=Math.floor(Math.log10(n)),m=n/Math.pow(10,e);
+ return m.toFixed(2)+'e'+e;
+}
 function fmt(n){
  if(!Number.isFinite(n))return '∞';
  if(n<=0)return '0';
@@ -140,7 +146,7 @@ function buildRows(){
  }
 }
 function render(){
- setText($('matter'),fmt(state.matter));
+ setText($('matter'),fmtMatter(state.matter));
  setText($('rate'),fmt(productionRate()));
  $('ipStat').style.display=state.infinities>0?'block':'none';
  $('ipStat').parentElement.style.gridTemplateColumns=state.infinities>0?'repeat(3,minmax(0,1fr))':'repeat(2,minmax(0,1fr))';
