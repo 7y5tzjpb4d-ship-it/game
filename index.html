@@ -167,7 +167,7 @@ function render(){
   const {d,det,amt,b}=rows[i],open=unlocked(i),c=cost(i);
   d.className='dim'+(open?'':' locked');
   setText(det,open?'倍率 ×'+fmt(dimensionMult(i)*(i===7?state.sacrificeMult:1)):'ブースト '+(i-3)+' 回で解放');
-  setText(amt,'購入 '+fmt(state.bought[i]));
+  setText(amt,'生成 '+fmt(state.amount[i]));
   const max=state.buyMax?maxAffordable(i):null;
   b.disabled=!open||(state.buyMax?max.count===0:state.matter<c);
   setText(b,!open?'ロック中':(state.buyMax?('購入×'+fmt(max.count)+' コスト'+fmt(max.count>0?max.spent:c)):('購入×1 コスト'+fmt(c))));
