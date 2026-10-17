@@ -220,7 +220,7 @@ function maxAll(){
 }
 function boost(){
  if(!canBoost())return;
- state.boosts++;state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;render();save();
+ state.boosts++;state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;render();save();
 }
 function sacrifice(){
  if(state.boosts<5||state.amount[7]<1||state.amount[0]<=0)return;
@@ -393,4 +393,10 @@ main{padding-bottom:155px!important}
  main{padding-bottom:110px!important;}
 }
 </style>
-</body></html>
+</body></html><style>
+/* Distinct colors for 5th–8th dimensions */
+#dimensions .dim:nth-child(5) .tier{background:#263f48;color:#8ee8f5}
+#dimensions .dim:nth-child(6) .tier{background:#493044;color:#f4a6d7}
+#dimensions .dim:nth-child(7) .tier{background:#3d354f;color:#c6b0ff}
+#dimensions .dim:nth-child(8) .tier{background:#49302a;color:#ffb49b}
+</style>
