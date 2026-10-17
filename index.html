@@ -40,7 +40,6 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 86px;max-width:560px
 </section>
 <div class="quick-actions"><button type="button" id="quickMaxAllBtn" class="quick-maxall">Max All</button><button type="button" id="quickBoostBtn" class="quick-boost">次元ブースト</button><button type="button" id="quickTickspeedBtn">Tickspeed購入</button><button type="button" id="quickBuyModeBtn">購入: 1個ずつ</button></div>
 </div>
-<div class="mobile-reset-actions" aria-label="リセット操作"><button type="button" class="mobile-boost" id="mobileBoostBtn">ブースト</button><button type="button" class="mobile-galaxy" id="mobileGalaxyBtn">Galaxy</button></div>
 <nav class="mobile-bottom-actions" aria-label="クイック操作"><button type="button" class="mobile-max" id="mobileMaxAllBtn">Max All</button><button type="button" id="mobileTickspeedBtn">Tickspeed</button><button type="button" id="mobileBuyModeBtn">最大購入</button><button type="button" id="mobileSaveBtn">セーブ</button></nav>
 <section class="panel tickspeed-panel"><div class="tickspeed-row"><div><h2 class="section-title">Tickspeed <span id="tickspeedMultiplier">倍率 ×1</span></h2><p id="tickspeedDesc" style="color:var(--muted);font-size:11px;margin:0">Tickspeedを上げると全次元の生産速度が上昇します。</p></div><div class="tickspeed-buttons"><button type="button" class="buy tickspeed-buy" id="tickspeedBtn">購入</button><button type="button" class="buy tickspeed-buy" id="tickspeedMaxBtn">Buy Max</button></div></div></section>
 <section class="panel sacrifice-panel" id="sacrificePanel">
@@ -53,6 +52,7 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 86px;max-width:560px
  <h2 class="section-title">次元 <span>購入すると反物質を自動生産</span></h2>
  <div class="dimensions" id="dimensions"></div>
 </section>
+<div class="mobile-reset-actions" aria-label="リセット操作"><button type="button" class="mobile-boost" id="mobileBoostBtn">ブースト</button><button type="button" class="mobile-galaxy" id="mobileGalaxyBtn">Galaxy</button></div>
 <section class="actions">
  <div class="action boost"><h3>次元ブースト</h3><p id="boostDesc">第1次元を20個購入すると実行できます。次元をリセットし、生産倍率を上げます。</p><button type="button" id="boostBtn" disabled>次元ブースト</button></div>
  <div class="action"><h3>購入設定</h3><p>購入方法を切り替えます。まとめ買いで操作を短縮できます。</p><button type="button" id="buyModeBtn">購入: 1個ずつ</button></div>
@@ -164,7 +164,7 @@ function render(){
  setText($('quickTickspeedBtn'),'Tickspeed · '+fmt(tsCost));
  $('quickMaxAllBtn').disabled=!canBuyAnything();
  setText($('quickBuyModeBtn'),'最大購入');
- $('mobileBoostBtn').disabled=!can;setText($('mobileBoostBtn'),'ブースト\n第'+tier+'次元 '+fmt(req)+'個');
+ $('mobileBoostBtn').disabled=!can;setText($('mobileBoostBtn'),'Boost\n第'+tier+'次元 '+fmt(req)+'個');
  $('mobileGalaxyBtn').disabled=!canGalaxy();setText($('mobileGalaxyBtn'),'Galaxy '+state.galaxies+'\n第8次元 '+fmt(galaxyRequirement())+'個');
  $('mobileTickspeedBtn').disabled=state.matter<tsCost;setText($('mobileTickspeedBtn'),'Tickspeed');
  setText($('mobileBuyModeBtn'),'最大購入');
@@ -336,6 +336,16 @@ html { -webkit-text-size-adjust: 100%; }
 main{padding-bottom:155px!important}
 }
 @media(min-width:541px){.mobile-reset-actions{display:none}}
+</style>
+<style id="reset-buttons-under-dimensions">
+@media(max-width:540px){
+ .mobile-reset-actions{position:static!important;left:auto!important;right:auto!important;bottom:auto!important;z-index:auto!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin:8px 0 12px!important;padding:0 4px!important;background:transparent!important;pointer-events:auto!important}
+ .mobile-reset-actions button{pointer-events:auto!important;width:100%!important;height:76px!important;min-height:76px!important}
+ .mobile-reset-actions .mobile-boost{background:#4b1717!important;border-color:#8a3434!important}
+ .mobile-reset-actions .mobile-galaxy{background:#25134f!important;border-color:#4d2b9a!important}
+ main{padding-bottom:86px!important}
+}
+@media(min-width:541px){.mobile-reset-actions{display:none!important}}
 </style>
 </body></html>
 
