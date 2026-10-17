@@ -8,7 +8,7 @@
 :root{color-scheme:dark;--bg:#10131b;--panel:#1b2230;--line:#344156;--text:#eef3ff;--muted:#aab6ca;--blue:#4b91ff;--green:#36c98a;--gold:#e8b84f}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1b2940 0,#10131b 58%);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
 main{max-width:900px;margin:auto;padding:22px 14px 40px}.head{text-align:center;padding:12px 0 20px}.eyebrow{letter-spacing:.18em;color:#80b5ff;font-size:12px;font-weight:800}.head h1{font-size:clamp(27px,5vw,42px);margin:6px 0}.head p{margin:0;color:var(--muted)}
-.sticky-tools{position:sticky;top:0;z-index:20;margin:0 -4px 14px;padding:8px 4px 10px;background:rgba(16,19,27,.94);backdrop-filter:blur(12px);border-bottom:1px solid #344156}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}.quick-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.quick-actions button{min-width:0;border:1px solid var(--line);background:#26354a;color:var(--text);padding:9px 6px;border-radius:9px;font-size:12px;font-weight:750;cursor:pointer}.quick-actions button:disabled{opacity:.38;cursor:not-allowed}.quick-actions .quick-boost{background:#49391e;border-color:#78602e;color:#ffe3a0}.stat,.panel{background:linear-gradient(145deg,#202a3a,#171d29);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 8px 25px #0002}.stat{text-align:center}.stat small{display:block;color:var(--muted);font-size:12px}.stat strong{font-size:clamp(18px,3vw,25px);font-variant-numeric:tabular-nums}.section-title{display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;font-size:18px}.section-title span{font-size:12px;color:var(--muted);font-weight:500}
+.sticky-tools{position:sticky;top:0;z-index:20;margin:0 -4px 14px;padding:8px 4px 10px;background:rgba(16,19,27,.94);backdrop-filter:blur(12px);border-bottom:1px solid #344156}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}.quick-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.quick-actions button{min-width:0;border:1px solid var(--line);background:#26354a;color:var(--text);padding:9px 6px;border-radius:9px;font-size:12px;font-weight:750;cursor:pointer}.quick-actions button:disabled{opacity:.38;cursor:not-allowed}.quick-actions .quick-boost{background:#49391e;border-color:#78602e;color:#ffe3a0}.quick-actions .quick-maxall{background:#214b3b;border-color:#36795e;color:#baffd9}.stat,.panel{background:linear-gradient(145deg,#202a3a,#171d29);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 8px 25px #0002}.stat{text-align:center}.stat small{display:block;color:var(--muted);font-size:12px}.stat strong{font-size:clamp(18px,3vw,25px);font-variant-numeric:tabular-nums}.section-title{display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;font-size:18px}.section-title span{font-size:12px;color:var(--muted);font-weight:500}
 .dimensions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.dim{display:grid;grid-template-columns:34px minmax(0,1fr);gap:7px;align-items:center;background:#171e2a;border:1px solid #2d394b;border-radius:12px;padding:9px;min-width:0}.dim.locked{opacity:.48}.tier{height:32px;width:32px;border-radius:8px;display:grid;place-items:center;background:#263b58;color:#a9d1ff;font-size:17px;font-weight:800}.dim:nth-child(2) .tier{background:#283d36;color:#9af0c5}.dim:nth-child(3) .tier{background:#443a25;color:#ffe09a}.dim:nth-child(4) .tier{background:#402b42;color:#f0b7ff}.dim-name{font-weight:750}.dim-info{color:var(--muted);font-size:12px;margin-top:2px}.dim-amount{font-size:13px;color:#e5edff;margin-top:3px}.buy{min-width:0;border:1px solid #568ee5;background:#244779;color:#fff;padding:8px 6px;border-radius:8px;font-size:12px;line-height:1.25;font-weight:750;cursor:pointer}.dim .buy{grid-column:1/-1;width:100%;min-height:34px;overflow-wrap:anywhere}.buy:hover:not(:disabled){background:#3264a4;filter:none;transform:none;transition:none}.buy:disabled{opacity:.35;cursor:not-allowed}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.action{border-radius:12px;padding:15px;border:1px solid var(--line);background:#202b3c;color:var(--text);text-align:left}.action h3{margin:0 0 4px;font-size:16px}.action p{margin:0;color:var(--muted);font-size:12px}.action button{margin-top:11px;width:100%;padding:11px;border:0;border-radius:8px;font-weight:800;color:#111827;background:var(--gold);cursor:pointer}.action button:disabled{opacity:.35;cursor:not-allowed}.buy,.action button{transition:none;animation:none;backface-visibility:hidden}.boost{border-color:#78602e;background:linear-gradient(145deg,#332c20,#211e1b)}.boost button{background:var(--gold)}.bottom{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:15px;color:var(--muted);font-size:12px}.secondary{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:8px 10px;cursor:pointer}.notice{margin-top:12px;color:#9db0ca;font-size:12px;text-align:center}
 @media(max-width:540px){main{padding:8px 8px 24px}.head{padding:4px 0 10px}.head h1{font-size:23px}.head p{font-size:12px}.sticky-tools{margin:0 -2px 8px;padding:5px 2px 7px}.stats{gap:4px;margin-bottom:6px}.stat{padding:6px 2px;border-radius:9px}.stat small{font-size:9px}.stat strong{font-size:16px}.quick-actions{gap:4px}.quick-actions button{padding:8px 2px;font-size:10px}.section-title{font-size:16px}.section-title span{font-size:10px}.dimensions{gap:6px}.dim{grid-template-columns:26px minmax(0,1fr);gap:5px;padding:7px;border-radius:9px}.tier{height:25px;width:25px;font-size:14px}.dim-name{font-size:12px}.dim-info{font-size:10px;line-height:1.25}.dim-amount{font-size:10px;line-height:1.25}.dim .buy{padding:7px 3px;font-size:10px;min-height:31px}.actions{grid-template-columns:1fr}.bottom{align-items:flex-start}}
 </style>
@@ -21,7 +21,7 @@ main{max-width:900px;margin:auto;padding:22px 14px 40px}.head{text-align:center;
  <div class="stat"><small>毎秒の生産量</small><strong id="rate">0</strong></div>
  <div class="stat"><small>次元ブースト</small><strong id="boostCount">0</strong></div>
 </section>
-<div class="quick-actions"><button type="button" id="quickBoostBtn" class="quick-boost">次元ブースト</button><button type="button" id="quickTickspeedBtn">Tickspeed購入</button><button type="button" id="quickBuyModeBtn">購入: 1個ずつ</button></div>
+<div class="quick-actions"><button type="button" id="quickMaxAllBtn" class="quick-maxall">Max All</button><button type="button" id="quickBoostBtn" class="quick-boost">次元ブースト</button><button type="button" id="quickTickspeedBtn">Tickspeed購入</button><button type="button" id="quickBuyModeBtn">購入: 1個ずつ</button></div>
 </div>
 <section class="panel">
  <h2 class="section-title">次元 <span>購入すると反物質を自動生産</span></h2>
@@ -119,6 +119,7 @@ function render(){
  setText($('quickBoostBtn'),can?'次元ブースト実行':'次元ブースト');
  $('quickTickspeedBtn').disabled=state.matter<tsCost;
  setText($('quickTickspeedBtn'),'Tickspeed · '+fmt(tsCost));
+ $('quickMaxAllBtn').disabled=!canBuyAnything();
  setText($('quickBuyModeBtn'),state.buyMax?'最大購入':'1個ずつ購入');
  const effect=n===1?'第1次元の倍率が2倍になります。':(n<=6?'第'+n+'次元以下の倍率が2倍になります。':'全ての次元の倍率が2倍になります。');
  setText($('boostDesc'),'第'+tier+'次元を '+fmt(req)+' 個購入で実行。'+effect+' 現在の累計購入数: '+fmt(state.bought[tier-1])+' 個。');
@@ -128,6 +129,30 @@ function buy(i){
  if(!unlocked(i))return;
  if(state.buyMax){const max=maxAffordable(i);for(let k=0;k<max.count;k++){const c=cost(i);state.matter-=c;state.amount[i]++;state.bought[i]++;}}
  else{const c=cost(i);if(state.matter<c)return;state.matter-=c;state.amount[i]++;state.bought[i]++;}
+ render();save();
+}
+function canBuyAnything(){
+ if(state.matter>=tickspeedCost())return true;
+ for(let i=0;i<8;i++)if(unlocked(i)&&maxAffordable(i).count>0)return true;
+ return false;
+}
+function maxAll(){
+ // 本家のMax All相当：高次元から順に、購入可能な次元を最大購入し、最後にTickspeedを最大購入。
+ for(let i=7;i>=0;i--){
+  if(!unlocked(i))continue;
+  const max=maxAffordable(i);
+  for(let k=0;k<max.count;k++){
+   const c=cost(i);
+   if(state.matter<c)break;
+   state.matter-=c;state.amount[i]++;state.bought[i]++;
+  }
+ }
+ let guard=0;
+ while(guard<10000){
+  const c=tickspeedCost();
+  if(!(state.matter>=c)||!Number.isFinite(c))break;
+  state.matter-=c;state.tickspeed++;guard++;
+ }
  render();save();
 }
 function boost(){
@@ -145,6 +170,7 @@ function load(){
  }}catch(e){}
 }
 $('boostBtn').onclick=boost;
+$('quickMaxAllBtn').onclick=maxAll;
 $('quickBoostBtn').onclick=()=>$('boostBtn').click();
 $('quickTickspeedBtn').onclick=()=>$('tickspeedBtn').click();
 $('quickBuyModeBtn').onclick=()=>$('buyModeBtn').click();
