@@ -279,7 +279,7 @@ function galaxy(){
  state.sacrificedFirst=0;
  render();save();
 }
-function bigCrunch(){if(!atInfinity())return;state.ip+=1;state.infinities++;state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;render();save();}
+function bigCrunch(){if(!atInfinity())return;state.ip+=1;state.infinities++;state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;switchScreen('main');render();save();}
 function save(){try{localStorage.setItem('antimatterFirstSteps',JSON.stringify({...state,last:Date.now()}));}catch(e){}}
 function load(){
  try{const s=JSON.parse(localStorage.getItem('antimatterFirstSteps'));if(s&&Array.isArray(s.amount)&&s.amount.length===8){
