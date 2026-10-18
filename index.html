@@ -150,7 +150,7 @@ function dimensionBoostMult(i){
  return Math.pow(2, Math.max(state.boosts - i, 0));
 }
 function dimensionMult(i){
- return 1e20*dimensionBoostMult(i)*Math.pow(2,Math.floor(state.bought[i]/10));
+ return dimensionBoostMult(i)*Math.pow(2,Math.floor(state.bought[i]/10));
 }
 // Dimension欄の表示にはdimensionMult()のみを使用。Tickspeedは生産計算にのみ適用する。
 function achievementMultiplier(){
@@ -193,7 +193,7 @@ function render(){
  $('infinityPanel').style.display='none';
  if(infinityReady){document.body.dataset.screen='infinity';$('screenTabs').style.display='none';$('tabContent').hidden=false;$('tabContent').innerHTML='<h2>Infinity</h2><p>反物質がInfinityに到達しました。</p><p>Infinity Point: '+fmt(state.ip)+' · Infinities: '+fmt(state.infinities)+'</p><button type="button" class="big-crunch-btn" id="tabCrunchBtn">Big Crunch (+1 IP)</button>';$('tabCrunchBtn').onclick=bigCrunch;}else{$('screenTabs').style.display='';}
  setText($('ipCount'),fmt(state.ip));setText($('infinityCount'),fmt(state.infinities));
- setText($('tickspeedMultiplier'),'購入 '+fmt(state.tickspeed)+'回 · 倍率 ×'+fmt(tickspeedMult()));
+ setText($('tickspeedMultiplier'),'購入 '+fmt(state.tickspeed)+'回 · 倍率 ×'+tickspeedMult().toFixed(3));
  setText($('tickspeedDesc'),'');
  const sacrificeUnlocked=state.boosts>=5;
  $('sacrificeBtn').disabled=!sacrificeUnlocked||state.amount[7]<1||state.amount[0]<=0||sacrificeGain()<1.01;
