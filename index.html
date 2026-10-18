@@ -222,7 +222,10 @@ function maxAll(){
  for(let i=7;i>=0;i--){
   if(!unlocked(i))continue;
   const max=maxAffordable(i);
-  for(let k=0;k<max.count;k++){
+  // Max Allは購入後の累計購入数が10の倍数になる範囲で最大購入する。
+  const targetBought=Math.floor((state.bought[i]+max.count)/10)*10;
+  const buyCount=Math.max(0,targetBought-state.bought[i]);
+  for(let k=0;k<buyCount;k++){
    const c=cost(i);
    if(state.matter<c)break;
    state.matter-=c;state.amount[i]++;state.bought[i]++;
