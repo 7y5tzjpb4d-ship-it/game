@@ -46,6 +46,16 @@ body.crunch-ready main > .notice{display:none!important;}
 body.crunch-ready .sticky-tools{margin:0!important;padding:0!important;border:0!important;}
 body.crunch-ready .infinity-panel{display:block!important;margin:20vh auto 0!important;max-width:520px!important;padding:24px!important;}
 </style>
+
+<script>
+// 縦向き固定をサポートする環境では縦向きを要求する（ブラウザの制限により拒否される場合あり）。
+async function requestPortraitOrientation(){
+  try { if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('portrait'); } catch (_) {}
+}
+window.addEventListener('load', requestPortraitOrientation);
+document.addEventListener('click', requestPortraitOrientation, {once:true});
+</script>
+
 </head>
 <body><main>
 <div class="sticky-tools">
@@ -172,8 +182,8 @@ function render(){
  for(let i=0;i<8;i++){
   const {d,det,amt,b}=rows[i],open=unlocked(i),c=cost(i);
   d.className='dim'+(open?'':' locked');
-  setText(det,open?'倍率 ×'+fmt(dimensionMult(i)*(i===7?state.sacrificeMult:1)):'ブースト '+(i-3)+' 回で解放');
-  setText(amt,'生成 '+fmt(state.amount[i]));
+  setText(det,open?'×'+fmt(dimensionMult(i)*(i===7?state.sacrificeMult:1)):'ブースト '+(i-3)+' 回で解放');
+  setText(amt,fmt(state.amount[i]));
   const max=state.buyMax?maxAffordable(i):null;
   b.disabled=!open||(state.buyMax?max.count===0:state.matter<c);
   setText(b,!open?'ロック中':(state.buyMax?('購入×'+fmt(max.count)+' コスト'+fmt(max.count>0?max.spent:c)):('購入×1 コスト'+fmt(c))));
