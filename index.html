@@ -111,10 +111,10 @@ function fmt(n){
  return Number(m.toPrecision(3))+'e'+e;
 }
 function cost(i){return baseCosts[i]*Math.pow(costGrowth[i],Math.floor(state.bought[i]/10));}
-function maxAffordable(i){
+function maxAffordable(i, limitToNextTen=true){
  let matter=state.matter, bought=state.bought[i], count=0, spent=0, c=cost(i);
- // 最大購入は、現在の購入数から次の10個単位の区切りまでに制限する。
- const limit = 10 - (bought % 10);
+ // 通常の最大購入は次の10個単位まで。Max Allでは購入可能数全体を計算する。
+ const limit = limitToNextTen ? 10 - (bought % 10) : Infinity;
  while(count<limit && matter>=c && Number.isFinite(c)){
   matter-=c; spent+=c; count++; bought++;
   c=baseCosts[i]*Math.pow(costGrowth[i],Math.floor(bought/10));
@@ -221,8 +221,8 @@ function maxAll(){
  // 本家のMax All相当：高次元から順に、購入可能な次元を最大購入し、最後にTickspeedを最大購入。
  for(let i=7;i>=0;i--){
   if(!unlocked(i))continue;
-  const max=maxAffordable(i);
-  // Max Allは購入後の累計購入数が10の倍数になる範囲で最大購入する。
+  const max=maxAffordable(i,false);
+  // Max Allは購入可能数全体から、累計購入数が10の倍数になる最大数を選ぶ。
   const targetBought=Math.floor((state.bought[i]+max.count)/10)*10;
   const buyCount=Math.max(0,targetBought-state.bought[i]);
   for(let k=0;k<buyCount;k++){
