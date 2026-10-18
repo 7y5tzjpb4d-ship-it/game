@@ -236,7 +236,7 @@ function render(){
  setText($('quickBuyModeBtn'),'最大購入');
  $('mobileBoostBtn').disabled=!can;setText($('mobileBoostBtn'),'Dimension Boost '+fmt(state.boosts)+'\n第'+tier+'次元 '+fmt(req)+'個');
  $('mobileGalaxyBtn').disabled=!canGalaxy();setText($('mobileGalaxyBtn'),'Antimatter Galaxy '+state.galaxies+'\n第8次元 '+fmt(galaxyRequirement())+'個');
- $('mobileTickspeedBtn').disabled=state.matter<tsCost;setText($('mobileTickspeedBtn'),'Tickspeed');
+ $('mobileTickspeedBtn').disabled=false;setText($('mobileTickspeedBtn'),state.buyMax?'購入: 最大個':'購入: 1個ずつ');
  setText($('mobileBuyModeBtn'),'最大購入');
  const effect=n===1?'第1次元の倍率が2倍になります。':(n<=6?'第'+n+'次元以下の倍率が2倍になります。':'全ての次元の倍率が2倍になります。');
  setText($('boostDesc'),'条件：第'+tier+'次元を '+fmt(req)+' 個購入（現在 '+fmt(state.bought[tier-1])+' 個）。'+effect);
@@ -337,7 +337,7 @@ $('mobileMaxAllBtn').onclick=maxAll;
 $('mobileBoostBtn').onclick=boost;
 $('mobileGalaxyBtn').onclick=galaxy;
 $('mobileSaveBtn').onclick=()=>$('resetBtn').click();
-$('mobileTickspeedBtn').onclick=()=>$('tickspeedBtn').click();
+$('mobileTickspeedBtn').onclick=()=>{state.buyMax=!state.buyMax;render();save();};
 $('mobileBuyModeBtn').onclick=()=>{state.buyMax=true;render();save();};
 $('quickBoostBtn').onclick=()=>$('boostBtn').click();
 $('quickTickspeedBtn').onclick=()=>{state.buyMax=!state.buyMax;render();save();};
