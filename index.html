@@ -151,7 +151,9 @@ function dimensionBoostMult(i){
  return Math.pow(2, Math.max(state.boosts - i, 0));
 }
 function dimensionMult(i){
- return dimensionBoostMult(i)*Math.pow(2,Math.floor(state.bought[i]/10))*(i===0&&state.achievements[15]?1.1:1)*(i===7&&state.achievements[10]?1.1:1);
+ // テスト用: 全次元に×1e10の倍率を付与
+ const testMultiplier = 1e10;
+ return testMultiplier*dimensionBoostMult(i)*Math.pow(2,Math.floor(state.bought[i]/10))*(i===0&&state.achievements[15]?1.1:1)*(i===7&&state.achievements[10]?1.1:1);
 }
 // Dimension欄の表示にはdimensionMult()のみを使用。Tickspeedは生産計算にのみ適用する。
 function achievementMultiplier(){
