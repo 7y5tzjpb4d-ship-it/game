@@ -47,7 +47,8 @@ body[data-screen="main"] #tabContent{display:none!important}
 body.crunch-ready main{padding-bottom:12px!important;}
 body.crunch-ready main > *{display:none!important;}
 body.crunch-ready .infinity-panel{display:block!important;}
-body.crunch-ready #tabContent,body.crunch-ready .screen-tabs{display:none!important;}
+body.crunch-ready #tabContent{display:block!important;}
+body.crunch-ready .screen-tabs{display:flex!important;}
 body.crunch-ready .sticky-tools .stats,
 body.crunch-ready .quick-actions,
 body.crunch-ready main > .mobile-bottom-actions,
@@ -59,7 +60,8 @@ body.crunch-ready main > .actions,
 body.crunch-ready main > .bottom,
 body.crunch-ready main > .notice{display:none!important;}
 body.crunch-ready .sticky-tools{margin:0!important;padding:0!important;border:0!important;}
-body.crunch-ready .infinity-panel{display:block!important;margin:20vh auto 0!important;max-width:520px!important;padding:24px!important;}
+body.crunch-ready .infinity-panel{display:none!important;}
+body.crunch-ready #tabContent{margin-top:8px!important;}
 </style>
 
 <script>
@@ -181,9 +183,9 @@ function render(){
  $('ipStat').parentElement.style.gridTemplateColumns=state.infinities>0?'repeat(3,minmax(0,1fr))':'repeat(2,minmax(0,1fr))';
  setText($('topIpCount'),fmt(state.ip));
  const infinityReady=atInfinity();
- $('screenTabs').style.display=infinityReady?'none':'';
  document.body.classList.toggle('crunch-ready',infinityReady);
- $('infinityPanel').style.display=infinityReady?'block':'none';
+ $('infinityPanel').style.display='none';
+ if(infinityReady){document.body.dataset.screen='infinity';document.querySelectorAll('.screen-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen==='infinity'));$('screenTabs').style.display='';$('tabContent').hidden=false;$('tabContent').innerHTML='<h2>Infinity</h2><p>反物質がInfinityに到達しました。</p><p>Infinity Point: '+fmt(state.ip)+' · Infinities: '+fmt(state.infinities)+'</p><button type="button" class="big-crunch-btn" id="tabCrunchBtn">Big Crunch (+1 IP)</button>';$('tabCrunchBtn').onclick=bigCrunch;}else{$('screenTabs').style.display='';}
  setText($('ipCount'),fmt(state.ip));setText($('infinityCount'),fmt(state.infinities));
  setText($('tickspeedMultiplier'),'購入 '+fmt(state.tickspeed)+'回 · 倍率 ×'+fmt(tickspeedMult()));
  setText($('tickspeedDesc'),'');
