@@ -113,7 +113,7 @@ const baseCosts=[10,100,1e3,1e6,1e9,1e13,1e18,1e24];
 const unlockAt=[0,0,0,0,0,0,0,0];
 const costGrowth=[1e3,1e4,1e5,1e6,1e8,1e10,1e12,1e15];
 const TICKSPEED_BASE_COST=1e3;
-const state={matter:10,amount:Array(8).fill(0),bought:Array(8).fill(0),boosts:0,galaxies:0,buyMax:true,tickspeed:0,sacrificeMult:1,sacrificedFirst:0,ip:0,infinities:0,last:Date.now()};
+const state={matter:10,amount:Array(8).fill(0),bought:Array(8).fill(0),boosts:0,galaxies:0,buyMax:true,tickspeed:0,sacrificeMult:1,sacrificedFirst:0,ip:0,infinities:0,achievements:Array(8).fill(false),last:Date.now()};
 const INFINITY=Number.MAX_VALUE;
 function atInfinity(){return state.matter>=INFINITY*0.999;}
 let lastSave=0,lastRender=0, rows=[];
@@ -231,6 +231,7 @@ function buy(i){
  if(!unlocked(i))return;
  if(state.buyMax){const max=maxAffordable(i);for(let k=0;k<max.count;k++){const c=cost(i);state.matter-=c;state.amount[i]++;state.bought[i]++;}}
  else{const c=cost(i);if(state.matter<c)return;state.matter-=c;state.amount[i]++;state.bought[i]++;}
+ if(i>=0&&state.bought[i]>0)state.achievements[i]=true;
  render();save();
 }
 function canBuyAnything(){
@@ -251,6 +252,7 @@ function maxAll(){
    if(state.matter<c)break;
    state.matter-=c;state.amount[i]++;state.bought[i]++;
   }
+  if(buyCount>0)state.achievements[i]=true;
  }
  let guard=0;
  while(guard<10000){
@@ -292,7 +294,7 @@ function load(){
   state.matter=Math.max(0,Number.isFinite(Number(s.matter))?Number(s.matter):10);state.amount=s.amount.map(x=>Math.max(0,Number(x)||0));
   if(Array.isArray(s.bought)&&s.bought.length===8)state.bought=s.bought.map(x=>Math.max(0,Number(x)||0));
   state.boosts=Math.max(0,Number(s.boosts)||0);state.galaxies=Math.max(0,Math.floor(Number(s.galaxies)||0));state.buyMax=true;state.tickspeed=Math.max(0,Math.floor(Number(s.tickspeed)||0));
-  state.sacrificeMult=Math.max(1,Number(s.sacrificeMult)||1);state.sacrificedFirst=Math.max(0,Number(s.sacrificedFirst)||0);state.ip=Math.max(0,Number(s.ip)||0);state.infinities=Math.max(0,Math.floor(Number(s.infinities)||0));
+  state.sacrificeMult=Math.max(1,Number(s.sacrificeMult)||1);state.sacrificedFirst=Math.max(0,Number(s.sacrificedFirst)||0);state.ip=Math.max(0,Number(s.ip)||0);state.infinities=Math.max(0,Math.floor(Number(s.infinities)||0));state.achievements=Array.isArray(s.achievements)&&s.achievements.length===8?s.achievements.map(Boolean):Array(8).fill(false);
   const savedAt=Number(s.last);const elapsed=Math.min(3600,Math.max(0,(Date.now()-(Number.isFinite(savedAt)&&savedAt>0?savedAt:Date.now()))/1000));
   // オフライン中も通常進行と同じ順序で各次元を生産させる。
   let remaining=elapsed;
@@ -327,7 +329,7 @@ $('buyModeBtn').onclick=()=>{state.buyMax=true;render();save();};
 $('saveBtn').onclick=()=>{save();$('status').textContent='セーブしました';};
 $('resetBtn').onclick=()=>{if(confirm('セーブデータを消して最初からやり直しますか？')){localStorage.removeItem('antimatterFirstSteps');state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.buyMax=true;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.ip=0;state.infinities=0;$('buyModeBtn').textContent='購入: 最大購入';render();save();}};
 const tabContent=$('tabContent');
-const tabViews={infinity:()=>`<h2>Infinity</h2><p>反物質がInfinityに到達しました。</p><p>Infinity Point: ${fmt(state.ip)} · Infinities: ${fmt(state.infinities)}</p><button type="button" class="big-crunch-btn" id="tabCrunchBtn">Big Crunch (+1 IP)</button>`,achievements:()=>`<h2>実績</h2><p>実績 11–18：各ティアのAntimatter Dimensionを購入すると解除</p><div class="achievement-grid">${[{id:11,name:'You gotta start somewhere',desc:'Buy a 1st Antimatter Dimension.'},{id:12,name:'100 antimatter is a lot',desc:'Buy a 2nd Antimatter Dimension.'},{id:13,name:'Half life 3 CONFIRMED',desc:'Buy a 3rd Antimatter Dimension.'},{id:14,name:'L4D: Left 4 Dimensions',desc:'Buy a 4th Antimatter Dimension.'},{id:15,name:'5 Dimension Antimatter Punch',desc:'Buy a 5th Antimatter Dimension.'},{id:16,name:"We couldn't afford 9",desc:'Buy a 6th Antimatter Dimension.'},{id:17,name:'Not a luck related achievement',desc:'Buy a 7th Antimatter Dimension.'},{id:18,name:'90 degrees to infinity',desc:'Buy an 8th Antimatter Dimension.'}].map(a=>`<div class="achievement-tile ${state.bought[a.id-11]>0?'unlocked':''}" data-achievement-id="${a.id}" data-achievement-name="${a.name}" data-achievement-desc="${a.desc}"><div class="achievement-id">${a.id}</div><div class="achievement-name">${a.name}</div></div>`).join('')}</div>`,statistics:()=>`<h2>統計</h2><p>反物質: ${fmtMatter(state.matter)}</p><p>Infinity Point: ${fmt(state.ip)}</p><p>Infinity回数: ${fmt(state.infinities)}</p><p>Dimension Boost: ${fmt(state.boosts)} / Galaxy: ${fmt(state.galaxies)}</p>`,options:()=>`<h2>設定</h2><button type="button" class="secondary" id="tabSaveBtn">セーブ</button> <button type="button" class="secondary" id="tabResetBtn">最初からやり直す</button>`};
+const tabViews={infinity:()=>`<h2>Infinity</h2><p>反物質がInfinityに到達しました。</p><p>Infinity Point: ${fmt(state.ip)} · Infinities: ${fmt(state.infinities)}</p><button type="button" class="big-crunch-btn" id="tabCrunchBtn">Big Crunch (+1 IP)</button>`,achievements:()=>`<h2>実績</h2><p>実績 11–18：各ティアのAntimatter Dimensionを購入すると解除</p><div class="achievement-grid">${[{id:11,name:'You gotta start somewhere',desc:'Buy a 1st Antimatter Dimension.'},{id:12,name:'100 antimatter is a lot',desc:'Buy a 2nd Antimatter Dimension.'},{id:13,name:'Half life 3 CONFIRMED',desc:'Buy a 3rd Antimatter Dimension.'},{id:14,name:'L4D: Left 4 Dimensions',desc:'Buy a 4th Antimatter Dimension.'},{id:15,name:'5 Dimension Antimatter Punch',desc:'Buy a 5th Antimatter Dimension.'},{id:16,name:"We couldn't afford 9",desc:'Buy a 6th Antimatter Dimension.'},{id:17,name:'Not a luck related achievement',desc:'Buy a 7th Antimatter Dimension.'},{id:18,name:'90 degrees to infinity',desc:'Buy an 8th Antimatter Dimension.'}].map(a=>`<div class="achievement-tile ${state.achievements[a.id-11]?'unlocked':''}" data-achievement-id="${a.id}" data-achievement-name="${a.name}" data-achievement-desc="${a.desc}"><div class="achievement-id">${a.id}</div><div class="achievement-name">${a.name}</div></div>`).join('')}</div>`,statistics:()=>`<h2>統計</h2><p>反物質: ${fmtMatter(state.matter)}</p><p>Infinity Point: ${fmt(state.ip)}</p><p>Infinity回数: ${fmt(state.infinities)}</p><p>Dimension Boost: ${fmt(state.boosts)} / Galaxy: ${fmt(state.galaxies)}</p>`,options:()=>`<h2>設定</h2><button type="button" class="secondary" id="tabSaveBtn">セーブ</button> <button type="button" class="secondary" id="tabResetBtn">最初からやり直す</button>`};
 function switchScreen(name){document.body.dataset.screen=name;document.querySelectorAll('.screen-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));if(name!=='main'){tabContent.innerHTML=tabViews[name]();tabContent.querySelectorAll('.achievement-tile').forEach(tile=>tile.addEventListener('click',()=>{const modal=document.createElement('div');modal.className='achievement-modal';modal.innerHTML=`<div class="achievement-modal-box"><h3>${tile.dataset.achievementId}. ${tile.dataset.achievementName}</h3><p>${tile.dataset.achievementDesc}</p><button type="button">閉じる</button></div>`;modal.addEventListener('click',e=>{if(e.target===modal||e.target.tagName==='BUTTON')modal.remove();});document.body.appendChild(modal);}));const c=$('tabCrunchBtn');if(c)c.onclick=bigCrunch;const sv=$('tabSaveBtn');if(sv)sv.onclick=()=>$('saveBtn').click();const rs=$('tabResetBtn');if(rs)rs.onclick=()=>$('resetBtn').click();}}
 document.querySelectorAll('.screen-tabs button').forEach(b=>b.addEventListener('click',()=>switchScreen(b.dataset.screen)));
 load();
