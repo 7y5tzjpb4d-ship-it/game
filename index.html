@@ -113,7 +113,9 @@ function fmt(n){
 function cost(i){return baseCosts[i]*Math.pow(costGrowth[i],Math.floor(state.bought[i]/10));}
 function maxAffordable(i){
  let matter=state.matter, bought=state.bought[i], count=0, spent=0, c=cost(i);
- while(count<10000 && matter>=c && Number.isFinite(c)){
+ // 最大購入は、現在の購入数から次の10個単位の区切りまでに制限する。
+ const limit = 10 - (bought % 10);
+ while(count<limit && matter>=c && Number.isFinite(c)){
   matter-=c; spent+=c; count++; bought++;
   c=baseCosts[i]*Math.pow(costGrowth[i],Math.floor(bought/10));
  }
