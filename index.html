@@ -182,7 +182,7 @@ function render(){
  for(let i=0;i<8;i++){
   const {d,det,amt,b}=rows[i],open=unlocked(i),c=cost(i);
   d.className='dim'+(open?'':' locked');
-  setText(det,open?'×'+fmt(dimensionMult(i)*(i===7?state.sacrificeMult:1)):'ブースト '+(i-3)+' 回で解放');
+  setText(det,open?'×'+fmt(dimensionMult(i)*(i===7?state.sacrificeMult:1)):'ブースト '+(i-3)+' 回');
   setText(amt,fmt(state.amount[i]));
   const max=state.buyMax?maxAffordable(i):null;
   b.disabled=!open||(state.buyMax?max.count===0:state.matter<c);
