@@ -158,7 +158,7 @@ function dimensionBoostMult(i){
  return Math.pow(2, Math.max(state.boosts - i, 0));
 }
 function dimensionMult(i){
- return dimensionBoostMult(i)*Math.pow(2,Math.floor(state.bought[i]/10))*(i===0&&state.achievements[15]?1.1:1)*(i===7&&state.achievements[10]?1.1:1);
+ return 1e10*dimensionBoostMult(i)*Math.pow(2,Math.floor(state.bought[i]/10))*(i===0&&state.achievements[15]?1.1:1)*(i===7&&state.achievements[10]?1.1:1);
 }
 // Dimension欄の表示にはdimensionMult()のみを使用。Tickspeedは生産計算にのみ適用する。
 function achievementMultiplier(){
@@ -313,7 +313,7 @@ function galaxy(){
  state.sacrificedFirst=0;
  render();save();
 }
-function bigCrunch(){if(!atInfinity())return;state.ip+=1;state.infinities++;state.achievements[8]=true;state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;switchScreen('main');render();save();}
+function bigCrunch(){if(!atInfinity())return;state.ip+=1;state.infinities++;state.achievements[8]=true;state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;switchScreen('main');render();save();}
 function applyOfflineProgress(seconds){
  let remaining=Math.min(3600,Math.max(0,seconds));
  while(remaining>0){
@@ -366,7 +366,7 @@ load();
 state.buyMax=true;$('buyModeBtn').textContent='最大購入';$('quickBuyModeBtn').textContent='最大購入';$('mobileBuyModeBtn').textContent='最大購入';buildRows();render();
 let last=performance.now();
 const achievementNames={11:'You gotta start somewhere',12:'100 antimatter is a lot',13:'Half life 3 CONFIRMED',14:'L4D: Left 4 Dimensions',15:'5 Dimension Antimatter Punch',16:"We couldn't afford 9",17:'Not a luck related achievement',18:'90 degrees to infinity',21:'To Infinity!',22:'Boosting the boost',23:'The 9th Dimension is a lie',24:'Antimatter Apocalypse',25:'Boosting to the max',26:'You got past The Big Wall',27:'Double Galaxy',28:"There's no point in doing that..."};
-const achievementDescs={11:'第1次元を購入する。',12:'第2次元を購入する。',13:'第3次元を購入する。',14:'第4次元を購入する。',15:'第5次元を購入する。',16:'第6次元を購入する。',17:'第7次元を購入する。',18:'第8次元を購入する。',21:'Big Crunchを実行する。',22:'Dimension Boostを初めて購入する。',23:'第8次元をちょうど99個所持する。',24:'反物質を1e80以上にする。',25:'Dimension Boostを10回購入する。',26:'Antimatter Galaxyを購入する。',27:'Antimatter Galaxyを2個購入する。',28:'第1次元を1e150個以上所持した状態で、さらに1個購入する。'};
+const achievementDescs={11:'第1次元を購入する。',12:'第2次元を購入する。',13:'第3次元を購入する。',14:'第4次元を購入する。',15:'第5次元を購入する。',16:'第6次元を購入する。',17:'第7次元を購入する。',18:'第8次元を購入する。',21:'Big Crunchを実行する。報酬：Infinity後、反物質100から開始。',22:'Dimension Boostを初めて購入する。',23:'第8次元をちょうど99個所持する。',24:'反物質を1e80以上にする。',25:'Dimension Boostを10回購入する。',26:'Antimatter Galaxyを購入する。',27:'Antimatter Galaxyを2個購入する。',28:'第1次元を1e150個以上所持した状態で、さらに1個購入する。'};
 let observedAchievements=state.achievements.slice();
 function showAchievementToast(id){
  let container=document.querySelector('.achievement-toast-container');if(!container){container=document.createElement('div');container.className='achievement-toast-container';container.setAttribute('aria-live','polite');document.body.appendChild(container);}
