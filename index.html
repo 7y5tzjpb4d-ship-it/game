@@ -131,6 +131,13 @@ function fmt(n){
  const e=Math.floor(Math.log10(n)),m=n/Math.pow(10,e);
  return Number(m.toPrecision(3))+'e'+e;
 }
+function fmtFixed(n,digits){
+ if(!Number.isFinite(n))return '∞';
+ if(n<=0)return (0).toFixed(digits);
+ if(n<1000)return n.toFixed(digits);
+ const e=Math.floor(Math.log10(n)),m=n/Math.pow(10,e);
+ return m.toFixed(digits)+'e'+e;
+}
 function cost(i){return baseCosts[i]*Math.pow(costGrowth[i],Math.floor(state.bought[i]/10));}
 function maxAffordable(i, limitToNextTen=true){
  let matter=state.matter, bought=state.bought[i], count=0, spent=0, c=cost(i);
@@ -194,7 +201,7 @@ function buildRows(){
 }
 function render(){
  setText($('matter'),fmtMatter(state.matter));
- setText($('rate'),fmt(productionRate()));
+ setText($('rate'),fmtFixed(productionRate(),2));
  $('ipStat').style.display=state.infinities>0?'block':'none';
  $('ipStat').parentElement.style.gridTemplateColumns=state.infinities>0?'repeat(3,minmax(0,1fr))':'repeat(2,minmax(0,1fr))';
  setText($('topIpCount'),fmt(state.ip));
@@ -207,7 +214,7 @@ function render(){
  setText($('tickspeedDesc'),'');
  const sacrificeUnlocked=state.boosts>=5;
  $('sacrificeBtn').disabled=!sacrificeUnlocked||state.amount[7]<1||state.amount[0]<=0||sacrificeGain()<1.01;
- setText($('sacrificeMultiplier'),'倍率 ×'+fmt(state.sacrificeMult));
+ setText($('sacrificeMultiplier'),'倍率 ×'+fmtFixed(state.sacrificeMult,2));
  $('sacrificePanel').style.opacity=sacrificeUnlocked?'1':'.65';
  const gain=sacrificeGain();
  setText($('sacrificeBtn'),$('sacrificeBtn').disabled?'ロック中':'Sacrifice ×'+gain.toFixed(2));
@@ -220,8 +227,8 @@ function render(){
  for(let i=0;i<8;i++){
   const {d,det,amt,b}=rows[i],open=unlocked(i),c=cost(i);
   d.className='dim'+(open?'':' locked');
-  setText(det,open?'×'+fmt(dimensionMult(i)*(i===7?state.sacrificeMult:1)*achievementMultiplier()):'ブースト '+(i-3)+' 回');
-  setText(amt,fmt(state.amount[i]));
+  setText(det,open?'×'+fmtFixed(dimensionMult(i)*(i===7?state.sacrificeMult:1)*achievementMultiplier(),2):'ブースト '+(i-3)+' 回');
+  setText(amt,fmtFixed(state.amount[i],2));
   const max=state.buyMax?maxAffordable(i):null;
   b.disabled=!open||(state.buyMax?max.count===0:state.matter<c);
   setText(b,!open?'ロック中':(state.buyMax?('購入×'+fmt(max.count)+' コスト'+fmt(max.count>0?max.spent:c)):('購入×1 コスト'+fmt(c))));
