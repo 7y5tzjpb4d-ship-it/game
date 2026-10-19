@@ -121,6 +121,8 @@ const state={matter:10,amount:Array(8).fill(0),bought:Array(8).fill(0),boosts:0,
 const INFINITY=Number.MAX_VALUE;
 function atInfinity(){return state.matter>=INFINITY*0.999;}
 let lastSave=0,lastRender=0, rows=[];
+const autobuyerElapsed=Array(9).fill(0);
+const autobuyerIntervals=[0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,0.5];
 let previousDimAutobuyerUnlocks=Array(8).fill(false);
 let autobuyerUnlockAlert=false;
 function dimAutobuyerUnlocked(i){return state.matter>=Math.pow(10,40+i*10);}
@@ -383,10 +385,37 @@ function showAchievementToast(id){
  const toast=document.createElement('div');toast.className='achievement-toast';const title=document.createElement('div');title.className='achievement-toast-title';title.textContent='Achievement Unlocked!';const name=document.createElement('div');name.className='achievement-toast-name';name.textContent=achievementNames[id]||('Achievement '+id);const desc=document.createElement('div');desc.className='achievement-toast-desc';desc.textContent=achievementDescs[id]||'';toast.append(title,name,desc);container.appendChild(toast);setTimeout(()=>{toast.style.transition='opacity .25s, transform .25s';toast.style.opacity='0';toast.style.transform='translateX(20px)';setTimeout(()=>toast.remove(),300);},4000);
 }
 function notifyNewAchievements(){state.achievements.forEach((unlocked,i)=>{if(unlocked&&!observedAchievements[i])showAchievementToast(i<8?i+11:i+13);});observedAchievements=state.achievements.slice();}
+function runAutobuyers(dt){
+ let changed=false;
+ for(let i=0;i<8;i++){
+  if(!state.autobuyers.dims[i]||!dimAutobuyerUnlocked(i)||!unlocked(i))continue;
+  autobuyerElapsed[i]+=dt;
+  if(autobuyerElapsed[i]+1e-9<autobuyerIntervals[i])continue;
+  autobuyerElapsed[i]%=autobuyerIntervals[i];
+  const mode=state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10';
+  const limit=mode==='1'?1:10-(state.bought[i]%10);
+  let boughtNow=0;
+  while(boughtNow<limit){
+   const c=cost(i);if(!Number.isFinite(c)||state.matter<c)break;
+   state.matter-=c;state.amount[i]++;state.bought[i]++;boughtNow++;
+  }
+  if(boughtNow){state.achievements[i]=true;if(i===0&&state.amount[0]>=1e150)state.achievements[15]=true;changed=true;}
+ }
+ if(state.autobuyers.tickspeed&&state.matter>=1e140){
+  autobuyerElapsed[8]+=dt;
+  if(autobuyerElapsed[8]+1e-9>=autobuyerIntervals[8]){
+   autobuyerElapsed[8]%=autobuyerIntervals[8];const c=tickspeedCost();
+   if(Number.isFinite(c)&&state.matter>=c){state.matter-=c;state.tickspeed++;changed=true;}
+  }
+ }
+ if(changed)checkAchievements();
+ return changed;
+}
 function tick(now){
  const dt=Math.min(.25,(now-last)/1000);last=now;
  for(let i=7;i>=1;i--){const v=state.amount[i-1]+state.amount[i]*productionMult(i)*0.1*dt;state.amount[i-1]=Number.isFinite(v)?Math.min(v,INFINITY):INFINITY;}
- const matterNext=state.matter+productionRate()*dt;state.matter=Number.isFinite(matterNext)?Math.min(matterNext,INFINITY):INFINITY;checkAchievements();notifyNewAchievements();
+ const matterNext=state.matter+productionRate()*dt;state.matter=Number.isFinite(matterNext)?Math.min(matterNext,INFINITY):INFINITY;
+ runAutobuyers(dt);checkAchievements();notifyNewAchievements();
  if(now-lastRender>=1000/60){render();lastRender=now;}
  if(now-lastSave>5000){save();lastSave=now;}
  requestAnimationFrame(tick);
