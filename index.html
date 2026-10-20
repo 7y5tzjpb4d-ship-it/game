@@ -43,7 +43,7 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 140px;max-width:560p
 body[data-screen="autobuyers"] main > :not(.sticky-tools):not(.mobile-bottom-actions):not(.screen-tabs):not(#tabContent),body[data-screen="infinity"] main > :not(.sticky-tools):not(.mobile-bottom-actions):not(.screen-tabs):not(#tabContent),body[data-screen="achievements"] main > :not(.sticky-tools):not(.mobile-bottom-actions):not(.screen-tabs):not(#tabContent),body[data-screen="statistics"] main > :not(.sticky-tools):not(.mobile-bottom-actions):not(.screen-tabs):not(#tabContent),body[data-screen="options"] main > :not(.sticky-tools):not(.mobile-bottom-actions):not(.screen-tabs):not(#tabContent){display:none!important}
 body[data-screen="autobuyers"] .sticky-tools .stats,body[data-screen="autobuyers"] .infinity-panel,body[data-screen="autobuyers"] .sticky-tools .quick-actions{display:none!important}
 body[data-screen="infinity"] .sticky-tools .stats,body[data-screen="achievements"] .sticky-tools .stats,body[data-screen="statistics"] .sticky-tools .stats,body[data-screen="options"] .sticky-tools .stats{display:none!important}
-body[data-screen="infinity"] .infinity-panel{display:block!important}
+body[data-screen="infinity"] .infinity-panel{display:none!important}
 body[data-screen]:not([data-screen="main"]) #tabContent{display:block!important}
 body[data-screen="main"] #tabContent{display:none!important}
 </style>
@@ -231,7 +231,6 @@ function render(){
  setText($('topIpCount'),fmt(state.ip));
  const infinityReady=atInfinity();
  document.body.classList.remove('crunch-ready');
- $('infinityPanel').style.display='none';
  $('screenTabs').style.display='';
  setText($('ipCount'),fmt(state.ip));setText($('infinityCount'),fmt(state.infinities));
  setText($('tickspeedMultiplier'),'購入 '+fmt(state.tickspeed)+'回 · 倍率 ×'+fmtFixed(tickspeedMult(),3));
