@@ -220,7 +220,9 @@ function infinityUpgradeMultiplier(id){return state.infinityUpgrades.includes(id
 function dimensionMult(i){
  const tenBuyMultiplier=state.infinityUpgrades.includes('dimMult')?2.2:2;
  let mult=1e10*dimensionBoostMult(i)*Math.pow(tenBuyMultiplier,Math.floor(state.bought[i]/10))*(i===0&&state.achievements[15]?1.1:1)*(i===7&&state.achievements[10]?1.1:1);
- mult*=infinityUpgradeMultiplier('timeMult')*infinityUpgradeMultiplier('timeMult2')*infinityUpgradeMultiplier('unspentBonus');
+ mult*=infinityUpgradeMultiplier('timeMult')*infinityUpgradeMultiplier('timeMult2');
+ // 未使用IPボーナスは第1次元にのみ適用する。
+ if(i===0)mult*=infinityUpgradeMultiplier('unspentBonus');
  if(i===0||i===7)mult*=infinityUpgradeMultiplier('18Mult');
  if(i===1||i===6)mult*=infinityUpgradeMultiplier('27Mult');
  if(i===2||i===5)mult*=infinityUpgradeMultiplier('36Mult');
