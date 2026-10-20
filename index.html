@@ -412,6 +412,8 @@ function applyOfflineProgress(seconds){
   }
   const next=state.matter+productionRate()*dt;
   state.matter=Number.isFinite(next)?Math.min(next,INFINITY):INFINITY;
+  // オフライン中も通常のtickと同様にAutobuyerを実行する。
+  runAutobuyers(dt);
   remaining-=dt;
  }
  checkAchievements();notifyNewAchievements();
