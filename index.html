@@ -68,6 +68,8 @@ body.crunch-ready main > .bottom,
 body.crunch-ready main > .notice{display:none!important;}
 body.crunch-ready .sticky-tools{margin:0!important;padding:0!important;border:0!important;}
 body.crunch-ready .infinity-panel{display:none!important;}
+/* Infinity画面では旧Infinityパネルの空枠を、通常画面用ルールより優先して隠す */
+body.crunch-ready[data-screen="infinity"] .infinity-panel{display:none!important;border:0!important;padding:0!important;margin:0!important;}
 body.crunch-ready #tabContent{margin-top:8px!important;}
 </style>
 
