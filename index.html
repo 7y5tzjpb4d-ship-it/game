@@ -191,11 +191,19 @@ function dimensionBoostMult(i){
 }
 function infinityUpgradeMultiplier(id){
  if(!state.infinityUpgrades.includes(id))return 1;
+ const infinities=Math.max(0,state.infinities);
+ const minutesPlayed=Math.max(0,state.playTime)/60;
+ const minutesInInfinity=Math.max(0,state.infinityTime)/60;
+ const unspentIP=Math.max(0,state.ip);
  switch(id){
-  case 'timeMult': return 1+Math.max(0,state.playTime)/60;
-  case 'timeMult2': return 1+Math.max(0,state.infinityTime)/10;
-  case 'unspentBonus': return 1+Math.log10(1+Math.max(0,state.ip));
-  case '18Mult': case '27Mult': case '36Mult': case '45Mult': return 1+state.infinities;
+  // Wiki: max((Minutes / 2)^0.15, 1)
+  case 'timeMult': return Math.max(Math.pow(minutesPlayed/2,0.15),1);
+  // Wiki: max((Minutes / 4)^0.25, 1)
+  case 'timeMult2': return Math.max(Math.pow(minutesInInfinity/4,0.25),1);
+  // Wiki: 1 + (IP / 2)^1.5
+  case 'unspentBonus': return 1+Math.pow(unspentIP/2,1.5);
+  // Wiki: 1 + Infinities / 5
+  case '18Mult': case '27Mult': case '36Mult': case '45Mult': return 1+infinities/5;
   default:return 1;
  }
 }
