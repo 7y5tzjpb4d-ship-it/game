@@ -127,7 +127,7 @@ document.addEventListener('click', requestPortraitOrientation, {once:true});
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
-function setText(el,value){const text=String(value);if(el.textContent!==text)el.textContent=text;}
+function setText(el,value){if(!el)return;const text=String(value);if(el.textContent!==text)el.textContent=text;}
 const names=['第1次元','第2次元','第3次元','第4次元','第5次元','第6次元','第7次元','第8次元'];
 const baseCosts=[10,100,1e3,1e6,1e9,1e13,1e18,1e24];
 const unlockAt=[0,0,0,0,0,0,0,0];
