@@ -289,7 +289,7 @@ function render(){
  for(let i=0;i<8;i++){
   const {d,det,amt,b}=rows[i],open=unlocked(i),c=cost(i);
   d.className='dim'+(open?'':' locked');
-  setText(det,open?'×'+fmtFixed(dimensionMult(i)*(i===7?state.sacrificeMult:1)*achievementMultiplier(),2):'ブースト '+(i-3)+' 回');
+  setText(det,open?'×'+fmtFixed(dimensionMult(i)*(i===7?state.sacrificeMult:1)*achievementMultiplier(),2)+(state.infinityUpgrades.includes('timeMult2')?' · Infinity時間 ×'+fmtFixed(infinityUpgradeMultiplierValue('timeMult2'),2):''):'ブースト '+(i-3)+' 回');
   setText(amt,fmtFixed(state.amount[i],2));
   const max=state.buyMax?maxAffordable(i):null;
   b.disabled=!open||(state.buyMax?max.count===0:state.matter<c);
