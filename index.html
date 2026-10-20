@@ -236,10 +236,10 @@ function sacrificeTotalMultiplier(total){return Math.max(Math.log10(Math.max(tot
 function sacrificeGain(){const next=sacrificeTotalMultiplier(state.sacrificedFirst+state.amount[0]);return next/Math.max(1,state.sacrificeMult);}
 function unlocked(i){return i<4||state.boosts>=i-3;}
 function productionRate(){return state.amount[0]*productionMult(0);}
-function boostRequirement(){const n=state.boosts+1;return n<=5?20:15*n-55;}
+function boostRequirement(){const n=state.boosts+1;const base=n<=5?20:15*n-55;return Math.max(1,base-(state.infinityUpgrades.includes('resetBoost')?9:0));}
 function boostRequirementTier(){const n=state.boosts+1;return n<=5?n+3:8;}
-function canBoost(){const n=state.boosts+1;const tier=boostRequirementTier();return state.bought[tier-1]>=boostRequirement();}
-function galaxyRequirement(){return 80+60*state.galaxies;}
+function canBoost(){const tier=boostRequirementTier();return state.bought[tier-1]>=boostRequirement();}
+function galaxyRequirement(){return Math.max(1,80+60*state.galaxies-(state.infinityUpgrades.includes('resetBoost')?9:0));}
 function canGalaxy(){return state.bought[7]>=galaxyRequirement();}
 function buildRows(){
  const root=$('dimensions');root.innerHTML='';rows=[];
