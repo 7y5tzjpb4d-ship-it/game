@@ -195,9 +195,10 @@ function tickspeedBase(){
 function tickspeedMult(){return Math.pow(tickspeedBase(),state.tickspeed);}
 function tickspeedCost(){return TICKSPEED_BASE_COST*Math.pow(10,state.tickspeed);}
 function dimensionBoostMult(i){
- // 本家の仕様: 次元dは max(ブースト回数 - (d - 1), 0) 回分の×2を受ける。
- // 8回目以降は、追加のブーストが全次元に×2を与える。
- return Math.pow(2, Math.max(state.boosts - i, 0));
+ // Dimension Boost強化購入後は、各Boostの倍率が×2.0から×2.5に上昇。
+ // 次元dは max(ブースト回数 - (d - 1), 0) 回分の効果を受ける。
+ const boostPower=state.infinityUpgrades.includes('resetMult')?2.5:2;
+ return Math.pow(boostPower, Math.max(state.boosts - i, 0));
 }
 function infinityUpgradeMultiplierValue(id){
  const infinities=Math.max(0,state.infinities);
