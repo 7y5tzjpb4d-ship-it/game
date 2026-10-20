@@ -289,7 +289,7 @@ function render(){
  for(let i=0;i<8;i++){
   const {d,det,amt,b}=rows[i],open=unlocked(i),c=cost(i);
   d.className='dim'+(open?'':' locked');
-  setText(det,open?'×'+fmtFixed(dimensionMult(i)*(i===7?state.sacrificeMult:1)*achievementMultiplier(),2)+(state.infinityUpgrades.includes('timeMult2')?' · Infinity時間 ×'+fmtFixed(infinityUpgradeMultiplierValue('timeMult2'),2):''):'ブースト '+(i-3)+' 回');
+  setText(det,open?'×'+fmtFixed(dimensionMult(i)*(i===7?state.sacrificeMult:1)*achievementMultiplier(),2):'ブースト '+(i-3)+' 回');
   setText(amt,fmtFixed(state.amount[i],2));
   const max=state.buyMax?maxAffordable(i):null;
   b.disabled=!open||(state.buyMax?max.count===0:state.matter<c);
@@ -378,10 +378,13 @@ function galaxy(){
 function bigCrunch(){if(!atInfinity())return;state.ip+=1;state.infinities++;state.achievements[8]=true;state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.infinityTime=0;buildRows();switchScreen('main');render();save();}
 function applyOfflineProgress(seconds){
  const offlineSeconds=Math.min(86400,Math.max(0,seconds));
- state.playTime=Math.max(0,Number(state.playTime)||0)+offlineSeconds;
  let remaining=offlineSeconds;
  while(remaining>0){
   const dt=Math.min(0.25,remaining);
+  // オフライン中も実時間とInfinity内経過時間を通常のtickと同じ刻みで進める。
+  // Infinity時間ボーナスはInfinity内経過時間を参照するため、生産計算より先に加算する。
+  state.playTime=Math.max(0,Number(state.playTime)||0)+dt;
+  if(state.infinities>0)state.infinityTime=Math.max(0,Number(state.infinityTime)||0)+dt;
   for(let i=7;i>=1;i--){
    const v=state.amount[i-1]+state.amount[i]*productionMult(i)*0.1*dt;
    state.amount[i-1]=Number.isFinite(v)?Math.min(v,INFINITY):INFINITY;
