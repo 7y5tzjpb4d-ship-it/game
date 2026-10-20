@@ -68,9 +68,13 @@ body.crunch-ready main > .bottom,
 body.crunch-ready main > .notice{display:none!important;}
 body.crunch-ready .sticky-tools{margin:0!important;padding:0!important;border:0!important;}
 body.crunch-ready .infinity-panel{display:none!important;}
-/* Infinity画面では旧Infinityパネルの空枠を、通常画面用ルールより優先して隠す */
-body.crunch-ready[data-screen="infinity"] .infinity-panel{display:none!important;border:0!important;padding:0!important;margin:0!important;}
-body.crunch-ready #tabContent{margin-top:8px!important;}
+/* Infinity専用画面では通常画面の上部コンテナと旧パネルをレイアウトごと除外する */
+body.crunch-ready .sticky-tools,
+body.crunch-ready #infinityPanel,
+body.crunch-ready[data-screen="infinity"] .infinity-panel{display:none!important;visibility:hidden!important;border:0!important;outline:0!important;padding:0!important;margin:0!important;min-height:0!important;height:0!important;}
+body.crunch-ready #tabContent,
+body.crunch-ready .screen-placeholder#tabContent{display:block!important;visibility:visible!important;margin:0!important;padding:30px!important;background:transparent!important;border:0!important;outline:0!important;box-shadow:none!important;min-height:0!important;height:auto!important;}
+body.crunch-ready #tabContent h2{margin-top:0!important;}
 </style>
 
 <script>
