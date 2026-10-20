@@ -181,7 +181,17 @@ function maxAffordable(i, limitToNextTen=true){
  }
  return {count,spent};
 }
-function tickspeedBase(){return 1.125+0.02*state.galaxies;}
+function galaxyStrength(){return state.infinityUpgrades.includes('galaxyBoost')?2:1;}
+function tickspeedBase(){
+ const g=state.galaxies;
+ const strength=galaxyStrength();
+ if(g<3){
+  const baseIntervals=[1/1.1245,1/1.11888888,1/1.11267177];
+  return Math.min(100,1/(baseIntervals[g]-g*strength*0.02));
+ }
+ const baseMultiplier=0.8;
+ return 1/(baseMultiplier*Math.pow(0.965,(g-2)*strength-2));
+}
 function tickspeedMult(){return Math.pow(tickspeedBase(),state.tickspeed);}
 function tickspeedCost(){return TICKSPEED_BASE_COST*Math.pow(10,state.tickspeed);}
 function dimensionBoostMult(i){
