@@ -48,11 +48,14 @@ body[data-screen]:not([data-screen="main"]) #tabContent{display:block!important}
 body[data-screen="main"] #tabContent{display:none!important}
 </style>
 <style id="big-crunch-focus-ui">
-body.crunch-ready main{padding-bottom:12px!important;}
+body.crunch-ready main{padding:0 14px 12px!important;max-width:none!important;}
 body.crunch-ready main > *{display:none!important;}
 body.crunch-ready .infinity-panel{display:none!important;}
-body.crunch-ready #tabContent{display:block!important;}
+body.crunch-ready #tabContent{display:block!important;margin-top:0;padding:30px;background:#18181e;border:2px solid #35353d;min-height:0;box-sizing:border-box;}
+body.crunch-ready #tabContent h2{font-size:28px;margin:0 0 42px;font-weight:800;}
+body.crunch-ready #tabContent .big-crunch-btn{display:block;width:100%;min-height:124px;font-size:40px;padding:20px 10px;}
 body.crunch-ready .screen-tabs{display:none!important;}
+@media(max-width:540px){body.crunch-ready main{padding:0 14px 12px!important;}body.crunch-ready #tabContent{padding:30px;}body.crunch-ready #tabContent h2{font-size:28px;margin-bottom:42px;}body.crunch-ready #tabContent .big-crunch-btn{min-height:124px;font-size:clamp(24px,5.2vw,40px);}}
 body.crunch-ready .sticky-tools .stats,
 body.crunch-ready .quick-actions,
 body.crunch-ready main > .mobile-bottom-actions,
