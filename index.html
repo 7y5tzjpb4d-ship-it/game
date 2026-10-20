@@ -252,7 +252,7 @@ function render(){
  setText($('tickspeedBtn'),'購入 · '+fmt(tsCost));
  $('tickspeedMaxBtn').disabled=state.matter<tsCost;
  setText($('tickspeedMaxBtn'),'Buy Max');
- if(rows.length!==8)buildRows();
+ if(rows.length!==8||$('dimensions').children.length!==8)buildRows();
  for(let i=0;i<8;i++){
   const {d,det,amt,b}=rows[i],open=unlocked(i),c=cost(i);
   d.className='dim'+(open?'':' locked');
@@ -342,7 +342,7 @@ function galaxy(){
  state.sacrificedFirst=0;
  render();save();
 }
-function bigCrunch(){if(!atInfinity())return;state.ip+=1;state.infinities++;state.achievements[8]=true;state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;switchScreen('main');render();save();}
+function bigCrunch(){if(!atInfinity())return;state.ip+=1;state.infinities++;state.achievements[8]=true;state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;buildRows();switchScreen('main');render();save();}
 function applyOfflineProgress(seconds){
  let remaining=Math.min(3600,Math.max(0,seconds));
  while(remaining>0){
@@ -370,7 +370,6 @@ function load(){
   applyOfflineProgress(elapsed);
  }}catch(e){}
 }
-$('bigCrunchBtn').onclick=bigCrunch;
 $('boostBtn').onclick=boost;
 $('sacrificeBtn').onclick=sacrifice;
 $('quickMaxAllBtn').onclick=maxAll;
