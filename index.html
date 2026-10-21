@@ -456,7 +456,9 @@ function galaxy(){
  state.matter=state.achievements[8]?100:10;
  state.amount=Array(8).fill(0);
  state.bought=Array(8).fill(0);
- state.boosts=0;
+ // Infinity Upgrade「初期Boost」系は通常プレイでのGalaxy購入後にも適用する。
+ // チャレンジ中は従来どおりBoost 0から開始する。
+ state.boosts=state.activeChallenge?0:startingBoosts();
  state.tickspeed=0;
  state.sacrificeMult=1;
  state.sacrificedFirst=0;
