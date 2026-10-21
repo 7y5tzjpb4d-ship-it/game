@@ -430,7 +430,9 @@ function challenge9QuickReset(){
 }
 function boost(){
  if(!canBoost())return;
- state.boosts++;checkAchievements();if(state.activeChallenge===3)state.challenge3TimeMult=1;if(state.activeChallenge===11){state.matter=10;}else state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;render();save();
+ // 手動・自動を問わず、Boost実行後はAutobuyerの待機時間をリセットする。
+ autobuyerElapsed[9]=0;
+ state.boosts++;checkAchievements();if(state.activeChallenge===3)state.challenge3TimeMult=1;state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;render();save();
 }
 function sacrifice(){
  if(state.boosts<5||(state.activeChallenge===10)||state.amount[state.activeChallenge===12?5:7]<1||state.amount[0]<=0)return;
@@ -482,10 +484,11 @@ function applyOfflineProgress(seconds){
   }
   const next=state.matter+productionRate()*dt;
   state.matter=Number.isFinite(next)?Math.min(next,INFINITY):INFINITY;
+  let challenge11MatterBoosted=false;
   if(state.activeChallenge===11&&state.challenge11Matter>state.matter){
-   state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;
+   state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;autobuyerElapsed[9]=0;challenge11MatterBoosted=true;
   }
-  runAutobuyers(dt);
+  runAutobuyers(dt,{skipBoost:challenge11MatterBoosted});
   remaining-=dt;
  }
  checkAchievements();notifyNewAchievements();
@@ -551,7 +554,7 @@ function showAchievementToast(id){
  const toast=document.createElement('div');toast.className='achievement-toast';const title=document.createElement('div');title.className='achievement-toast-title';title.textContent='Achievement Unlocked!';const name=document.createElement('div');name.className='achievement-toast-name';name.textContent=achievementNames[id]||('Achievement '+id);const desc=document.createElement('div');desc.className='achievement-toast-desc';desc.textContent=achievementDescs[id]||'';toast.append(title,name,desc);container.appendChild(toast);setTimeout(()=>{toast.style.transition='opacity .25s, transform .25s';toast.style.opacity='0';toast.style.transform='translateX(20px)';setTimeout(()=>toast.remove(),300);},4000);
 }
 function notifyNewAchievements(){state.achievements.forEach((unlocked,i)=>{if(unlocked&&!observedAchievements[i])showAchievementToast(i<8?i+11:i+13);});observedAchievements=state.achievements.slice();}
-function runAutobuyers(dt){
+function runAutobuyers(dt, options={}){
  let changed=false;
  for(let i=0;i<8;i++){
   if(!state.autobuyers.dims[i]||!dimAutobuyerUnlocked(i)||!unlocked(i)||(state.activeChallenge===10&&i>=6))continue;
@@ -584,7 +587,7 @@ function runAutobuyers(dt){
   }
  }
  const resetAuto=[{key:'boost',index:9,unlocked:()=>challengeCompleted(10),ready:()=>canBoost(),run:()=>boost()},{key:'galaxy',index:10,unlocked:()=>challengeCompleted(11),ready:()=>canGalaxy(),run:()=>galaxy()},{key:'crunch',index:11,unlocked:()=>challengeCompleted(12),ready:()=>atInfinity(),run:()=>state.activeChallenge?completeChallenge():bigCrunch()}];
- for(const a of resetAuto){if(!state.autobuyers[a.key]||!a.unlocked())continue;autobuyerElapsed[a.index]+=dt;if(autobuyerElapsed[a.index]+1e-9>=autobuyerInterval()[a.index]){autobuyerElapsed[a.index]%=autobuyerInterval()[a.index];if(a.ready()){a.run();changed=true;}}}
+ for(const a of resetAuto){if(options.skipBoost&&a.key==='boost')continue;if(!state.autobuyers[a.key]||!a.unlocked())continue;autobuyerElapsed[a.index]+=dt;if(autobuyerElapsed[a.index]+1e-9>=autobuyerInterval()[a.index]){autobuyerElapsed[a.index]%=autobuyerInterval()[a.index];if(a.ready()){a.run();changed=true;}}}
  if(changed)checkAchievements();
  return changed;
 }
@@ -596,8 +599,9 @@ function tick(now){
  if(state.activeChallenge===12){for(let i=7;i>=2;i--){const v=state.amount[i-2]+dimensionOutput(i)*0.1*dt;state.amount[i-2]=Number.isFinite(v)?Math.min(v,INFINITY):INFINITY;}}else{for(let i=7;i>=1;i--){if(state.activeChallenge===10&&i>=6)continue;const v=state.amount[i-1]+dimensionOutput(i)*0.1*dt;state.amount[i-1]=Number.isFinite(v)?Math.min(v,INFINITY):INFINITY;}}
  state.ip+=passiveIPRate()*dt;
  const matterNext=state.matter+productionRate()*dt;state.matter=Number.isFinite(matterNext)?Math.min(matterNext,INFINITY):INFINITY;
- if(state.activeChallenge===11&&state.challenge11Matter>state.matter){state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;}
- runAutobuyers(dt);checkAchievements();notifyNewAchievements();
+ let challenge11MatterBoosted=false;
+ if(state.activeChallenge===11&&state.challenge11Matter>state.matter){state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;autobuyerElapsed[9]=0;challenge11MatterBoosted=true;}
+ runAutobuyers(dt,{skipBoost:challenge11MatterBoosted});checkAchievements();notifyNewAchievements();
  render();if(state.activeChallenge&&document.body.dataset.screen==='challenges'&&now-lastRender>500){switchScreen('challenges');}lastRender=now;
  if(now-lastSave>5000){save();lastSave=now;}
  requestAnimationFrame(tick);
