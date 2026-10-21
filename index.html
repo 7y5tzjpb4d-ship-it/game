@@ -125,16 +125,14 @@ document.addEventListener('click', requestPortraitOrientation, {once:true});
 @media(max-width:540px){.infinity-upgrade-grid{gap:4px}.infinity-upgrade-btn{min-height:100px;padding:6px 3px;font-size:10px}.infinity-upgrade-btn strong{font-size:10px}.infinity-upgrade-btn small{font-size:9px}.infinity-extra-upgrades{gap:4px}}
 </style>
 <style id="challenge-screen-ui">
-.challenge-summary{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 12px;margin:10px 0 14px;background:#20202a;border:1px solid #41414d;border-radius:4px;color:#d9d9e5;font-size:12px}
-.challenge-summary strong{font-size:15px;color:#fff}
 .challenge-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .challenge-card{min-width:0;min-height:138px;display:flex;flex-direction:column;gap:7px;padding:11px;background:#222229;border:1px solid #41414b;border-radius:4px}
 .challenge-card .challenge-number{font-size:10px;letter-spacing:.08em;color:#9bbce8;font-weight:800}
 .challenge-card strong{font-size:13px;color:#f1f1f7}
 .challenge-card p{margin:0;color:#b8b8c6;font-size:11px;line-height:1.4;flex:1}
-.challenge-status{align-self:flex-start;padding:3px 6px;background:#34343d;color:#c4c4cf;font-size:10px;border-radius:3px}
+.challenge-status{align-self:flex-start;padding:3px 6px;background:#34343d;color:#c4c4cf;font-size:10px;border-radius:3px}.challenge-card.completed{border-color:#4d9871;background:#1e3028}.challenge-card.active{border-color:#6f9ed5;box-shadow:0 0 0 1px #6f9ed533}.challenge-card button,.challenge-controls button{width:100%;font-size:11px;padding:7px 5px}.challenge-controls{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.challenge-controls button{width:auto;min-width:130px}.challenge-description{margin:10px 0;padding:12px;background:#20202a;border:1px solid #41414d;border-radius:4px;line-height:1.5;font-size:12px}.challenge-card p{min-height:48px}
 .challenge-note{margin-top:12px;padding:10px;border-left:3px solid #6587b3;background:#1d222b;color:#b8c5d8;font-size:11px;line-height:1.5}
-@media(max-width:540px){.challenge-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.challenge-card{min-height:135px;padding:8px;gap:6px}.challenge-card strong{font-size:12px}.challenge-card p{font-size:10px}.challenge-summary{font-size:10px;padding:8px}.challenge-summary strong{font-size:13px}}
+@media(max-width:540px){.challenge-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.challenge-card{min-height:135px;padding:8px;gap:6px}.challenge-card strong{font-size:12px}.challenge-card p{font-size:10px}.challenge-controls button{flex:1;min-width:0}}
 </style>
 <script>
 (()=>{
@@ -145,16 +143,42 @@ const baseCosts=[10,100,1e3,1e6,1e9,1e13,1e18,1e24];
 const unlockAt=[0,0,0,0,0,0,0,0];
 const costGrowth=[1e3,1e4,1e5,1e6,1e8,1e10,1e12,1e15];
 const TICKSPEED_BASE_COST=1e3;
-const state={matter:10,amount:Array(8).fill(0),bought:Array(8).fill(0),boosts:0,galaxies:0,buyMax:true,tickspeed:0,sacrificeMult:1,sacrificedFirst:0,ip:1,infinities:1,infinityUpgrades:[],ipMultLevel:0,ipOffline:false,achievements:Array(16).fill(true),autobuyers:{dims:Array(8).fill(false),tickspeed:false,unlockedDims:Array(8).fill(false),tickspeedUnlocked:false,boost:false,galaxy:false,crunch:false,dimModes:Array(8).fill('10'),dimMode:'10',intervalUpgradeLevel:0,intervalUpgradeLevels:Array(9).fill(0),boostMode:'amount',boostValue:4,galaxyMode:'amount',galaxyValue:1,crunchMode:'amount',crunchValue:1},playTime:0,infinityTime:0,fastestInfinity:0,last:Date.now()};
+const state={matter:10,amount:Array(8).fill(0),bought:Array(8).fill(0),boosts:0,galaxies:0,buyMax:true,tickspeed:0,sacrificeMult:1,sacrificedFirst:0,ip:1,infinities:1,infinityUpgrades:[],ipMultLevel:0,ipOffline:false,achievements:Array(16).fill(true),autobuyers:{dims:Array(8).fill(false),tickspeed:false,unlockedDims:Array(8).fill(false),tickspeedUnlocked:false,boost:false,galaxy:false,crunch:false,dimModes:Array(8).fill('10'),dimMode:'10',intervalUpgradeLevel:0,intervalUpgradeLevels:Array(9).fill(0),boostMode:'amount',boostValue:4,galaxyMode:'amount',galaxyValue:1,crunchMode:'amount',crunchValue:1},playTime:0,infinityTime:0,fastestInfinity:0,activeChallenge:0,completedChallenges:[1],challengeTimes:{},challenge2Recovery:1,challenge3TimeMult:1,challenge11Matter:0,challenge11NoBonusBoosts:0,last:Date.now()};
 const INFINITY=Number.MAX_VALUE;
 function atInfinity(){return state.matter>=INFINITY*0.999;}
+const challengeData=[
+ {id:1,name:'1st Dimension Autobuyer Challenge',desc:'初めてInfinityに到達する。初回Infinityは自動的にクリア扱いとなり、再挑戦はできません。',reward:'第1次元Autobuyerの間隔アップグレード'},
+ {id:2,name:'2nd Dimension Autobuyer Challenge',desc:'DimensionまたはTickspeedを購入すると全Dimensionの生産が停止し、3分かけて徐々に回復します。',reward:'第2次元Autobuyerの間隔アップグレード'},
+ {id:3,name:'3rd Dimension Autobuyer Challenge',desc:'第1次元の生産が大幅に弱体化しますが、時間経過で倍率が指数的に増加します。Boost/Galaxyで倍率はリセットされます。',reward:'第3次元Autobuyerの間隔アップグレード'},
+ {id:4,name:'4th Dimension Autobuyer Challenge',desc:'Dimensionを購入すると、それより下位のDimensionの所持数が0になります。',reward:'第4次元Autobuyerの間隔アップグレード'},
+ {id:5,name:'5th Dimension Autobuyer Challenge',desc:'Tickspeedの効果はGalaxy 0個で×1.080、1個で×1.100、2個で×1.120となります。',reward:'第5次元Autobuyerの間隔アップグレード'},
+ {id:6,name:'6th Dimension Autobuyer Challenge',desc:'第3〜第8次元は反物質ではなく2段階下位のDimensionを消費して購入します。専用の購入価格を使用します。',reward:'第6次元Autobuyerの間隔アップグレード'},
+ {id:7,name:'7th Dimension Autobuyer Challenge',desc:'10個購入ボーナスはBoost回数に応じて強化され、倍率は最大×2です。',reward:'第7次元Autobuyerの間隔アップグレード'},
+ {id:8,name:'8th Dimension Autobuyer Challenge',desc:'Dimension Boostの倍率がなくなり、Galaxyは購入できません。Boostは最大5回です。SacrificeはTickspeedを維持したまま反物質とDimensionをリセットし、効果が大幅に強化されます。',reward:'第8次元Autobuyerの間隔アップグレード'},
+ {id:9,name:'Tickspeed Autobuyer Challenge',desc:'TickspeedまたはDimensionを10個購入すると、同じコスト帯の他の購入コストも次の段階へ進みます。',reward:'Tickspeed Autobuyerの間隔アップグレード'},
+ {id:10,name:'Automated Dimension Boosts Challenge',desc:'第1〜第6次元のみ使用できます。Dimension Boostは通常より多くのDimensionを要求し、Galaxyは第6次元99個から始まり、1個ごとに90個ずつ増えます。Sacrificeは使用できません。16回以上Infinityが必要です。',reward:'Dimension Boost Autobuyer'},
+ {id:11,name:'Automated Antimatter Galaxies Challenge',desc:'第2次元を1個以上持つとNormal Matterが増加し、反物質を超えるとボーナスなしでDimension Boostが発生します。Matterの増加率はBoost数・Galaxy数で上昇します。16回以上Infinityが必要です。',reward:'Antimatter Galaxy Autobuyer'},
+ {id:12,name:'Automated Big Crunches Challenge',desc:'各Dimensionは2段階下位を生産します。第1・第2次元は反物質も生産します。第2次元は倍率の1.7乗・所持数の1.5乗、第4・第6次元は倍率の1.4乗／1.3乗・所持数の1.3乗で生産します。Sacrificeは第1〜第6次元のみをリセットします。16回以上Infinityが必要です。',reward:'Big Crunch Autobuyer'}
+];
+function challengeUnlocked(id){return id<=9?state.infinities>=1:state.infinities>=16;}
+function challengeCompleted(id){return state.completedChallenges.includes(id);}
+function challengeActive(id){return state.activeChallenge===id;}
+// Normal Challenges disable the fourth column of Infinity Upgrades.
+const challengeDisabledInfinityUpgrades=['skipReset1','skipReset2','skipReset3','skipResetGalaxy'];
+function hasInfinityUpgrade(id){return state.infinityUpgrades.includes(id)&&!(state.activeChallenge>0&&challengeDisabledInfinityUpgrades.includes(id));}
+function challengePurchaseReset(){if(state.activeChallenge===2)state.challenge2Recovery=0;}
+function resetChallengeTimers(){state.challenge2Recovery=1;state.challenge3TimeMult=1;state.challenge11Matter=state.activeChallenge===11?10:0;}
+function startChallenge(id){if(state.activeChallenge||!challengeUnlocked(id)||id===1)return;state.activeChallenge=id;state.challenge11NoBonusBoosts=0;state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.infinityTime=0;resetChallengeTimers();autobuyerElapsed.fill(0);buildRows();render();save();switchScreen('challenges');}
+function exitChallenge(){if(!state.activeChallenge)return;state.activeChallenge=0;state.challenge11NoBonusBoosts=0;state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.infinityTime=0;resetChallengeTimers();autobuyerElapsed.fill(0);buildRows();render();save();switchScreen('challenges');}
+function completeChallenge(){if(!state.activeChallenge||!atInfinity())return;const id=state.activeChallenge;state.challenge11NoBonusBoosts=0;const elapsed=Math.max(0,state.infinityTime);if(!challengeCompleted(id))state.completedChallenges.push(id);state.challengeTimes[id]=state.challengeTimes[id]>0?Math.min(state.challengeTimes[id],elapsed):elapsed;state.activeChallenge=0;state.ip+=ipGainMultiplier();state.infinities++;state.achievements[8]=true;state.matter=100;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.infinityTime=0;resetChallengeTimers();buildRows();render();save();switchScreen('challenges');}
+function challengeCardStatus(id){if(challengeCompleted(id))return 'クリア済み';if(!challengeUnlocked(id))return '未解放';if(challengeActive(id))return '挑戦中';return '挑戦可能';}
 let lastSave=0,lastRender=0, rows=[];
-const autobuyerElapsed=Array(9).fill(0);
-const autobuyerBaseIntervals=[0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,0.5];
+const autobuyerElapsed=Array(12).fill(0);
+const autobuyerBaseIntervals=[0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,0.5,0.5,0.7,1.0];
 function autobuyerUpgradeLevels(){state.autobuyers.intervalUpgradeLevels=Array.isArray(state.autobuyers.intervalUpgradeLevels)?Array.from({length:9},(_,i)=>Math.max(0,Math.floor(Number(state.autobuyers.intervalUpgradeLevels[i])||0))):Array(9).fill(0);return state.autobuyers.intervalUpgradeLevels;}
 function autobuyerInterval(){const levels=autobuyerUpgradeLevels();return autobuyerBaseIntervals.map((v,i)=>Math.max(0.1,v*Math.pow(0.6,levels[i])));}
 function autobuyerIntervalUpgradeCost(i){return Math.pow(2,autobuyerUpgradeLevels()[i]||0);}
-function autobuyerUpgradeUnlocked(i){return i===0&&state.infinities>0;}
+function autobuyerUpgradeUnlocked(i){return i>=0&&i<=8&&challengeCompleted(i===8?9:i+1);}
 function buyAutobuyerIntervalUpgrade(i){const cost=autobuyerIntervalUpgradeCost(i);if(!autobuyerUpgradeUnlocked(i)||state.ip<cost||autobuyerInterval()[i]<=0.1)return false;state.ip-=cost;state.autobuyers.intervalUpgradeLevels[i]=(state.autobuyers.intervalUpgradeLevels[i]||0)+1;save();if(document.body.dataset.screen==='autobuyers')switchScreen('autobuyers');else render();return true;}
 let previousDimAutobuyerUnlocks=Array(8).fill(false);
 let autobuyerUnlockAlert=false;
@@ -182,22 +206,33 @@ function fmtFixed(n,digits){
  const e=Math.floor(Math.log10(n)),m=n/Math.pow(10,e);
  return m.toFixed(digits)+'e'+e;
 }
-function cost(i,offset=0){return baseCosts[i]*Math.pow(costGrowth[i],Math.floor((state.bought[i]+offset)/10));}
+function cost(i,offset=0){if(state.activeChallenge===6&&i>=2){const c6Base=[100,500,2500,20000,200000,4000000],c6Growth=[1e4,1.2e4,1.8e4,2.6e4,3.2e4,4.2e4];return c6Base[i-2]*Math.pow(c6Growth[i-2],Math.floor((state.bought[i]+offset)/10));}return baseCosts[i]*Math.pow(costGrowth[i],Math.floor((state.bought[i]+offset)/10));}
+function dimensionResource(i){return state.activeChallenge===6&&i>=2?state.amount[i-2]:state.matter;}
+function canAffordDimension(i,c=cost(i)){return dimensionResource(i)>=c;}
+function spendDimension(i,c){if(state.activeChallenge===6&&i>=2)state.amount[i-2]-=c;else state.matter-=c;}
 function maxAffordable(i, limitToNextTen=true){
- let matter=state.matter, bought=state.bought[i], count=0, spent=0, c=cost(i);
+ let matter=dimensionResource(i), bought=state.bought[i], count=0, spent=0, c=cost(i);
  // 通常の最大購入は次の10個単位まで。Max Allでは購入可能数全体を計算する。
  const limit = limitToNextTen ? 10 - (bought % 10) : Infinity;
  while(count<limit && matter>=c && Number.isFinite(c)){
   matter-=c; spent+=c; count++; bought++;
-  c=baseCosts[i]*Math.pow(costGrowth[i],Math.floor(bought/10));
+  c=state.activeChallenge===6&&i>=2?([100,500,2500,20000,200000,4000000][i-2]*Math.pow([1e4,1.2e4,1.8e4,2.6e4,3.2e4,4.2e4][i-2],Math.floor(bought/10))):baseCosts[i]*Math.pow(costGrowth[i],Math.floor(bought/10));
  }
  return {count,spent};
 }
-function galaxyStrength(){return state.infinityUpgrades.includes('galaxyBoost')?2:1;}
+
+function applyChallenge9CostStep(purchasedCost, excludeDimension=-1){
+ if(state.activeChallenge!==9||!Number.isFinite(purchasedCost))return;
+ const same=(a,b)=>Number.isFinite(a)&&Math.abs(a-b)<Math.max(1,Math.abs(b))*1e-10;
+ for(let j=0;j<8;j++)if(j!==excludeDimension&&same(cost(j),purchasedCost))state.bought[j]=(Math.floor(state.bought[j]/10)+1)*10;
+ if(same(tickspeedCost(),purchasedCost))state.tickspeed++;
+}
+function galaxyStrength(){return hasInfinityUpgrade('galaxyBoost')?2:1;}
 function tickspeedBase(){
  const g=state.galaxies;
  const strength=galaxyStrength();
  if(g<3){
+  if(state.activeChallenge===5)return [1.08, strength===2?1.125:1.10, strength===2?1.173:1.12][g];
   const baseIntervals=[1/1.1245,1/1.11888888,1/1.11267177];
   return Math.min(100,1/(baseIntervals[g]-g*strength*0.02));
  }
@@ -207,10 +242,10 @@ function tickspeedBase(){
 function tickspeedMult(){return Math.pow(tickspeedBase(),state.tickspeed);}
 function tickspeedCost(){return TICKSPEED_BASE_COST*Math.pow(10,state.tickspeed);}
 function dimensionBoostMult(i){
- // Dimension Boost強化購入後は、各Boostの倍率が×2.0から×2.5に上昇。
- // 次元dは max(ブースト回数 - (d - 1), 0) 回分の効果を受ける。
+ // NC11でMatterが起こしたBoostは、Dimensionの倍率を増やさない。
+ const effectiveBoosts=state.boosts-(state.activeChallenge===11?state.challenge11NoBonusBoosts:0);
  const boostPower=state.infinityUpgrades.includes('resetMult')?2.5:2;
- return Math.pow(boostPower, Math.max(state.boosts - i, 0));
+ return Math.pow(boostPower, Math.max(effectiveBoosts - i, 0));
 }
 function infinityUpgradeMultiplierValue(id){
  const infinities=Math.max(0,state.infinities);
@@ -229,10 +264,10 @@ function infinityUpgradeMultiplierValue(id){
   default:return 1;
  }
 }
-function infinityUpgradeMultiplier(id){return state.infinityUpgrades.includes(id)?infinityUpgradeMultiplierValue(id):1;}
+function infinityUpgradeMultiplier(id){return hasInfinityUpgrade(id)?infinityUpgradeMultiplierValue(id):1;}
 function dimensionMult(i){
- const tenBuyMultiplier=state.infinityUpgrades.includes('dimMult')?2.2:2;
- let mult=1*dimensionBoostMult(i)*Math.pow(tenBuyMultiplier,Math.floor(state.bought[i]/10))*(i===0&&state.achievements[15]?1.1:1)*(i===7&&state.achievements[10]?1.1:1);
+ const tenBuyMultiplier=state.activeChallenge===7?Math.min(2,1+0.2*state.boosts):(state.infinityUpgrades.includes('dimMult')?2.2:2);
+ let mult=1*(state.activeChallenge===8?1:dimensionBoostMult(i))*Math.pow(tenBuyMultiplier,Math.floor(state.bought[i]/10))*(i===0&&state.achievements[15]?1.1:1)*(i===7&&state.achievements[10]?1.1:1);
  mult*=infinityUpgradeMultiplier('timeMult')*infinityUpgradeMultiplier('timeMult2');
  // 未使用IPボーナスは第1次元にのみ適用する。
  if(i===0)mult*=infinityUpgradeMultiplier('unspentBonus');
@@ -248,7 +283,9 @@ function achievementMultiplier(){
  const completedRows=Math.floor(count/8);
  return Math.pow(1.03,count)*Math.pow(1.25,completedRows);
 }
-function productionMult(i){return dimensionMult(i)*(i===7?state.sacrificeMult:1)*tickspeedMult()*achievementMultiplier();}
+function productionMult(i){let m=dimensionMult(i)*(i===7?state.sacrificeMult:1)*tickspeedMult()*achievementMultiplier();if(state.activeChallenge===2)m*=Math.max(0,Math.min(1,state.challenge2Recovery));if(state.activeChallenge===3&&i===0)m*=0.01*state.challenge3TimeMult;if(state.activeChallenge===12&&(i===1||i===3||i===5))m=Math.pow(Math.max(1,m),i===1?1.7:(i===3?1.4:1.3));return m;}
+function dimensionAmountPower(i){return state.activeChallenge===12&&i===1?1.5:state.activeChallenge===12&&(i===3||i===5)?1.3:1;}
+function dimensionOutput(i){return Math.pow(Math.max(0,state.amount[i]),dimensionAmountPower(i))*productionMult(i);}
 function checkAchievements(){
  if(state.infinities>0)state.achievements[8]=true;
  if(state.boosts>=1)state.achievements[9]=true;
@@ -259,14 +296,14 @@ function checkAchievements(){
  if(state.galaxies>=2)state.achievements[14]=true;
 }
 function sacrificeTotalMultiplier(total){return Math.max(Math.log10(Math.max(total,1))/10,1)**2;}
-function sacrificeGain(){const next=sacrificeTotalMultiplier(state.sacrificedFirst+state.amount[0]);return next/Math.max(1,state.sacrificeMult);}
-function unlocked(i){return i<4||state.boosts>=i-3;}
-function productionRate(){return state.amount[0]*productionMult(0);}
-function boostRequirement(){const n=state.boosts+1;const base=n<=5?20:15*n-55;return Math.max(1,base-(state.infinityUpgrades.includes('resetBoost')?9:0));}
-function boostRequirementTier(){const n=state.boosts+1;return n<=5?n+3:8;}
-function canBoost(){const tier=boostRequirementTier();return state.bought[tier-1]>=boostRequirement();}
-function galaxyRequirement(){return Math.max(1,80+60*state.galaxies-(state.infinityUpgrades.includes('resetBoost')?9:0));}
-function canGalaxy(){return state.bought[7]>=galaxyRequirement();}
+function sacrificeGain(){if(state.activeChallenge===8)return Math.pow(Math.max(1,state.amount[0]),0.05)/Math.pow(Math.max(1,state.sacrificedFirst+state.amount[0]),0.04);const next=sacrificeTotalMultiplier(state.sacrificedFirst+state.amount[0]);return next/Math.max(1,state.sacrificeMult);}
+function unlocked(i){if(state.activeChallenge===10&&i>=6)return false;return i<4||state.boosts>=i-3;}
+function productionRate(){let r=dimensionOutput(0);if(state.activeChallenge===12)r+=dimensionOutput(1);return r;}
+function boostRequirement(){const n=state.boosts+1;let base=n<=5?20:15*n-55;if(state.activeChallenge===10)base=40+15*Math.max(0,state.boosts-2);return Math.max(1,base-(hasInfinityUpgrade('resetBoost')?9:0));}
+function boostRequirementTier(){const n=state.boosts+1;return state.activeChallenge===10?Math.min(6,n+3):(n<=5?n+3:8);}
+function canBoost(){if(state.activeChallenge===8&&state.boosts>=5)return false;const tier=boostRequirementTier();return state.bought[tier-1]>=boostRequirement();}
+function galaxyRequirement(){const base=state.activeChallenge===10?99+90*state.galaxies:80+60*state.galaxies;return Math.max(1,base-(hasInfinityUpgrade('resetBoost')?9:0));}
+function canGalaxy(){const tier=state.activeChallenge===10?5:7;return state.activeChallenge!==8&&state.bought[tier]>=galaxyRequirement();}
 function buildRows(){
  const root=$('dimensions');root.innerHTML='';rows=[];
  for(let i=0;i<8;i++){
@@ -286,7 +323,7 @@ function render(){
  setText($('statInfinityTime'),formatPlayTime(state.infinityTime));
  setText($('statFastestInfinity'),state.fastestInfinity>0?formatPlayTime(state.fastestInfinity):'未記録');
  document.querySelectorAll('[data-passive-ip-minute], [data-ip-offline-minute]').forEach(el=>{el.textContent='1分あたりの獲得量：'+(state.fastestInfinity>0?fmtFixed(60*passiveIPRate(),3)+' IP':'最速Infinity記録後に表示');});
- setText($('matter'),fmtMatter(state.matter));
+ setText($('matter'),fmtMatter(state.matter));if(state.activeChallenge===11){const el=$('matter');if(el)el.title='Matter: '+fmtMatter(state.challenge11Matter);}
  updateAutobuyerUnlockAlert();
  setText($('rate'),fmtFixed(productionRate(),2));
  $('ipStat').style.display=state.infinities>0?'block':'none';
@@ -297,8 +334,8 @@ function render(){
  const infinityReady=atInfinity();
  document.body.classList.toggle('crunch-ready',infinityReady);
  $('infinityPanel').style.display='none';
- if(infinityReady){document.body.dataset.screen='infinity';$('screenTabs').style.display='none';$('tabContent').hidden=false;$('tabContent').innerHTML='<h2>Infinity</h2><button type="button" class="big-crunch-btn" id="tabCrunchBtn">Big Crunch (+'+fmt(ipGainMultiplier())+' IP)</button>';$('tabCrunchBtn').onclick=bigCrunch;}
- else{$('screenTabs').style.display='';if(wasCrunchReady){document.body.dataset.screen='main';$('tabContent').hidden=true;$('tabContent').innerHTML='';document.querySelectorAll('.screen-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen==='main'));}}
+ if(infinityReady&&!state.activeChallenge){document.body.dataset.screen='infinity';$('screenTabs').style.display='none';$('tabContent').hidden=false;$('tabContent').innerHTML='<h2>Infinity</h2><button type="button" class="big-crunch-btn" id="tabCrunchBtn">Big Crunch (+'+fmt(ipGainMultiplier())+' IP)</button>';$('tabCrunchBtn').onclick=bigCrunch;}
+ else{$('screenTabs').style.display='';if(wasCrunchReady&&!state.activeChallenge){document.body.dataset.screen='main';$('tabContent').hidden=true;$('tabContent').innerHTML='';document.querySelectorAll('.screen-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen==='main'));}}
  setText($('ipCount'),fmt(state.ip));setText($('infinityCount'),fmt(state.infinities));
  setText($('tickspeedMultiplier'),'購入 '+fmt(state.tickspeed)+'回 · 倍率 ×'+fmtFixed(tickspeedMult(),3));
  setText($('tickspeedDesc'),'');
@@ -309,18 +346,18 @@ function render(){
  const gain=sacrificeGain();
  setText($('sacrificeBtn'),$('sacrificeBtn').disabled?'ロック中':'Sacrifice ×'+gain.toFixed(2));
  const tsCost=tickspeedCost();
- $('tickspeedBtn').disabled=state.matter<tsCost;
- setText($('tickspeedBtn'),'購入 · '+fmt(tsCost));
- $('tickspeedMaxBtn').disabled=state.matter<tsCost;
+ $('tickspeedBtn').disabled=state.activeChallenge===6?state.amount[0]<tsCost:state.matter<tsCost;
+ setText($('tickspeedBtn'),'購入 · '+fmt(tsCost)+(state.activeChallenge===6?' 第1次元':''));
+ $('tickspeedMaxBtn').disabled=state.activeChallenge===6?state.amount[0]<tsCost:state.matter<tsCost;
  setText($('tickspeedMaxBtn'),'Buy Max');
  if(rows.length!==8||$('dimensions').children.length!==8)buildRows();
  for(let i=0;i<8;i++){
-  const {d,det,amt,b}=rows[i],open=unlocked(i),c=cost(i);
+  const {d,det,amt,b}=rows[i],open=unlocked(i)&&!(state.activeChallenge===10&&i>=6),c=cost(i);
   d.className='dim'+(open?'':' locked');
   setText(det,open?'×'+fmtFixed(dimensionMult(i)*(i===7?state.sacrificeMult:1)*achievementMultiplier(),2):'ブースト '+(i-3)+' 回');
   setText(amt,fmtFixed(state.amount[i],2));
   const max=state.buyMax?maxAffordable(i):null;
-  b.disabled=!open||(state.buyMax?max.count===0:state.matter<c);
+  b.disabled=!open||(state.buyMax?max.count===0:!canAffordDimension(i,c));
   setText(b,!open?'ロック中':(state.buyMax?('購入×'+fmt(max.count)+' コスト'+fmt(max.count>0?max.spent:c)):('購入×1 コスト'+fmt(c))));
  }
  const n=state.boosts+1,req=boostRequirement(),tier=boostRequirementTier(),can=canBoost();
@@ -332,7 +369,7 @@ function render(){
  $('quickMaxAllBtn').disabled=!canBuyAnything();
  setText($('quickBuyModeBtn'),'最大購入');
  $('mobileBoostBtn').disabled=!can;setText($('mobileBoostBtn'),'Dimension Boost '+fmt(state.boosts)+'\n第'+tier+'次元 '+fmt(req)+'個');
- $('mobileGalaxyBtn').disabled=!canGalaxy();setText($('mobileGalaxyBtn'),'Antimatter Galaxy '+state.galaxies+'\n第8次元 '+fmt(galaxyRequirement())+'個');
+ $('mobileGalaxyBtn').disabled=!canGalaxy();setText($('mobileGalaxyBtn'),'Antimatter Galaxy '+state.galaxies+'\n第'+(state.activeChallenge===10?6:8)+'次元 '+fmt(galaxyRequirement())+'個');
  $('mobileTickspeedBtn').disabled=false;setText($('mobileTickspeedBtn'),state.buyMax?'購入: 最大個':'購入: 1個ずつ');
  setText($('mobileBuyModeBtn'),'最大購入');
  const effect=n===1?'第1次元の倍率が2倍になります。':(n<=6?'第'+n+'次元以下の倍率が2倍になります。':'全ての次元の倍率が2倍になります。');
@@ -340,17 +377,14 @@ function render(){
  setText($('status'),'ゲームは自動保存されます。');
 }
 function buy(i){
- if(!unlocked(i))return;
- if(i===0&&state.amount[0]>=1e150)state.achievements[15]=true;
- if(state.buyMax){const max=maxAffordable(i);for(let k=0;k<max.count;k++){const c=cost(i);state.matter-=c;state.amount[i]++;state.bought[i]++;}}
- else{const c=cost(i);if(state.matter<c)return;state.matter-=c;state.amount[i]++;state.bought[i]++;}
- if(i>=0&&state.bought[i]>0)state.achievements[i]=true;
- if(i===0&&state.amount[0]>=1e150)state.achievements[15]=true;
- checkAchievements();
- render();save();
+ if(!unlocked(i)||(state.activeChallenge===10&&i>=6))return;
+ const buyCount=state.buyMax?maxAffordable(i).count:1;let boughtNow=0;
+ for(let k=0;k<buyCount;k++){const c=cost(i);if(!canAffordDimension(i,c))break;spendDimension(i,c);state.amount[i]++;state.bought[i]++;boughtNow++;if(state.activeChallenge===4){for(let j=0;j<i;j++)state.amount[j]=0;} }
+ if(boughtNow){if(state.activeChallenge===2)challengePurchaseReset();if(state.activeChallenge===9&&state.bought[i]%10===0)applyChallenge9CostStep(cost(i,-1),i);if(i>=0)state.achievements[i]=true;if(i===0&&state.amount[0]>=1e150)state.achievements[15]=true;checkAchievements();render();save();}
 }
+
 function canBuyAnything(){
- if(state.matter>=tickspeedCost())return true;
+ if(state.activeChallenge===6?state.amount[0]>=tickspeedCost():state.matter>=tickspeedCost())return true;
  for(let i=0;i<8;i++)if(unlocked(i)&&maxAffordable(i).count>0)return true;
  return false;
 }
@@ -364,36 +398,36 @@ function maxAll(){
   const buyCount=Math.max(0,targetBought-state.bought[i]);
   for(let k=0;k<buyCount;k++){
    const c=cost(i);
-   if(state.matter<c)break;
-   state.matter-=c;state.amount[i]++;state.bought[i]++;
+   if(!canAffordDimension(i,c))break;
+   spendDimension(i,c);state.amount[i]++;state.bought[i]++;if(state.activeChallenge===4){for(let j=0;j<i;j++)state.amount[j]=0;}if(state.activeChallenge===9&&state.bought[i]%10===0)applyChallenge9CostStep(cost(i,-1),i);
   }
-  if(buyCount>0)state.achievements[i]=true;
+  if(buyCount>0){if(state.activeChallenge===2)challengePurchaseReset();state.achievements[i]=true;}
  }
  checkAchievements();
  let guard=0;
  while(guard<10000){
   const c=tickspeedCost();
-  if(!(state.matter>=c)||!Number.isFinite(c))break;
-  state.matter-=c;state.tickspeed++;guard++;
+  if(!(state.activeChallenge===6?state.amount[0]>=c:state.matter>=c)||!Number.isFinite(c))break;
+  if(state.activeChallenge===6)state.amount[0]-=c;else state.matter-=c;state.tickspeed++;if(state.activeChallenge===2)challengePurchaseReset();guard++;
  }
  render();save();
 }
 function boost(){
  if(!canBoost())return;
- state.boosts++;checkAchievements();state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;render();save();
+ state.boosts++;checkAchievements();if(state.activeChallenge===3)state.challenge3TimeMult=1;if(state.activeChallenge===11){state.matter=10;}else state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;render();save();
 }
 function sacrifice(){
- if(state.boosts<5||state.amount[7]<1||state.amount[0]<=0)return;
+ if(state.boosts<5||(state.activeChallenge===10)||state.amount[state.activeChallenge===12?5:7]<1||state.amount[0]<=0)return;
  const gain=sacrificeGain();
  if(gain<1.01)return;
  state.sacrificedFirst+=state.amount[0];
  state.sacrificeMult*=gain;
- for(let i=0;i<7;i++)state.amount[i]=0;
+ if(state.activeChallenge===8){state.matter=10;for(let i=0;i<8;i++)state.amount[i]=0;}else if(state.activeChallenge===12){for(let i=0;i<6;i++)state.amount[i]=0;}else{for(let i=0;i<7;i++)state.amount[i]=0;}
  render();save();
 }
 function galaxy(){
- if(!canGalaxy())return;
- state.galaxies++;checkAchievements();
+ if(state.activeChallenge===8||!canGalaxy())return;
+ state.galaxies++;checkAchievements();if(state.activeChallenge===3)state.challenge3TimeMult=1;
  state.matter=state.achievements[8]?100:10;
  state.amount=Array(8).fill(0);
  state.bought=Array(8).fill(0);
@@ -404,11 +438,12 @@ function galaxy(){
  render();save();
 }
 function ipGainMultiplier(){return Math.pow(2,Math.max(0,state.ipMultLevel||0));}
-function passiveIPRate(){if(!state.infinityUpgrades.includes('passiveGen')||!(state.fastestInfinity>0))return 0;return ipGainMultiplier()/(state.fastestInfinity*10);}
-function startingBoosts(){if(state.infinityUpgrades.includes('skipResetGalaxy'))return 4;if(state.infinityUpgrades.includes('skipReset3'))return 3;if(state.infinityUpgrades.includes('skipReset2'))return 2;if(state.infinityUpgrades.includes('skipReset1'))return 1;return 0;}
+function passiveIPRate(){if(!hasInfinityUpgrade('passiveGen')||!(state.fastestInfinity>0))return 0;return ipGainMultiplier()/(state.fastestInfinity*10);}
+function startingBoosts(){if(hasInfinityUpgrade('skipResetGalaxy'))return 4;if(state.infinityUpgrades.includes('skipReset3'))return 3;if(state.infinityUpgrades.includes('skipReset2'))return 2;if(state.infinityUpgrades.includes('skipReset1'))return 1;return 0;}
 function startingGalaxies(){return state.infinityUpgrades.includes('skipResetGalaxy')?1:0;}
 function bigCrunch(){if(!atInfinity())return;const completedInfinity=Math.max(0,state.infinityTime);if(completedInfinity>0)state.fastestInfinity=state.fastestInfinity>0?Math.min(state.fastestInfinity,completedInfinity):completedInfinity;state.ip+=ipGainMultiplier();state.infinities++;state.achievements[8]=true;state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.infinityTime=0;buildRows();switchScreen('main');render();save();}
 function applyOfflineProgress(seconds){
+ if(state.activeChallenge)return;
  const offlineSeconds=Math.min(86400,Math.max(0,seconds));
  let remaining=offlineSeconds;
  while(remaining>0){
@@ -419,7 +454,7 @@ function applyOfflineProgress(seconds){
   if(state.ipOffline)state.ip+=passiveIPRate()*dt;
   if(state.infinities>0)state.infinityTime=Math.max(0,Number(state.infinityTime)||0)+dt;
   for(let i=7;i>=1;i--){
-   const v=state.amount[i-1]+state.amount[i]*productionMult(i)*0.1*dt;
+   const v=state.amount[i-1]+dimensionOutput(i)*0.1*dt;
    state.amount[i-1]=Number.isFinite(v)?Math.min(v,INFINITY):INFINITY;
   }
   const next=state.matter+productionRate()*dt;
@@ -437,7 +472,7 @@ function load(){
   if(Array.isArray(s.bought)&&s.bought.length===8)state.bought=s.bought.map(x=>Math.max(0,Number(x)||0));
   state.boosts=Math.max(0,Number(s.boosts)||0);state.galaxies=Math.max(0,Math.floor(Number(s.galaxies)||0));state.buyMax=true;state.tickspeed=Math.max(0,Math.floor(Number(s.tickspeed)||0));
   if(s.autobuyers&&typeof s.autobuyers==='object'){state.autobuyers={...state.autobuyers,...s.autobuyers,dims:Array.isArray(s.autobuyers.dims)?Array.from({length:8},(_,i)=>Boolean(s.autobuyers.dims[i])):state.autobuyers.dims,unlockedDims:Array.isArray(s.autobuyers.unlockedDims)?Array.from({length:8},(_,i)=>Boolean(s.autobuyers.unlockedDims[i])):Array(8).fill(false),tickspeedUnlocked:Boolean(s.autobuyers.tickspeedUnlocked),intervalUpgradeLevels:Array.isArray(s.autobuyers.intervalUpgradeLevels)?Array.from({length:9},(_,i)=>Math.max(0,Math.floor(Number(s.autobuyers.intervalUpgradeLevels[i])||0))):Array(9).fill(0)};}
-  state.sacrificeMult=Math.max(1,Number(s.sacrificeMult)||1);state.sacrificedFirst=Math.max(0,Number(s.sacrificedFirst)||0);state.playTime=Math.max(0,Number(s.playTime)||0);state.infinityTime=Math.max(0,Number(s.infinityTime)||0);state.fastestInfinity=Math.max(0,Number(s.fastestInfinity)||0);state.ip=Math.max(0,Number(s.ip)||0);state.infinities=Math.max(0,Math.floor(Number(s.infinities)||0));state.infinityUpgrades=Array.isArray(s.infinityUpgrades)?s.infinityUpgrades.filter(x=>typeof x==='string'):[];state.ipMultLevel=Math.max(0,Math.floor(Number(s.ipMultLevel)||0));state.ipOffline=Boolean(s.ipOffline);state.achievements=Array.isArray(s.achievements)?Array.from({length:16},(_,i)=>Boolean(s.achievements[i])):Array(16).fill(false);
+  state.sacrificeMult=Math.max(1,Number(s.sacrificeMult)||1);state.sacrificedFirst=Math.max(0,Number(s.sacrificedFirst)||0);state.playTime=Math.max(0,Number(s.playTime)||0);state.infinityTime=Math.max(0,Number(s.infinityTime)||0);state.fastestInfinity=Math.max(0,Number(s.fastestInfinity)||0);state.ip=Math.max(0,Number(s.ip)||0);state.infinities=Math.max(0,Math.floor(Number(s.infinities)||0));state.infinityUpgrades=Array.isArray(s.infinityUpgrades)?s.infinityUpgrades.filter(x=>typeof x==='string'):[];state.ipMultLevel=Math.max(0,Math.floor(Number(s.ipMultLevel)||0));state.ipOffline=Boolean(s.ipOffline);state.activeChallenge=Math.max(0,Math.min(12,Math.floor(Number(s.activeChallenge)||0)));state.completedChallenges=Array.isArray(s.completedChallenges)?Array.from(new Set(s.completedChallenges.map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=12))):[1];if(state.infinities>0&&!state.completedChallenges.includes(1))state.completedChallenges.push(1);state.challengeTimes=s.challengeTimes&&typeof s.challengeTimes==='object'?s.challengeTimes:{};state.challenge2Recovery=Math.max(0,Math.min(1,Number(s.challenge2Recovery??1)));state.challenge3TimeMult=Math.max(1,Number(s.challenge3TimeMult)||1);state.challenge11Matter=Math.max(0,Number(s.challenge11Matter)||0);state.challenge11NoBonusBoosts=Math.max(0,Math.floor(Number(s.challenge11NoBonusBoosts)||0));state.achievements=Array.isArray(s.achievements)?Array.from({length:16},(_,i)=>Boolean(s.achievements[i])):Array(16).fill(false);
   const savedAt=Number(s.last);const elapsed=Math.min(86400,Math.max(0,(Date.now()-(Number.isFinite(savedAt)&&savedAt>0?savedAt:Date.now()))/1000));
   // オフライン中も通常進行と同じ順序で各次元を生産させる。
   applyOfflineProgress(elapsed);
@@ -455,11 +490,11 @@ $('mobileBuyModeBtn').onclick=()=>{state.buyMax=true;render();save();};
 $('quickBoostBtn').onclick=()=>$('boostBtn').click();
 $('quickTickspeedBtn').onclick=()=>{state.buyMax=!state.buyMax;render();save();};
 $('quickBuyModeBtn').onclick=()=>{state.buyMax=!state.buyMax;render();save();};
-$('tickspeedBtn').onclick=()=>{const c=tickspeedCost();if(state.matter<c)return;state.matter-=c;state.tickspeed++;render();save();};
-$('tickspeedMaxBtn').onclick=()=>{let guard=0;while(guard<10000){const c=tickspeedCost();if(!Number.isFinite(c)||state.matter<c)break;state.matter-=c;state.tickspeed++;guard++;}render();save();};
+$('tickspeedBtn').onclick=()=>{const c=tickspeedCost();if(state.activeChallenge===6?state.amount[0]<c:state.matter<c)return;if(state.activeChallenge===6)state.amount[0]-=c;else state.matter-=c;state.tickspeed++;if(state.activeChallenge===2)challengePurchaseReset();if(state.activeChallenge===9)applyChallenge9CostStep(c,-1);render();save();};
+$('tickspeedMaxBtn').onclick=()=>{let guard=0;while(guard<10000){const c=tickspeedCost();if(!Number.isFinite(c)||(state.activeChallenge===6?state.amount[0]<c:state.matter<c))break;if(state.activeChallenge===6)state.amount[0]-=c;else state.matter-=c;state.tickspeed++;if(state.activeChallenge===2)challengePurchaseReset();if(state.activeChallenge===9)applyChallenge9CostStep(c,-1);guard++;}render();save();};
 $('buyModeBtn').onclick=()=>{state.buyMax=true;render();save();};
 $('saveBtn').onclick=()=>{save();$('status').textContent='セーブしました';};
-$('resetBtn').onclick=()=>{if(confirm('セーブデータを消して最初からやり直しますか？')){localStorage.removeItem('antimatterFirstSteps');state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.buyMax=true;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.ip=1;state.infinities=1;state.playTime=0;state.infinityTime=0;state.fastestInfinity=0;state.last=Date.now();state.infinityUpgrades=[];state.ipMultLevel=0;state.ipOffline=false;state.achievements=Array(16).fill(true);state.autobuyers={dims:Array(8).fill(false),tickspeed:false,unlockedDims:Array(8).fill(false),tickspeedUnlocked:false,boost:false,galaxy:false,crunch:false,dimModes:Array(8).fill('10'),dimMode:'10',intervalUpgradeLevel:0,intervalUpgradeLevels:Array(9).fill(0),boostMode:'amount',boostValue:4,galaxyMode:'amount',galaxyValue:1,crunchMode:'amount',crunchValue:1};previousDimAutobuyerUnlocks=Array(8).fill(false);autobuyerUnlockAlert=false;observedAchievements=state.achievements.slice();$('buyModeBtn').textContent='購入: 最大購入';render();save();switchScreen(document.body.dataset.screen||'main');}};
+$('resetBtn').onclick=()=>{if(confirm('セーブデータを消して最初からやり直しますか？')){localStorage.removeItem('antimatterFirstSteps');state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.buyMax=true;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.ip=1;state.infinities=1;state.playTime=0;state.infinityTime=0;state.fastestInfinity=0;state.last=Date.now();state.infinityUpgrades=[];state.ipMultLevel=0;state.ipOffline=false;state.activeChallenge=0;state.completedChallenges=[1];state.challengeTimes={};state.challenge11NoBonusBoosts=0;resetChallengeTimers();state.achievements=Array(16).fill(true);state.autobuyers={dims:Array(8).fill(false),tickspeed:false,unlockedDims:Array(8).fill(false),tickspeedUnlocked:false,boost:false,galaxy:false,crunch:false,dimModes:Array(8).fill('10'),dimMode:'10',intervalUpgradeLevel:0,intervalUpgradeLevels:Array(9).fill(0),boostMode:'amount',boostValue:4,galaxyMode:'amount',galaxyValue:1,crunchMode:'amount',crunchValue:1};previousDimAutobuyerUnlocks=Array(8).fill(false);autobuyerUnlockAlert=false;observedAchievements=state.achievements.slice();$('buyModeBtn').textContent='購入: 最大購入';render();save();switchScreen(document.body.dataset.screen||'main');}};
 const tabContent=$('tabContent');
 const infinityUpgradeData=[
  ['timeMult','時間経過による強化','全プレイ時間に応じて倍率上昇',1],['18Mult','第1・第8次元強化','Infinitiesに応じて倍率上昇',1],['36Mult','第3・第6次元強化','Infinitiesに応じて倍率上昇',1],['resetBoost','リセット条件緩和','Boost / Galaxyの必要数 −9',1],
@@ -473,10 +508,10 @@ function infinityUpgradeCurrentMultiplier(id){
 }
 function infinityUpgradeView(){const unlocked=state.infinities>0;const cards=[0,4,8,12,1,5,9,13,2,6,10,14,3,7,11,15].map(i=>({u:infinityUpgradeData[i],i})).map(({u,i})=>{const bought=state.infinityUpgrades.includes(u[0]);const prerequisite=infinityUpgradePrerequisiteMet(i);const canBuy=unlocked&&!bought&&prerequisite&&state.ip>=u[3];const showMultiplier=!['resetBoost','dimMult','galaxyBoost','resetMult','passiveGen','skipReset1','skipReset2','skipReset3','skipResetGalaxy'].includes(u[0]);return `<button type="button" class="infinity-upgrade-btn ${bought?'purchased':''}" data-infinity-upgrade="${u[0]}" ${canBuy?'':'disabled'}><strong>${u[1]}</strong><span>${u[2]}</span>${u[0]==='passiveGen'?`<span data-passive-ip-minute>1分あたりの獲得量：${state.fastestInfinity>0?fmtFixed(60*passiveIPRate(),3)+' IP':'最速Infinity記録後に表示'}</span>`:''}${showMultiplier?`<span data-current-multiplier="${u[0]}">現在の倍率：${infinityUpgradeCurrentMultiplier(u[0])}</span>`:''}<small>${bought?'購入済み':!prerequisite?'上のアップグレードが必要':`コスト：${u[3]} IP`}</small></button>`}).join('');return `<h2>Infinity Upgrades</h2><p>所持IP：<strong>${fmt(state.ip)}</strong> · Infinity回数：${fmt(state.infinities)}</p><div class="infinity-upgrade-grid">${cards}</div><div class="infinity-extra-upgrades"><button type="button" class="infinity-upgrade-btn ${state.ipOffline?'purchased':''}" data-infinity-extra="ipOffline" ${unlocked&&!state.ipOffline&&state.ip>=1000?'':'disabled'}><strong>Offline IP</strong><span>オフライン中にIPを獲得</span><span data-ip-offline-minute>1分あたりの獲得量：${state.fastestInfinity>0?fmtFixed(60*passiveIPRate(),3)+' IP':'最速Infinity記録後に表示'}</span><small>${state.ipOffline?'購入済み':'コスト：1,000 IP'}</small></button><button type="button" class="infinity-upgrade-btn" data-infinity-extra="ipMult" ${unlocked&&state.ip>=10*Math.pow(10,state.ipMultLevel)?'':'disabled'}><strong>IP Multiplier</strong><span>IP獲得量 ×${Math.pow(2,state.ipMultLevel+1)}</span><small>コスト：${fmt(10*Math.pow(10,state.ipMultLevel))} IP</small></button></div>`}
 function formatPlayTime(seconds){const total=Math.max(0,Math.floor(Number(seconds)||0));const d=Math.floor(total/86400),h=Math.floor(total%86400/3600),m=Math.floor(total%3600/60),s=total%60;return (d?d+'日 ':'')+h+'時間 '+m+'分 '+s+'秒';}
-const tabViews={autobuyers:()=>`<h2>Autobuyers</h2><div class="ab-grid">${names.map((n,i)=>`<div class="ab-card"><div><strong>${n}</strong><small>${!dimAutobuyerUnlocked(i)?`ロック中：反物質 ${fmtMatter(Math.pow(10,40+i*10))} が必要`:`解禁済み · 間隔：${autobuyerInterval()[i].toFixed(2)}秒`}</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">購入モード <select data-ab-dim-mode="${i}" style="max-width:100%;min-width:0;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px"><option value="10" ${(state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10')==='10'?'selected':''}>次の10個購入ボーナスまで</option><option value="1" ${(state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10')==='1'?'selected':''}>1個ずつ</option></select></label><button type="button" data-ab-upgrade="${i}" ${!autobuyerUpgradeUnlocked(i)||state.ip<autobuyerIntervalUpgradeCost(i)||autobuyerInterval()[i]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(i)?'ロック中':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(i))}）`}</button></div><label class="ab-toggle"><input type="checkbox" data-ab-dim="${i}" ${state.autobuyers.dims[i]?'checked':''} ${!dimAutobuyerUnlocked(i)&&!state.autobuyers.dims[i]?'disabled':''}> ON</label></div>`).join('')}<div class="ab-card"><div><strong>Tickspeed</strong><small>${!tickspeedAutobuyerUnlocked()?`ロック中：反物質 1e140 が必要`:`解禁済み · 間隔：${autobuyerInterval()[8].toFixed(2)}秒 · 購入モード：1個ずつ`}</small><button type="button" data-ab-upgrade="8" disabled>ロック中</button></div><label class="ab-toggle"><input type="checkbox" data-ab="tickspeed" ${state.autobuyers.tickspeed?'checked':''} ${!tickspeedAutobuyerUnlocked()&&!state.autobuyers.tickspeed?'disabled':''}> ON</label></div></div>`,challenges:()=>`<h2>Challenges</h2><p style="color:var(--muted);font-size:12px;margin:0">通常チャレンジ</p><div class="challenge-summary"><span>Normal Challenges</span><strong>0 / 12 完了</strong></div><div class="challenge-grid">${Array.from({length:12},(_,i)=>`<div class="challenge-card"><span class="challenge-number">CHALLENGE ${String(i+1).padStart(2,'0')}</span><strong>Normal Challenge ${i+1}</strong><p>このチャレンジの制約・クリア条件は、チャレンジ機能の実装時に追加されます。</p><span class="challenge-status">準備中</span></div>`).join('')}</div><div class="challenge-note">チャレンジ画面を追加しました。現在は一覧表示のみで、チャレンジの開始・制約適用・クリア判定はまだ実装されていません。</div>`,infinity:()=>infinityUpgradeView(),achievements:()=>`<h2>実績</h2><p>実績による生産倍率：×${achievementMultiplier().toFixed(3)}</p><div class="achievement-grid">${[{id:11,name:'You gotta start somewhere',desc:'第1次元を購入する。'},{id:12,name:'100 antimatter is a lot',desc:'第2次元を購入する。'},{id:13,name:'Half life 3 CONFIRMED',desc:'第3次元を購入する。'},{id:14,name:'L4D: Left 4 Dimensions',desc:'第4次元を購入する。'},{id:15,name:'5 Dimension Antimatter Punch',desc:'第5次元を購入する。'},{id:16,name:"We couldn't afford 9",desc:'第6次元を購入する。'},{id:17,name:'Not a luck related achievement',desc:'第7次元を購入する。'},{id:18,name:'90 degrees to infinity',desc:'第8次元を購入する。'},{id:21,name:'To Infinity!',desc:'Big Crunchを実行する。報酬：Infinity後、反物質100から開始。'},{id:22,name:'Boosting the boost',desc:'Dimension Boostを初めて購入する。'},{id:23,name:'The 9th Dimension is a lie',desc:'第8次元をちょうど99個所持する。報酬：第8次元が10%強化される。'},{id:24,name:'Antimatter Apocalypse',desc:'反物質を1e80以上にする。'},{id:25,name:'Boosting to the max',desc:'Dimension Boostを10回購入する。'},{id:26,name:'You got past The Big Wall',desc:'Antimatter Galaxyを購入する。'},{id:27,name:'Double Galaxy',desc:'Antimatter Galaxyを2個購入する。'},{id:28,name:"There's no point in doing that...",desc:'第1次元を1e150個以上所持した状態で、さらに1個購入する。報酬：第1次元が10%強化される。'}].map(a=>`<div class="achievement-tile ${state.achievements[(a.id<20?a.id-11:a.id-13)]?'unlocked':''}" data-achievement-id="${a.id}" data-achievement-name="${a.name}" data-achievement-desc="${a.desc}"><div class="achievement-id">${a.id}</div><div class="achievement-name">${a.name}</div></div>`).join('')}</div>`,statistics:()=>`<h2>統計</h2><p>総プレイ時間: <span id="statPlayTime">${formatPlayTime(state.playTime)}</span></p><p>Infinity内経過時間: <span id="statInfinityTime">${formatPlayTime(state.infinityTime)}</span></p><p>最速Infinity時間: <span id="statFastestInfinity">${state.fastestInfinity>0?formatPlayTime(state.fastestInfinity):'未記録'}</span></p><p>反物質: ${fmtMatter(state.matter)}</p><p>Infinity Point: ${fmt(state.ip)}</p><p>Infinity回数: ${fmt(state.infinities)}</p><p>Dimension Boost: ${fmt(state.boosts)} / Galaxy: ${fmt(state.galaxies)}</p>`,options:()=>`<h2>設定</h2><button type="button" class="secondary" id="tabSaveBtn">セーブ</button> <button type="button" class="secondary" id="tabResetBtn">最初からやり直す</button>`};
+const tabViews={autobuyers:()=>`<h2>Autobuyers</h2><div class="ab-grid">${names.map((n,i)=>`<div class="ab-card"><div><strong>${n}</strong><small>${!dimAutobuyerUnlocked(i)?`ロック中：反物質 ${fmtMatter(Math.pow(10,40+i*10))} が必要`:`解禁済み · 間隔：${autobuyerInterval()[i].toFixed(2)}秒`}</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">購入モード <select data-ab-dim-mode="${i}" style="max-width:100%;min-width:0;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px"><option value="10" ${(state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10')==='10'?'selected':''}>次の10個購入ボーナスまで</option><option value="1" ${(state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10')==='1'?'selected':''}>1個ずつ</option></select></label><button type="button" data-ab-upgrade="${i}" ${!autobuyerUpgradeUnlocked(i)||state.ip<autobuyerIntervalUpgradeCost(i)||autobuyerInterval()[i]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(i)?'ロック中':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(i))}）`}</button></div><label class="ab-toggle"><input type="checkbox" data-ab-dim="${i}" ${state.autobuyers.dims[i]?'checked':''} ${!dimAutobuyerUnlocked(i)&&!state.autobuyers.dims[i]?'disabled':''}> ON</label></div>`).join('')}<div class="ab-card"><div><strong>Tickspeed</strong><small>${!tickspeedAutobuyerUnlocked()?`ロック中：反物質 1e140 が必要`:`解禁済み · 間隔：${autobuyerInterval()[8].toFixed(2)}秒 · 購入モード：1個ずつ`}</small><button type="button" data-ab-upgrade="8" ${!autobuyerUpgradeUnlocked(8)||state.ip<autobuyerIntervalUpgradeCost(8)||autobuyerInterval()[8]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(8)?'NC9クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(8))}）`}</button></div><label class="ab-toggle"><input type="checkbox" data-ab="tickspeed" ${state.autobuyers.tickspeed?'checked':''} ${!tickspeedAutobuyerUnlocked()&&!state.autobuyers.tickspeed?'disabled':''}> ON</label></div><div class="ab-card"><div><strong>Dimension Boost</strong><small>${challengeCompleted(10)?'解放済み · 0.5秒ごとに条件確認':'NC10クリアで解放'}</small></div><label class="ab-toggle"><input type="checkbox" data-ab="boost" ${state.autobuyers.boost?'checked':''} ${!challengeCompleted(10)&&!state.autobuyers.boost?'disabled':''}> ON</label></div><div class="ab-card"><div><strong>Antimatter Galaxy</strong><small>${challengeCompleted(11)?'解放済み · 0.7秒ごとに条件確認':'NC11クリアで解放'}</small></div><label class="ab-toggle"><input type="checkbox" data-ab="galaxy" ${state.autobuyers.galaxy?'checked':''} ${!challengeCompleted(11)&&!state.autobuyers.galaxy?'disabled':''}> ON</label></div><div class="ab-card"><div><strong>Big Crunch</strong><small>${challengeCompleted(12)?'解放済み · 1秒ごとにInfinityを確認':'NC12クリアで解放'}</small></div><label class="ab-toggle"><input type="checkbox" data-ab="crunch" ${state.autobuyers.crunch?'checked':''} ${!challengeCompleted(12)&&!state.autobuyers.crunch?'disabled':''}> ON</label></div></div>`,challenges:()=>`<h2>Challenges</h2><p style="color:var(--muted);font-size:12px;margin:0">Normal Challenges — 目標：Infinityに到達</p>${state.activeChallenge?`<div class="challenge-description"><strong>挑戦中：NC${state.activeChallenge} — ${challengeData[state.activeChallenge-1].name}</strong><p>${challengeData[state.activeChallenge-1].desc}</p><p>現在の反物質：${fmtMatter(state.matter)} / 目標：Infinity</p>${state.activeChallenge===11?`<p>Normal Matter：${fmtMatter(state.challenge11Matter)}</p>`:''}<div class="challenge-controls">${atInfinity()?`<button type="button" data-challenge-complete>Infinity到達・クリア</button>`:''}<button type="button" data-challenge-exit>中断して通常プレイへ戻る</button></div></div>`:''}<div class="challenge-grid">${challengeData.map(c=>{const done=challengeCompleted(c.id),active=challengeActive(c.id),unlocked=challengeUnlocked(c.id),canStart=unlocked&&!active&&c.id!==1;return `<div class="challenge-card ${done?'completed':''} ${active?'active':''}"><span class="challenge-number">CHALLENGE ${String(c.id).padStart(2,'0')}</span><strong>NC${c.id}: ${c.name}</strong><p>${c.desc}</p><p><small>報酬：${c.reward}</small></p>${state.challengeTimes[c.id]>0?`<p><small>最速記録：${formatPlayTime(state.challengeTimes[c.id])}</small></p>`:''}<span class="challenge-status">${challengeCardStatus(c.id)}</span>${active?`<button type="button" data-challenge-exit>中断</button>`:canStart?`<button type="button" data-challenge-start="${c.id}">開始</button>`:c.id===1?`<button type="button" disabled>初回Infinity済み</button>`:`<button type="button" disabled>${done?'クリア済み':unlocked?'挑戦不可':'16 Infinityで解放'}</button>`}</div>`}).join('')}</div><div class="challenge-note">チャレンジ中にInfinityへ到達したら、この画面で「Infinity到達・クリア」を押してください。中断するとチャレンジの進行状況をリセットして通常プレイへ戻ります。</div>`,infinity:()=>infinityUpgradeView(),achievements:()=>`<h2>実績</h2><p>実績による生産倍率：×${achievementMultiplier().toFixed(3)}</p><div class="achievement-grid">${[{id:11,name:'You gotta start somewhere',desc:'第1次元を購入する。'},{id:12,name:'100 antimatter is a lot',desc:'第2次元を購入する。'},{id:13,name:'Half life 3 CONFIRMED',desc:'第3次元を購入する。'},{id:14,name:'L4D: Left 4 Dimensions',desc:'第4次元を購入する。'},{id:15,name:'5 Dimension Antimatter Punch',desc:'第5次元を購入する。'},{id:16,name:"We couldn't afford 9",desc:'第6次元を購入する。'},{id:17,name:'Not a luck related achievement',desc:'第7次元を購入する。'},{id:18,name:'90 degrees to infinity',desc:'第8次元を購入する。'},{id:21,name:'To Infinity!',desc:'Big Crunchを実行する。報酬：Infinity後、反物質100から開始。'},{id:22,name:'Boosting the boost',desc:'Dimension Boostを初めて購入する。'},{id:23,name:'The 9th Dimension is a lie',desc:'第8次元をちょうど99個所持する。報酬：第8次元が10%強化される。'},{id:24,name:'Antimatter Apocalypse',desc:'反物質を1e80以上にする。'},{id:25,name:'Boosting to the max',desc:'Dimension Boostを10回購入する。'},{id:26,name:'You got past The Big Wall',desc:'Antimatter Galaxyを購入する。'},{id:27,name:'Double Galaxy',desc:'Antimatter Galaxyを2個購入する。'},{id:28,name:"There's no point in doing that...",desc:'第1次元を1e150個以上所持した状態で、さらに1個購入する。報酬：第1次元が10%強化される。'}].map(a=>`<div class="achievement-tile ${state.achievements[(a.id<20?a.id-11:a.id-13)]?'unlocked':''}" data-achievement-id="${a.id}" data-achievement-name="${a.name}" data-achievement-desc="${a.desc}"><div class="achievement-id">${a.id}</div><div class="achievement-name">${a.name}</div></div>`).join('')}</div>`,statistics:()=>`<h2>統計</h2><p>総プレイ時間: <span id="statPlayTime">${formatPlayTime(state.playTime)}</span></p><p>Infinity内経過時間: <span id="statInfinityTime">${formatPlayTime(state.infinityTime)}</span></p><p>最速Infinity時間: <span id="statFastestInfinity">${state.fastestInfinity>0?formatPlayTime(state.fastestInfinity):'未記録'}</span></p><p>反物質: ${fmtMatter(state.matter)}</p><p>Infinity Point: ${fmt(state.ip)}</p><p>Infinity回数: ${fmt(state.infinities)}</p><p>Dimension Boost: ${fmt(state.boosts)} / Galaxy: ${fmt(state.galaxies)}</p>`,options:()=>`<h2>設定</h2><button type="button" class="secondary" id="tabSaveBtn">セーブ</button> <button type="button" class="secondary" id="tabResetBtn">最初からやり直す</button>`};
 function buyInfinityUpgrade(id){const index=infinityUpgradeData.findIndex(x=>x[0]===id);const u=infinityUpgradeData[index];if(!u||state.infinities<1||state.infinityUpgrades.includes(id)||!infinityUpgradePrerequisiteMet(index)||state.ip<u[3])return;state.ip-=u[3];state.infinityUpgrades.push(id);save();switchScreen('infinity');}
 function buyInfinityExtra(id){if(state.infinities<1)return;if(id==='ipOffline'&&!state.ipOffline&&state.ip>=1000){state.ip-=1000;state.ipOffline=true;}else if(id==='ipMult'){const cost=10*Math.pow(10,state.ipMultLevel);if(state.ip>=cost){state.ip-=cost;state.ipMultLevel++;}else return;}else return;save();switchScreen('infinity');}
-function switchScreen(name){if(name==='autobuyers'){autobuyerUnlockAlert=false;const alertTab=document.querySelector('.screen-tabs button[data-screen="autobuyers"]');if(alertTab)alertTab.classList.remove('unlock-alert');}document.body.dataset.screen=name;document.querySelectorAll('.screen-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));if(name!=='main'){tabContent.innerHTML=tabViews[name]();tabContent.querySelectorAll('.achievement-tile').forEach(tile=>tile.addEventListener('click',()=>{const modal=document.createElement('div');modal.className='achievement-modal';modal.innerHTML=`<div class="achievement-modal-box"><h3>${tile.dataset.achievementId}. ${tile.dataset.achievementName}</h3><p>${tile.dataset.achievementDesc.replace('報酬：','<br>報酬：')}</p><button type="button">閉じる</button></div>`;modal.addEventListener('click',e=>{if(e.target===modal||e.target.tagName==='BUTTON')modal.remove();});document.body.appendChild(modal);}));tabContent.querySelectorAll('[data-ab-dim]').forEach(el=>el.addEventListener('change',()=>{state.autobuyers.dims[Number(el.dataset.abDim)]=el.checked;save();}));tabContent.querySelectorAll('[data-ab-dim-mode]').forEach(el=>el.addEventListener('change',()=>{state.autobuyers.dimModes=Array.isArray(state.autobuyers.dimModes)?state.autobuyers.dimModes:Array(8).fill(state.autobuyers.dimMode||'10');state.autobuyers.dimModes[Number(el.dataset.abDimMode)]=el.value;save();}));tabContent.querySelectorAll('[data-ab]').forEach(el=>el.addEventListener('change',()=>{state.autobuyers[el.dataset.ab]=el.checked;save();}));tabContent.querySelectorAll('[data-ab-upgrade]').forEach(el=>el.addEventListener('click',()=>buyAutobuyerIntervalUpgrade(Number(el.dataset.abUpgrade))));tabContent.querySelectorAll('[data-infinity-upgrade]').forEach(el=>el.addEventListener('click',()=>buyInfinityUpgrade(el.dataset.infinityUpgrade)));tabContent.querySelectorAll('[data-infinity-extra]').forEach(el=>el.addEventListener('click',()=>buyInfinityExtra(el.dataset.infinityExtra)));['abBoostMode','abGalaxyValue','abCrunchMode','abCrunchValue'].forEach(id=>{const el=$(id);if(el)el.addEventListener('change',()=>{if(id==='abBoostMode')state.autobuyers.boostMode=el.value;if(id==='abGalaxyValue')state.autobuyers.galaxyValue=Math.max(1,Number(el.value)||1);if(id==='abCrunchMode')state.autobuyers.crunchMode=el.value;if(id==='abCrunchValue')state.autobuyers.crunchValue=Math.max(1,Number(el.value)||1);save();});});const c=$('tabCrunchBtn');if(c)c.onclick=bigCrunch;const sv=$('tabSaveBtn');if(sv)sv.onclick=()=>$('saveBtn').click();const rs=$('tabResetBtn');if(rs)rs.onclick=()=>$('resetBtn').click();}}
+function switchScreen(name){if(name==='autobuyers'){autobuyerUnlockAlert=false;const alertTab=document.querySelector('.screen-tabs button[data-screen="autobuyers"]');if(alertTab)alertTab.classList.remove('unlock-alert');}document.body.dataset.screen=name;document.querySelectorAll('.screen-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));if(name!=='main'){tabContent.innerHTML=tabViews[name]();tabContent.querySelectorAll('.achievement-tile').forEach(tile=>tile.addEventListener('click',()=>{const modal=document.createElement('div');modal.className='achievement-modal';modal.innerHTML=`<div class="achievement-modal-box"><h3>${tile.dataset.achievementId}. ${tile.dataset.achievementName}</h3><p>${tile.dataset.achievementDesc.replace('報酬：','<br>報酬：')}</p><button type="button">閉じる</button></div>`;modal.addEventListener('click',e=>{if(e.target===modal||e.target.tagName==='BUTTON')modal.remove();});document.body.appendChild(modal);}));tabContent.querySelectorAll('[data-ab-dim]').forEach(el=>el.addEventListener('change',()=>{state.autobuyers.dims[Number(el.dataset.abDim)]=el.checked;save();}));tabContent.querySelectorAll('[data-ab-dim-mode]').forEach(el=>el.addEventListener('change',()=>{state.autobuyers.dimModes=Array.isArray(state.autobuyers.dimModes)?state.autobuyers.dimModes:Array(8).fill(state.autobuyers.dimMode||'10');state.autobuyers.dimModes[Number(el.dataset.abDimMode)]=el.value;save();}));tabContent.querySelectorAll('[data-ab]').forEach(el=>el.addEventListener('change',()=>{state.autobuyers[el.dataset.ab]=el.checked;save();}));tabContent.querySelectorAll('[data-ab-upgrade]').forEach(el=>el.addEventListener('click',()=>buyAutobuyerIntervalUpgrade(Number(el.dataset.abUpgrade))));tabContent.querySelectorAll('[data-challenge-start]').forEach(el=>el.addEventListener('click',()=>startChallenge(Number(el.dataset.challengeStart))));tabContent.querySelectorAll('[data-challenge-exit]').forEach(el=>el.addEventListener('click',exitChallenge));tabContent.querySelectorAll('[data-challenge-complete]').forEach(el=>el.addEventListener('click',completeChallenge));tabContent.querySelectorAll('[data-infinity-upgrade]').forEach(el=>el.addEventListener('click',()=>buyInfinityUpgrade(el.dataset.infinityUpgrade)));tabContent.querySelectorAll('[data-infinity-extra]').forEach(el=>el.addEventListener('click',()=>buyInfinityExtra(el.dataset.infinityExtra)));['abBoostMode','abGalaxyValue','abCrunchMode','abCrunchValue'].forEach(id=>{const el=$(id);if(el)el.addEventListener('change',()=>{if(id==='abBoostMode')state.autobuyers.boostMode=el.value;if(id==='abGalaxyValue')state.autobuyers.galaxyValue=Math.max(1,Number(el.value)||1);if(id==='abCrunchMode')state.autobuyers.crunchMode=el.value;if(id==='abCrunchValue')state.autobuyers.crunchValue=Math.max(1,Number(el.value)||1);save();});});const c=$('tabCrunchBtn');if(c)c.onclick=bigCrunch;const sv=$('tabSaveBtn');if(sv)sv.onclick=()=>$('saveBtn').click();const rs=$('tabResetBtn');if(rs)rs.onclick=()=>$('resetBtn').click();}}
 document.querySelectorAll('.screen-tabs button').forEach(b=>b.addEventListener('click',()=>switchScreen(b.dataset.screen)));
 load();
 updateAutobuyerUnlockAlert();autobuyerUnlockAlert=false;previousDimAutobuyerUnlocks=Array.from({length:8},(_,i)=>dimAutobuyerUnlocked(i));
@@ -493,7 +528,7 @@ function notifyNewAchievements(){state.achievements.forEach((unlocked,i)=>{if(un
 function runAutobuyers(dt){
  let changed=false;
  for(let i=0;i<8;i++){
-  if(!state.autobuyers.dims[i]||!dimAutobuyerUnlocked(i)||!unlocked(i))continue;
+  if(!state.autobuyers.dims[i]||!dimAutobuyerUnlocked(i)||!unlocked(i)||(state.activeChallenge===10&&i>=6))continue;
   autobuyerElapsed[i]+=dt;
   if(autobuyerElapsed[i]+1e-9<autobuyerInterval()[i])continue;
   autobuyerElapsed[i]%=autobuyerInterval()[i];
@@ -501,31 +536,37 @@ function runAutobuyers(dt){
   const limit=mode==='1'?1:10-(state.bought[i]%10);
   // 「次の10個購入ボーナスまで」は必要個数分を全て買える時だけ購入する。
   let totalCost=0;for(let k=0;k<limit;k++){const c=cost(i,k);if(!Number.isFinite(c)){totalCost=Infinity;break;}totalCost+=c;}
-  if(mode!=='1'&&state.matter<totalCost)continue;
+  if(mode!=='1'&&dimensionResource(i)<totalCost)continue;
   let boughtNow=0;
   while(boughtNow<limit){
-   const c=cost(i);if(!Number.isFinite(c)||state.matter<c)break;
-   state.matter-=c;state.amount[i]++;state.bought[i]++;boughtNow++;
+   const c=cost(i);if(!Number.isFinite(c)||!canAffordDimension(i,c))break;
+   spendDimension(i,c);state.amount[i]++;state.bought[i]++;boughtNow++;if(state.activeChallenge===4){for(let j=0;j<i;j++)state.amount[j]=0;}
   }
-  if(boughtNow){state.achievements[i]=true;if(i===0&&state.amount[0]>=1e150)state.achievements[15]=true;changed=true;}
+  if(boughtNow){if(state.activeChallenge===2)challengePurchaseReset();if(state.activeChallenge===9&&state.bought[i]%10===0)applyChallenge9CostStep(cost(i,-1),i);state.achievements[i]=true;if(i===0&&state.amount[0]>=1e150)state.achievements[15]=true;changed=true;}
  }
  if(state.autobuyers.tickspeed&&tickspeedAutobuyerUnlocked()){
   autobuyerElapsed[8]+=dt;
   if(autobuyerElapsed[8]+1e-9>=autobuyerInterval()[8]){
    autobuyerElapsed[8]%=autobuyerInterval()[8];const c=tickspeedCost();
-   if(Number.isFinite(c)&&state.matter>=c){state.matter-=c;state.tickspeed++;changed=true;}
+   if(Number.isFinite(c)&&(state.activeChallenge===6?state.amount[0]>=c:state.matter>=c)){if(state.activeChallenge===6)state.amount[0]-=c;else state.matter-=c;state.tickspeed++;if(state.activeChallenge===2)challengePurchaseReset();if(state.activeChallenge===9)applyChallenge9CostStep(c,-1);changed=true;}
   }
  }
+ const resetAuto=[{key:'boost',index:9,unlocked:()=>challengeCompleted(10),ready:()=>canBoost(),run:()=>boost()},{key:'galaxy',index:10,unlocked:()=>challengeCompleted(11),ready:()=>canGalaxy(),run:()=>galaxy()},{key:'crunch',index:11,unlocked:()=>challengeCompleted(12),ready:()=>atInfinity(),run:()=>state.activeChallenge?completeChallenge():bigCrunch()}];
+ for(const a of resetAuto){if(!state.autobuyers[a.key]||!a.unlocked())continue;autobuyerElapsed[a.index]+=dt;if(autobuyerElapsed[a.index]+1e-9>=autobuyerBaseIntervals[a.index]){autobuyerElapsed[a.index]%=autobuyerBaseIntervals[a.index];if(a.ready()){a.run();changed=true;}}}
  if(changed)checkAchievements();
  return changed;
 }
 function tick(now){
  const dt=Math.min(.25,(now-last)/1000);last=now;state.playTime+=dt;if(state.infinities>0)state.infinityTime+=dt;
- for(let i=7;i>=1;i--){const v=state.amount[i-1]+state.amount[i]*productionMult(i)*0.1*dt;state.amount[i-1]=Number.isFinite(v)?Math.min(v,INFINITY):INFINITY;}
+ if(state.activeChallenge===2)state.challenge2Recovery=Math.min(1,state.challenge2Recovery+dt/180);
+ if(state.activeChallenge===3)state.challenge3TimeMult=Math.min(INFINITY,state.challenge3TimeMult*Math.pow(1.0038065,dt));
+ if(state.activeChallenge===11&&state.amount[1]>0)state.challenge11Matter=Math.min(INFINITY,Math.max(10,state.challenge11Matter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,10*dt));
+ if(state.activeChallenge===12){for(let i=7;i>=2;i--){const v=state.amount[i-2]+dimensionOutput(i)*0.1*dt;state.amount[i-2]=Number.isFinite(v)?Math.min(v,INFINITY):INFINITY;}}else{for(let i=7;i>=1;i--){if(state.activeChallenge===10&&i>=6)continue;const v=state.amount[i-1]+dimensionOutput(i)*0.1*dt;state.amount[i-1]=Number.isFinite(v)?Math.min(v,INFINITY):INFINITY;}}
  state.ip+=passiveIPRate()*dt;
  const matterNext=state.matter+productionRate()*dt;state.matter=Number.isFinite(matterNext)?Math.min(matterNext,INFINITY):INFINITY;
+ if(state.activeChallenge===11&&state.challenge11Matter>state.matter){state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;}
  runAutobuyers(dt);checkAchievements();notifyNewAchievements();
- render();lastRender=now;
+ render();if(state.activeChallenge&&document.body.dataset.screen==='challenges'&&now-lastRender>500){switchScreen('challenges');}lastRender=now;
  if(now-lastSave>5000){save();lastSave=now;}
  requestAnimationFrame(tick);
 }
