@@ -432,7 +432,8 @@ function boost(){
  if(!canBoost())return;
  // 手動・自動を問わず、Boost実行後はAutobuyerの待機時間をリセットする。
  autobuyerElapsed[9]=0;
- state.boosts++;checkAchievements();if(state.activeChallenge===3)state.challenge3TimeMult=1;state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;render();save();
+ 
+ state.boosts++;checkAchievements();if(state.activeChallenge===3)state.challenge3TimeMult=1;if(state.activeChallenge===11)state.challenge11Matter=10;state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;render();save();
 }
 function sacrifice(){
  if(state.boosts<5||(state.activeChallenge===10)||state.amount[state.activeChallenge===12?5:7]<1||state.amount[0]<=0)return;
@@ -471,6 +472,7 @@ function applyOfflineProgress(seconds){
  let remaining=offlineSeconds;
  while(remaining>0){
   const dt=Math.min(0.25,remaining);
+  
   state.playTime=Math.max(0,Number(state.playTime)||0)+dt;
   if(state.infinities>0)state.infinityTime=Math.max(0,Number(state.infinityTime)||0)+dt;
   if(state.activeChallenge===2)state.challenge2Recovery=Math.min(1,state.challenge2Recovery+dt/180);
