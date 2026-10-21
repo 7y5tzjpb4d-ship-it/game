@@ -422,7 +422,12 @@ function sacrifice(){
  if(gain<1.01)return;
  state.sacrificedFirst+=state.amount[0];
  state.sacrificeMult*=gain;
- if(state.activeChallenge===8){state.matter=10;for(let i=0;i<8;i++)state.amount[i]=0;}else if(state.activeChallenge===12){for(let i=0;i<6;i++)state.amount[i]=0;}else{for(let i=0;i<7;i++)state.amount[i]=0;}
+ if(state.activeChallenge===8){
+  // NC8: Sacrifice resets antimatter, all Dimension amounts, purchase multipliers, and costs. Tickspeed is retained. Achievement 21 starts at 100 antimatter.
+  state.matter=state.achievements[8]?100:10;
+  state.amount=Array(8).fill(0);
+  state.bought=Array(8).fill(0);
+ }else if(state.activeChallenge===12){for(let i=0;i<6;i++)state.amount[i]=0;}else{for(let i=0;i<7;i++)state.amount[i]=0;}
  render();save();
 }
 function galaxy(){
