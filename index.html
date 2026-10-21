@@ -309,7 +309,7 @@ function checkAchievements(){
  if(state.completedChallenges.length>=12)unlockAchievement(48);
  if(state.infinityUpgrades.length>=16)unlockAchievement(41);
  if(state.exceedProductionTime>=30)unlockAchievement(44);
- const mults=Array.from({length:8},(_,i)=>dimensionMult(i));
+ const mults=Array.from({length:8},(_,i)=>dimensionMult(i)*(i===7?state.sacrificeMult:1)*achievementMultiplier());
  if(mults.every((m,i)=>i===0||m>mults[i-1]))unlockAchievement(43);
 }
 function startingAntimatter(){return state.achievements[8]?100:10;}
