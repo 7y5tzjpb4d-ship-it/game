@@ -443,23 +443,27 @@ function startingBoosts(){if(hasInfinityUpgrade('skipResetGalaxy'))return 4;if(s
 function startingGalaxies(){return state.infinityUpgrades.includes('skipResetGalaxy')?1:0;}
 function bigCrunch(){if(!atInfinity())return;const completedInfinity=Math.max(0,state.infinityTime);if(completedInfinity>0)state.fastestInfinity=state.fastestInfinity>0?Math.min(state.fastestInfinity,completedInfinity):completedInfinity;state.ip+=ipGainMultiplier();state.infinities++;state.achievements[8]=true;state.matter=state.achievements[8]?100:10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.infinityTime=0;buildRows();switchScreen('main');render();save();}
 function applyOfflineProgress(seconds){
- if(state.activeChallenge)return;
+ // チャレンジ中も、通常プレイと同じチャレンジ固有ルールを適用してオフライン進行する。
  const offlineSeconds=Math.min(86400,Math.max(0,seconds));
  let remaining=offlineSeconds;
  while(remaining>0){
   const dt=Math.min(0.25,remaining);
-  // オフライン中も実時間とInfinity内経過時間を通常のtickと同じ刻みで進める。
-  // Infinity時間ボーナスはInfinity内経過時間を参照するため、生産計算より先に加算する。
   state.playTime=Math.max(0,Number(state.playTime)||0)+dt;
-  if(state.ipOffline)state.ip+=passiveIPRate()*dt;
   if(state.infinities>0)state.infinityTime=Math.max(0,Number(state.infinityTime)||0)+dt;
-  for(let i=7;i>=1;i--){
-   const v=state.amount[i-1]+dimensionOutput(i)*0.1*dt;
-   state.amount[i-1]=Number.isFinite(v)?Math.min(v,INFINITY):INFINITY;
+  if(state.activeChallenge===2)state.challenge2Recovery=Math.min(1,state.challenge2Recovery+dt/180);
+  if(state.activeChallenge===3)state.challenge3TimeMult=Math.min(INFINITY,state.challenge3TimeMult*Math.pow(1.0038065,dt));
+  if(state.activeChallenge===11&&state.amount[1]>0)state.challenge11Matter=Math.min(INFINITY,Math.max(10,state.challenge11Matter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,10*dt));
+  if(state.ipOffline)state.ip+=passiveIPRate()*dt;
+  if(state.activeChallenge===12){
+   for(let i=7;i>=2;i--){const v=state.amount[i-2]+dimensionOutput(i)*0.1*dt;state.amount[i-2]=Number.isFinite(v)?Math.min(v,INFINITY):INFINITY;}
+  }else{
+   for(let i=7;i>=1;i--){if(state.activeChallenge===10&&i>=6)continue;const v=state.amount[i-1]+dimensionOutput(i)*0.1*dt;state.amount[i-1]=Number.isFinite(v)?Math.min(v,INFINITY):INFINITY;}
   }
   const next=state.matter+productionRate()*dt;
   state.matter=Number.isFinite(next)?Math.min(next,INFINITY):INFINITY;
-  // オフライン中も通常のtickと同様にAutobuyerを実行する。
+  if(state.activeChallenge===11&&state.challenge11Matter>state.matter){
+   state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;state.matter=10;state.amount=Array(8).fill(0);state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;
+  }
   runAutobuyers(dt);
   remaining-=dt;
  }
