@@ -102,6 +102,7 @@ document.addEventListener('click', requestPortraitOrientation, {once:true});
 <nav class="screen-tabs" id="screenTabs" aria-label="画面切り替え"><button class="active" data-screen="main">Main</button><button data-screen="autobuyers">Autobuyers</button><button data-screen="challenges">Challenges</button><button data-screen="infinity">Infinity</button><button data-screen="achievements">実績</button><button data-screen="statistics">統計</button><button data-screen="options">設定</button></nav>
 <section class="screen-placeholder" id="tabContent" hidden></section>
 <section class="panel tickspeed-panel"><div class="tickspeed-row"><div><h2 class="section-title">Tickspeed <span id="tickspeedMultiplier">倍率 ×1</span></h2><p id="tickspeedDesc" style="color:var(--muted);font-size:11px;margin:0">Tickspeedを上げると全次元の生産速度が上昇します。</p></div><div class="tickspeed-buttons"><button type="button" class="buy tickspeed-buy" id="tickspeedBtn">購入</button><button type="button" class="buy tickspeed-buy" id="tickspeedMaxBtn">Buy Max</button></div></div></section>
+<section class="panel" id="challenge11MatterPanel" style="display:none"><h2 class="section-title">Normal Matter <span>チャレンジ11</span></h2><strong id="challenge11MatterDisplay" style="font-size:20px">10</strong></section>
 <section class="panel sacrifice-panel" id="sacrificePanel">
  <div class="sacrifice-row"><div><h2 class="section-title">Dimensional Sacrifice <span id="sacrificeMultiplier">倍率 ×1</span></h2></div><button type="button" class="buy sacrifice-buy" id="sacrificeBtn" disabled>Sacrifice ×1</button></div>
 </section>
@@ -324,6 +325,7 @@ function render(){
  setText($('statFastestInfinity'),state.fastestInfinity>0?formatPlayTime(state.fastestInfinity):'未記録');
  document.querySelectorAll('[data-passive-ip-minute], [data-ip-offline-minute]').forEach(el=>{el.textContent='1分あたりの獲得量：'+(state.fastestInfinity>0?fmtFixed(60*passiveIPRate(),3)+' IP':'最速Infinity記録後に表示');});
  setText($('matter'),fmtMatter(state.matter));if(state.activeChallenge===11){const el=$('matter');if(el)el.title='Matter: '+fmtMatter(state.challenge11Matter);}
+ const nc11MatterPanel=$('challenge11MatterPanel');if(nc11MatterPanel)nc11MatterPanel.style.display=state.activeChallenge===11?'block':'none';setText($('challenge11MatterDisplay'),fmtMatter(state.challenge11Matter));
  updateAutobuyerUnlockAlert();
  setText($('rate'),fmtFixed(productionRate(),2));
  $('ipStat').style.display=state.infinities>0?'block':'none';
