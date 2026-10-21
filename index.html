@@ -309,8 +309,11 @@ function checkAchievements(){
  if(state.completedChallenges.length>=12)unlockAchievement(48);
  if(state.infinityUpgrades.length>=16)unlockAchievement(41);
  if(state.exceedProductionTime>=30)unlockAchievement(44);
- const mults=Array.from({length:8},(_,i)=>dimensionMult(i)*(i===7?state.sacrificeMult:1)*achievementMultiplier());
- if(mults.every((m,i)=>i===0||m>mults[i-1]))unlockAchievement(43);
+ // Achievement 43 (How the antitables have turned..): the effective multiplier must
+ // strictly increase from Dimension 1 through Dimension 8. Keep this check independent
+ // of the shared achievement multiplier, which cannot change the ordering.
+ const antitableMults=Array.from({length:8},(_,i)=>dimensionMult(i)*(i===7?state.sacrificeMult:1));
+ if(antitableMults.every((m,i)=>i===0||m>antitableMults[i-1]))unlockAchievement(43);
 }
 function startingAntimatter(){return state.achievements[8]?100:10;}
 function infinityStartingAntimatter(){return state.achievements[22]?5000:startingAntimatter();}
@@ -340,6 +343,7 @@ function buildRows(){
 let lastRegularScreen='main';
 let autobuyerCrunchInProgress=false;
 function render(){
+ checkAchievements();
  setText($('statPlayTime'),formatPlayTime(state.playTime));
  setText($('statInfinityTime'),formatPlayTime(state.infinityTime));
  setText($('statFastestInfinity'),state.fastestInfinity>0?formatPlayTime(state.fastestInfinity):'未記録');
