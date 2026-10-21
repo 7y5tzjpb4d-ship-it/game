@@ -334,7 +334,7 @@ function render(){
  const infinityReady=atInfinity();
  document.body.classList.toggle('crunch-ready',infinityReady);
  $('infinityPanel').style.display='none';
- if(infinityReady&&!state.activeChallenge){document.body.dataset.screen='infinity';$('screenTabs').style.display='none';$('tabContent').hidden=false;$('tabContent').innerHTML='<h2>Infinity</h2><button type="button" class="big-crunch-btn" id="tabCrunchBtn">Big Crunch (+'+fmt(ipGainMultiplier())+' IP)</button>';$('tabCrunchBtn').onclick=bigCrunch;}
+ if(infinityReady){document.body.dataset.screen='infinity';$('screenTabs').style.display='none';$('tabContent').hidden=false;$('tabContent').innerHTML='<h2>Infinity</h2><button type="button" class="big-crunch-btn" id="tabCrunchBtn">Big Crunch (+'+fmt(ipGainMultiplier())+' IP)</button>';$('tabCrunchBtn').onclick=()=>state.activeChallenge?completeChallenge():bigCrunch();}
  else{$('screenTabs').style.display='';if(wasCrunchReady&&!state.activeChallenge){document.body.dataset.screen='main';$('tabContent').hidden=true;$('tabContent').innerHTML='';document.querySelectorAll('.screen-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen==='main'));}}
  setText($('ipCount'),fmt(state.ip));setText($('infinityCount'),fmt(state.infinities));
  setText($('tickspeedMultiplier'),'購入 '+fmt(state.tickspeed)+'回 · 倍率 ×'+fmtFixed(tickspeedMult(),3));
