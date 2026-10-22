@@ -368,11 +368,14 @@ function safeCostBigNumber(base,growth,n,alternateGrowth){
  if(!state.breakInfinityActive||normalLog<=capLog)return BigNumber.fromLog10(normalLog);
  // Post-Infinity scaling increases the cost multiplier itself after each purchase:
  // x10, x100, x1000... by default; repeatable upgrades reduce the scaling base.
- const firstPostCount=Math.max(0,Math.ceil((capLog-baseLog)/growthLog));
+ const firstPostCount=Math.max(0,Math.floor((capLog-baseLog)/growthLog)+1);
  const postCount=Math.max(0,count-firstPostCount);
  const scaling=Math.max(2,Number(alternateGrowth)||10);
- const triangular=postCount*(postCount-1)/2;
- const logCost=capLog+postCount*growthLog+triangular*Math.log10(scaling);
+ // Keep the ordinary geometric cost through the first cost above Infinity.
+ // Each later ×10 Dimension purchase increases the per-10 cost multiplier:
+ // ×1e3 -> ×1e4 -> ×1e5 ... (minimum ×3 with max upgrade).
+ const triangular=postCount*(postCount+1)/2;
+ const logCost=normalLog+triangular*Math.log10(scaling);
  return BigNumber.fromLog10(logCost);
 }
 function safeCostFromScaling(base,growth,n,alternateGrowth){return safeCostBigNumber(base,growth,n,alternateGrowth).toNumber();}
@@ -421,13 +424,15 @@ function tickspeedCostBigNumber(){
  const count=Math.max(0,Number(state.tickspeed)||0);
  const baseLog=Math.log10(TICKSPEED_BASE_COST),growthLog=Math.log10(10),capLog=Math.log10(Number.MAX_VALUE);
  const normalLog=baseLog+count*growthLog;
- // Infinity前は従来どおり×10。Infinity後はアップグレードの値を
- // 実際の購入コスト倍率として使う（最大レベルなら購入ごとに×2）。
+ // Infinity前は毎回×10。Infinity後は倍率が購入ごとに×10ずつ増える。
+ // Cost progression: e308, e309, e311, e314 ...; max upgrade changes
+ // the scaling coefficient from ×10 to ×2 (e308, e309, e310.3, ...).
  if(!state.breakInfinityActive||normalLog<=capLog)return BigNumber.fromLog10(normalLog);
- const firstPostCount=Math.max(0,Math.ceil((capLog-baseLog)/growthLog));
+ const firstPostCount=Math.max(0,Math.floor((capLog-baseLog)/growthLog)+1);
  const postCount=Math.max(0,count-firstPostCount);
  const scaling=Math.max(2,10-(Number(state.breakInfinityRepeatables?.[0])||0));
- return BigNumber.fromLog10(capLog+postCount*Math.log10(scaling));
+ const triangular=postCount*(postCount+1)/2;
+ return BigNumber.fromLog10(normalLog+triangular*Math.log10(scaling));
 }
 function tickspeedCost(){return tickspeedCostBigNumber();}
 function canAffordTickspeed(c=tickspeedCost()){return matterBigNumber().compare(c)>=0;}
