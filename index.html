@@ -530,7 +530,7 @@ function render(){
  setText($('statPlayTime'),formatPlayTime(state.playTime));
  setText($('statInfinityTime'),formatPlayTime(state.infinityTime));
  setText($('statFastestInfinity'),state.fastestInfinity>0?formatPlayTime(state.fastestInfinity):'未記録');
- document.querySelectorAll('[data-passive-ip-minute]').forEach(el=>{el.textContent='1分あたりの獲得量：'+(state.fastestInfinity>0?fmtBig(passiveIPRateBigNumber().multiply(60))+' IP':'最速Infinity記録後に表示');});document.querySelectorAll('[data-bi-generation-time]').forEach(el=>{el.textContent='1 Infinityの生産時間：'+(state.fastestInfinity>0?(state.fastestInfinity*5).toFixed(1)+'秒':'最速Infinity記録後に表示');});document.querySelectorAll('[data-ip-offline-minute]').forEach(el=>{el.textContent='オフライン時：'+fmtBig(bestIPPerMinuteBigNumber().multiply(0.5))+' IP/分（最高IP/分の50%）';});
+ document.querySelectorAll('[data-passive-ip-minute]').forEach(el=>{el.textContent='1分あたりの獲得量：'+(state.fastestInfinity>0?fmtBig(passiveIPRateBigNumber().multiply(60))+' IP':'最速Infinity記録後に表示');});document.querySelectorAll('[data-bi-generation-time]').forEach(el=>{el.textContent='生産時間：'+(state.fastestInfinity>0?Number(state.fastestInfinity*5).toFixed(1)+'秒':'未記録');});document.querySelectorAll('[data-ip-offline-minute]').forEach(el=>{el.textContent='オフライン時：'+fmtBig(bestIPPerMinuteBigNumber().multiply(0.5))+' IP/分（最高IP/分の50%）';});
  setText($('matter'),matterDisplayBig().toDisplayString(2));if(state.activeChallenge===11){const el=$('matter');if(el)el.title='Matter: '+fmtMatter(state.challenge11Matter);}
  const nc11MatterPanel=$('challenge11MatterPanel');if(nc11MatterPanel)nc11MatterPanel.style.display=state.activeChallenge===11?'block':'none';setText($('challenge11MatterDisplay'),fmtMatter(state.challenge11Matter));
  updateAutobuyerUnlockAlert();
@@ -840,7 +840,7 @@ function breakInfinityView(){
  const oneTime=breakInfinityUpgradeData().map(([id,name,desc,cost])=>{
   const bought=breakInfinityUpgradeBought(id),can=active&&!bought&&hasIPAtLeast(cost);
   const showMultiplier=['totalAM','currentAM','infinities','slowestChallenge','achievements'].includes(id);
-  return `<button type="button" class="infinity-upgrade-btn ${bought?'purchased':''}" data-bi-upgrade="${id}" ${can?'':'disabled'}><strong>${name}</strong><span>${desc}</span>${id==='fastestInfinity'?`<span class="bi-generation-time" data-bi-generation-time>生産時間：${state.fastestInfinity>0?(state.fastestInfinity*5).toFixed(1)+'秒':'最速Infinity記録後に表示'}</span>`:''}${showMultiplier?`<span data-bi-current-multiplier="${id}">現在の倍率：×${fmtFixedBig(breakInfinityUpgradeEffectBigNumber(id),2)}</span>`:''}<small>${bought?'購入済み':`コスト：${fmt(cost)} IP`}</small></button>`;
+  return `<button type="button" class="infinity-upgrade-btn ${bought?'purchased':''}" data-bi-upgrade="${id}" ${can?'':'disabled'}><strong>${name}</strong><span>${desc}</span>${id==='fastestInfinity'?`<span class="bi-generation-time" data-bi-generation-time>${state.fastestInfinity>0?Number(state.fastestInfinity*5).toFixed(1)+'秒':'未記録'}</span>`:''}${showMultiplier?`<span data-bi-current-multiplier="${id}">現在の倍率：×${fmtFixedBig(breakInfinityUpgradeEffectBigNumber(id),2)}</span>`:''}<small>${bought?'購入済み':`コスト：${fmt(cost)} IP`}</small></button>`;
  }).join('');
  const repeatables=breakInfinityRepeatableData().map(([id,name,desc,baseCost,mult])=>{
   const index=id==='tickspeedCost'?0:id==='dimensionCost'?1:2;
