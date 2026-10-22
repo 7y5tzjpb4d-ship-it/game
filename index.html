@@ -615,7 +615,7 @@ function breakInfinityView(){
  }).join('');
  return `<h2>Break Infinity</h2>
  <p>所持IP：<strong>${fmt(state.ip)}</strong> · Infinity回数：${fmt(state.infinities)}</p>
- ${!state.breakInfinityUnlocked?`<div class="infinity-upgrade-grid"><button type="button" class="infinity-upgrade-btn" id="biUnlockPanel" ${breakInfinityCanUnlock()?'':'disabled'}><strong>Break Infinity：ロック中</strong><span>解禁条件：Auto Crunchの購入間隔を0.1秒まで強化する</span><span>現在の強化レベル：${state.autobuyers.intervalUpgradeLevels?.[11]||0}/15</span><small>${breakInfinityCanUnlock()?'パネルを押して解禁':'ロック中'}</small></button></div>`:
+ ${!state.breakInfinityUnlocked?`<div class="infinity-upgrade-grid" style="grid-template-columns:1fr"><button type="button" class="infinity-upgrade-btn" id="biUnlockPanel" style="width:100%;grid-column:1/-1" ${breakInfinityCanUnlock()?'':'disabled'}><strong>Break Infinity：ロック中</strong><span>解禁条件：Auto Crunchの購入間隔を0.1秒まで強化する</span> <small>${breakInfinityCanUnlock()?'パネルを押して解禁':'ロック中'}</small></button></div>`:
  `<div class="infinity-upgrade-grid">${oneTime}</div>
  <h3 class="break-infinity-section-title">Repeatable Upgrades</h3><div class="infinity-upgrade-grid">${repeatables}</div>`}`;
 }
