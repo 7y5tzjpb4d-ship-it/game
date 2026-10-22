@@ -155,6 +155,27 @@ document.addEventListener('click', requestPortraitOrientation, {once:true});
 (()=>{
 const $=id=>document.getElementById(id);
 function setText(el,value){if(!el)return;const text=String(value);if(el.textContent!==text)el.textContent=text;}
+// 巨大数を仮数・指数で保持する BigNumber。通常の Number の上限を超えて演算・比較・表示できる。
+class BigNumber {
+ constructor(mantissa=0, exponent=0){
+  if(mantissa instanceof BigNumber){this.mantissa=mantissa.mantissa;this.exponent=mantissa.exponent;return;}
+  if(typeof mantissa==='string'&&/^\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?\s*$/i.test(mantissa)){const n=Number(mantissa);if(Number.isFinite(n)){this.mantissa=n;this.exponent=0;}else{const [a,b]=mantissa.toLowerCase().split('e');this.mantissa=Number(a);this.exponent=Number(b)||0;}this.normalize();return;}
+  this.mantissa=Number(mantissa)||0;this.exponent=Number(exponent)||0;this.normalize();
+ }
+ normalize(){if(this.mantissa===0||!Number.isFinite(this.mantissa)){if(this.mantissa===0){this.exponent=0;}else{this.mantissa=Math.sign(this.mantissa)||1;this.exponent=Number.MAX_VALUE;}return this;}if(this.mantissa<0){const sign=-1;this.mantissa=-this.mantissa;this._sign=sign;}const shift=Math.floor(Math.log10(this.mantissa));this.mantissa/=Math.pow(10,shift);this.exponent+=shift;if(this._sign){this.mantissa*=this._sign;delete this._sign;}if(Math.abs(this.mantissa)>=10){this.mantissa/=10;this.exponent++;}return this;}
+ static from(value){if(value instanceof BigNumber)return new BigNumber(value);if(typeof value==='string'&&/^\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)e[+-]?\d+\s*$/i.test(value)){const [m,e]=value.trim().toLowerCase().split('e');return new BigNumber(Number(m),Number(e));}return new BigNumber(Number(value)||0);}
+ static fromLog10(log){if(!Number.isFinite(log))return log===Infinity?new BigNumber(1,Number.MAX_VALUE):new BigNumber(0);const e=Math.floor(log);return new BigNumber(Math.pow(10,log-e),e);}
+ log10(){return this.mantissa>0?this.exponent+Math.log10(this.mantissa):-Infinity;}
+ compare(other){other=BigNumber.from(other);if(this.mantissa<0&&other.mantissa>=0)return -1;if(this.mantissa>=0&&other.mantissa<0)return 1;if(this.exponent!==other.exponent)return (this.exponent>other.exponent?1:-1)*Math.sign(this.mantissa||other.mantissa||1);return this.mantissa===other.mantissa?0:this.mantissa>other.mantissa?1:-1;}
+ add(other){other=BigNumber.from(other);if(!this.mantissa)return other;if(!other.mantissa)return new BigNumber(this);const d=this.exponent-other.exponent;if(Math.abs(d)>16)return new BigNumber(d>0?this:other);const e=Math.max(this.exponent,other.exponent);return new BigNumber(this.mantissa*Math.pow(10,this.exponent-e)+other.mantissa*Math.pow(10,other.exponent-e),e);}
+ subtract(other){other=BigNumber.from(other);return this.add(new BigNumber(-other.mantissa,other.exponent));}
+ multiply(other){other=BigNumber.from(other);return new BigNumber(this.mantissa*other.mantissa,this.exponent+other.exponent);}
+ divide(other){other=BigNumber.from(other);if(!other.mantissa)throw new Error('division by zero');return new BigNumber(this.mantissa/other.mantissa,this.exponent-other.exponent);}
+ power(power){if(this.mantissa<0&&Math.floor(power)!==power) return new BigNumber(NaN);if(!this.mantissa)return new BigNumber(power===0?1:0);const l=this.log10()*power;return BigNumber.fromLog10(l);}
+ toNumber(){if(!this.mantissa)return 0;if(this.exponent>308)return this.mantissa>0?Number.MAX_VALUE:-Number.MAX_VALUE;if(this.exponent< -324)return 0;return this.mantissa*Math.pow(10,this.exponent);}
+ toDisplayString(digits=2){if(!this.mantissa)return (0).toFixed(digits);if(this.exponent<3&&this.exponent>-7){const n=this.toNumber();if(Number.isFinite(n))return n.toFixed(digits);}return this.mantissa.toFixed(digits)+'e'+this.exponent;}
+ toJSON(){return {mantissa:this.mantissa,exponent:this.exponent};}
+}
 const names=['第1次元','第2次元','第3次元','第4次元','第5次元','第6次元','第7次元','第8次元'];
 const baseCosts=[10,100,1e3,1e6,1e9,1e13,1e18,1e24];
 const unlockAt=[0,0,0,0,0,0,0,0];
@@ -163,7 +184,8 @@ const TICKSPEED_BASE_COST=1e3;
 const state={matter:100,matterLog10:2,breakInfinityUnlocked:false,breakInfinityActive:false,breakInfinityUpgrades:[],breakInfinityRepeatables:[0,0,0],totalAntimatterLog10:2,totalIPGained:1e6,amount:Array(8).fill(0),bought:Array(8).fill(0),boosts:0,galaxies:0,buyMax:true,tickspeed:0,sacrificeMult:1,sacrificedFirst:0,ip:1e6,infinities:20,infinityUpgrades:['timeMult','18Mult','36Mult','resetBoost','dimMult','27Mult','45Mult','galaxyBoost','timeMult2','unspentBonus','resetMult','passiveGen','skipReset1','skipReset2','skipReset3','skipResetGalaxy'],ipMultLevel:0,ipOffline:false,achievements:Array(32).fill(true),exceedProductionTime:0,sacrificedThisInfinity:false,autobuyers:{dims:Array(8).fill(false),tickspeed:false,tickspeedMode:'single',unlockedDims:Array(8).fill(true),tickspeedUnlocked:true,boost:false,galaxy:false,crunch:false,dimModes:Array(8).fill('10'),dimMode:'10',intervalUpgradeLevel:0,intervalUpgradeLevels:Array(12).fill(0),dimBulkLevels:Array(8).fill(0),boostMode:'amount',boostValue:4,boostLimit:'',galaxyMode:'amount',galaxyValue:1,galaxyLimit:'',crunchMode:'amount',crunchValue:1},playTime:0,infinityTime:0,fastestInfinity:0,activeChallenge:0,completedChallenges:Array.from({length:12},(_,i)=>i+1),challengeTimes:{},challenge2Recovery:1,challenge3TimeMult:1,challenge11Matter:0,challenge11NoBonusBoosts:0,last:Date.now()};
 const INFINITY=Number.MAX_VALUE;
 function atInfinity(){return state.breakInfinityActive ? (Number(state.matterLog10)||0)>Math.log10(INFINITY)+1e-9 : state.matter>=INFINITY*0.999;}
-function matterLog(){return state.breakInfinityActive&&state.matter>=INFINITY*0.999?Math.max(Math.log10(INFINITY),Number(state.matterLog10)||Math.log10(INFINITY)):Math.log10(Math.max(1,state.matter));}
+function matterBigNumber(){return state.breakInfinityActive&&state.matter>=INFINITY*0.999?BigNumber.fromLog10(Math.max(Math.log10(INFINITY),Number(state.matterLog10)||Math.log10(INFINITY))):BigNumber.from(state.matter);}
+function matterLog(){return matterBigNumber().log10()||0;}
 function addMatterProduction(rate,dt){if(state.breakInfinityActive&&state.matter>=INFINITY*0.999){const log=matterLog();if(!Number.isFinite(rate)){
   const logRate=Math.max(308,log+1);
   const delta=Math.log10(1+Math.pow(10,Math.min(308,logRate+Math.log10(Math.max(dt,1e-9))-log)));
@@ -233,7 +255,7 @@ function tickspeedAutobuyerUnlocked(){return Boolean(state.autobuyers.tickspeedU
 function resetAutobuyerUnlocks(){state.autobuyers.unlockedDims=Array(8).fill(false);state.autobuyers.tickspeedUnlocked=false;state.autobuyers.dims=Array(8).fill(false);state.autobuyers.tickspeed=false;previousDimAutobuyerUnlocks=Array(8).fill(false);autobuyerUnlockAlert=false;}
 function updateAutobuyerUnlockAlert(){const now=Array.from({length:8},(_,i)=>state.matter>=Math.pow(10,40+i*10));let newlyUnlocked=false;state.autobuyers.unlockedDims=Array.isArray(state.autobuyers.unlockedDims)?state.autobuyers.unlockedDims:Array(8).fill(false);now.forEach((v,i)=>{if(v&&!state.autobuyers.unlockedDims[i]){state.autobuyers.unlockedDims[i]=true;newlyUnlocked=true;}});if(state.matter>=1e140&&!state.autobuyers.tickspeedUnlocked){state.autobuyers.tickspeedUnlocked=true;newlyUnlocked=true;}if(newlyUnlocked){autobuyerUnlockAlert=true;save();}previousDimAutobuyerUnlocks=now;const tab=document.querySelector('.screen-tabs button[data-screen="autobuyers"]');if(tab)tab.classList.toggle('unlock-alert',autobuyerUnlockAlert);}
 function fmtMatter(n){
- if(state.breakInfinityActive&&n>=INFINITY*0.999&&(Number(state.matterLog10)||0)>Math.log10(INFINITY)+1e-9){const e=Math.floor(state.matterLog10),m=Math.pow(10,state.matterLog10-e);return m.toFixed(2)+'e'+e;}
+ if(state.breakInfinityActive&&n>=INFINITY*0.999&&(Number(state.matterLog10)||0)>Math.log10(INFINITY)+1e-9)return matterBigNumber().toDisplayString(2);
  if(!Number.isFinite(n))return '∞';
  if(n<1000)return Math.max(0,n).toFixed(2);
  const e=Math.floor(Math.log10(n)),m=n/Math.pow(10,e);
@@ -253,22 +275,20 @@ function fmtFixed(n,digits){
  const e=Math.floor(Math.log10(n)),m=n/Math.pow(10,e);
  return m.toFixed(digits)+'e'+e;
 }
-function safeCostFromScaling(base,growth,n,alternateGrowth){
- const logMax=Math.log10(Number.MAX_VALUE);
- const logBase=Math.log10(base),logGrowth=Math.log10(growth);
+function safeCostBigNumber(base,growth,n,alternateGrowth){
+ const logMax=Math.log10(Number.MAX_VALUE), logBase=Math.log10(base), logGrowth=Math.log10(growth);
  let logCost=logBase+n*logGrowth;
- if(state.breakInfinityActive&&logCost>logMax){
-  const alt=Math.max(2,alternateGrowth);
-  logCost=logMax+(logCost-logMax)*Math.log10(alt)/Math.log10(growth);
- }
- if(!Number.isFinite(logCost)||logCost>=logMax-1e-12)return Number.MAX_VALUE;
- return Math.max(base,Math.pow(10,logCost));
+ if(state.breakInfinityActive&&logCost>logMax){const alt=Math.max(2,alternateGrowth);logCost=logMax+(logCost-logMax)*Math.log10(alt)/Math.log10(growth);}
+ if(!Number.isFinite(logCost))return BigNumber.fromLog10(logMax);
+ return BigNumber.fromLog10(Math.min(logCost,Number.MAX_VALUE));
 }
-function cost(i,offset=0){const n=Math.floor((state.bought[i]+offset)/10);if(state.activeChallenge===6&&i>=2){const c6Base=[100,500,2500,20000,200000,4000000],c6Growth=[1e4,1.2e4,1.8e4,2.6e4,3.2e4,4.2e4];return safeCostFromScaling(c6Base[i-2],c6Growth[i-2],n,Math.max(3,10-(state.breakInfinityRepeatables[1]||0)));}return safeCostFromScaling(baseCosts[i],costGrowth[i],n,Math.max(3,10-(state.breakInfinityRepeatables[1]||0)));}
+function safeCostFromScaling(base,growth,n,alternateGrowth){return Math.max(base,safeCostBigNumber(base,growth,n,alternateGrowth).toNumber());}
+function costBigNumber(i,offset=0){const n=Math.floor((state.bought[i]+offset)/10);if(state.activeChallenge===6&&i>=2){const c6Base=[100,500,2500,20000,200000,4000000],c6Growth=[1e4,1.2e4,1.8e4,2.6e4,3.2e4,4.2e4];return safeCostBigNumber(c6Base[i-2],c6Growth[i-2],n,Math.max(3,10-(state.breakInfinityRepeatables[1]||0)));}return safeCostBigNumber(baseCosts[i],costGrowth[i],n,Math.max(3,10-(state.breakInfinityRepeatables[1]||0)));}
+function cost(i,offset=0){return costBigNumber(i,offset).toNumber();}
 function dimensionResource(i){return state.activeChallenge===6&&i>=2?state.amount[i-2]:state.matter;}
 function canAffordDimension(i,c=cost(i)){
  const resource=dimensionResource(i);
- if(state.activeChallenge!==6&&state.breakInfinityActive&&state.matter>=Number.MAX_VALUE*0.999&&matterLog()>Math.log10(Number.MAX_VALUE))return matterLog()>=Math.log10(c);
+ if(state.activeChallenge!==6&&state.breakInfinityActive)return matterBigNumber().compare(costBigNumber(i))>=0;
  return resource>=c;
 }
 function spendDimension(i,c){
@@ -309,7 +329,8 @@ function tickspeedBase(){
  return 1/(baseMultiplier*Math.pow(0.965,(g-2)*strength-2));
 }
 function tickspeedMult(){const base=tickspeedBase()*((state.achievements[21]||state.achievements[28])?1.02:1);return Math.min(INFINITY,Math.pow(base,Math.min(state.tickspeed,10000)));}
-function tickspeedCost(){return safeCostFromScaling(TICKSPEED_BASE_COST,10,state.tickspeed,Math.max(2,10-(state.breakInfinityRepeatables[0]||0)));}
+function tickspeedCostBigNumber(){return safeCostBigNumber(TICKSPEED_BASE_COST,10,state.tickspeed,Math.max(2,10-(state.breakInfinityRepeatables[0]||0)));}
+function tickspeedCost(){return tickspeedCostBigNumber().toNumber();}
 function canAffordTickspeed(c=tickspeedCost()){return state.breakInfinityActive&&state.matter>=Number.MAX_VALUE*0.999&&matterLog()>Math.log10(Number.MAX_VALUE)?matterLog()>=Math.log10(c):state.matter>=c;}
 function spendTickspeed(c){if(state.breakInfinityActive&&state.matter>=Number.MAX_VALUE*0.999&&matterLog()>Math.log10(Number.MAX_VALUE)){state.matter=Number.MAX_VALUE;return;}state.matter=Math.max(0,state.matter-c);state.matterLog10=Math.log10(Math.max(1,state.matter));}
 function dimensionBoostMult(i){
@@ -464,8 +485,9 @@ function render(){
   setText(det,open?'×'+fmtFixed(dimensionMult(i)*(i===7?state.sacrificeMult:1)*achievementMultiplier(),2):'ブースト '+(i-3)+' 回');
   setText(amt,fmtFixed(state.amount[i],2));
   const max=state.buyMax?maxAffordable(i):null;
+  const costText=state.activeChallenge===6&&i>=2?fmt(c):costBigNumber(i).toDisplayString(2);
   b.disabled=!open||(state.buyMax?max.count===0:!canAffordDimension(i,c));
-  setText(b,!open?'ロック中':(state.buyMax?('購入×'+fmt(max.count)+' コスト'+fmt(max.count>0?max.spent:c)):('購入×1 コスト'+fmt(c))));
+  setText(b,!open?'ロック中':(state.buyMax?('購入×'+fmt(max.count)+' コスト'+fmt(max.count>0?max.spent:c)):('購入×1 コスト'+costText)));
  }
  const n=state.boosts+1,req=boostRequirement(),tier=boostRequirementTier(),can=canBoost();
  $('boostBtn').disabled=!can;
