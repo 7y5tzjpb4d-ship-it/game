@@ -919,6 +919,14 @@ tabContent.querySelectorAll('[data-bi-repeat]').forEach(el=>el.addEventListener(
 const mainCrunchButton=$('mainBigCrunchBtn');if(mainCrunchButton)mainCrunchButton.addEventListener('click',()=>{if(state.breakInfinityActive&&canCrunchNow())bigCrunch();});
 document.querySelectorAll('.screen-tabs button').forEach(b=>b.addEventListener('click',()=>{const target=b.dataset.screen;if(target==='main'&&(document.body.dataset.screen==='main'||b.classList.contains('active'))){mainSubpage=mainSubpage==='main'?'infinityDimensions':'main';switchScreen('main');return;}if(target==='infinity'&&document.body.dataset.screen==='infinity'){infinitySubpage=infinitySubpage==='upgrades'?'break':'upgrades';switchScreen('infinity');return;}if(target==='main')mainSubpage='main';if(target==='infinity')infinitySubpage='upgrades';switchScreen(target);}));
 load();
+// TEST MODE: unlock every Autobuyer and pre-purchase all interval/bulk upgrades.
+// Keep the activation toggles off so they do not alter the test state until enabled manually.
+state.autobuyers.unlockedDims=Array(8).fill(true);
+state.autobuyers.tickspeedUnlocked=true;
+state.autobuyers.intervalUpgradeLevels=[4,4,4,5,5,5,5,5,4,7,9,15];
+state.autobuyers.dimBulkLevels=Array(8).fill(9);
+state.completedChallenges=Array.from({length:12},(_,i)=>i+1);
+save();
 updateAutobuyerUnlockAlert();autobuyerUnlockAlert=false;previousDimAutobuyerUnlocks=Array.from({length:8},(_,i)=>dimAutobuyerUnlocked(i));
 state.buyMax=true;$('buyModeBtn').textContent='最大購入';$('quickBuyModeBtn').textContent='最大購入';$('mobileBuyModeBtn').textContent='最大購入';buildRows();render();
 let last=performance.now();
