@@ -597,6 +597,8 @@ function notifyNewAchievements(){state.achievements.forEach((unlocked,i)=>{if(un
 function runAutobuyers(dt, options={}){
  let changed=false;
  for(let i=0;i<8;i++){
+  // Infinity到達後はDimension Autobuyerを止め、Crunch処理を優先する。
+  if(atInfinity())break;
   if(!state.autobuyers.dims[i]||!dimAutobuyerUnlocked(i)||!unlocked(i)||(state.activeChallenge===10&&i>=6))continue;
   autobuyerElapsed[i]+=dt;
   if(autobuyerElapsed[i]+1e-9<autobuyerInterval()[i])continue;
@@ -626,7 +628,7 @@ function runAutobuyers(dt, options={}){
   }
  }
  const autobuyerLimitReached=(key,current)=>{const raw=state.autobuyers[key];if(typeof raw!=='string'||!/^[0-9]+$/.test(raw))return false;const limit=Number(raw);return Number.isFinite(limit)&&current>=limit;};
- const resetAuto=[{key:'boost',index:9,unlocked:()=>challengeCompleted(10),ready:()=>canBoost()&&!autobuyerLimitReached('boostLimit',state.boosts),run:()=>boost()},{key:'galaxy',index:10,unlocked:()=>challengeCompleted(11),ready:()=>canGalaxy()&&!autobuyerLimitReached('galaxyLimit',state.galaxies),run:()=>galaxy()},{key:'crunch',index:11,unlocked:()=>challengeCompleted(12),ready:()=>atInfinity(),run:()=>state.activeChallenge?completeChallenge():bigCrunch(true)}];
+ const resetAuto=[{key:'crunch',index:11,unlocked:()=>challengeCompleted(12),ready:()=>atInfinity(),run:()=>state.activeChallenge?completeChallenge():bigCrunch(true)},{key:'boost',index:9,unlocked:()=>challengeCompleted(10),ready:()=>!atInfinity()&&canBoost()&&!autobuyerLimitReached('boostLimit',state.boosts),run:()=>boost()},{key:'galaxy',index:10,unlocked:()=>challengeCompleted(11),ready:()=>!atInfinity()&&canGalaxy()&&!autobuyerLimitReached('galaxyLimit',state.galaxies),run:()=>galaxy()}];
  for(const a of resetAuto){if(options.skipBoost&&a.key==='boost')continue;if(!state.autobuyers[a.key]||!a.unlocked())continue;const interval=autobuyerInterval()[a.index];autobuyerElapsed[a.index]=Math.min(interval,autobuyerElapsed[a.index]+dt);if(autobuyerElapsed[a.index]+1e-9>=interval&&a.ready()){autobuyerElapsed[a.index]=0;a.run();changed=true;break;}}
  if(changed)checkAchievements();
  return changed;
