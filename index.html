@@ -94,13 +94,17 @@ document.addEventListener('click', requestPortraitOrientation, {once:true});
 @media(max-width:540px){#tabContent .break-infinity-upgrade-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}}
 </style>
 
+<style id="main-big-crunch-button-style">
+.main-big-crunch-btn{display:block;width:100%;margin:0 0 7px;padding:7px 4px;border:1px solid #c18aff;border-radius:6px;background:linear-gradient(135deg,#6b21a8,#3b0764);color:#fff;font-size:12px;font-weight:800;cursor:pointer}
+.main-big-crunch-btn:disabled{opacity:.4;cursor:not-allowed}
+</style>
 </head>
 <body><main>
 <div class="sticky-tools">
 <section class="stats">
  <div class="stat"><small>反物質 / ANTIMATTER</small><strong id="matter">10</strong></div>
  <div class="stat"><small>毎秒の生産量</small><strong id="rate">0</strong></div>
- <div class="stat" id="ipStat" style="display:none"><small>所持IP</small><strong id="topIpCount">0</strong></div>
+ <div class="stat" id="ipStat" style="display:none"><button type="button" id="mainBigCrunchBtn" class="main-big-crunch-btn" style="display:none">Big Crunch for 0 IP</button><small>所持IP</small><strong id="topIpCount">0</strong></div>
 </section>
 <section class="panel infinity-panel" id="infinityPanel"><p hidden>反物質がInfinityに到達しました。<br>Infinity Point: <strong id="ipCount">0</strong> · Infinities: <strong id="infinityCount">0</strong></p></section>
 <div class="quick-actions"><button type="button" id="quickMaxAllBtn" class="quick-maxall">Max All</button><button type="button" id="quickBoostBtn" class="quick-boost">次元ブースト</button><button type="button" id="quickTickspeedBtn">Tickspeed購入</button><button type="button" id="quickBuyModeBtn">購入: 1個ずつ</button></div>
@@ -392,10 +396,17 @@ function render(){
  $('ipStat').style.display=state.infinities>0?'block':'none';
  $('ipStat').parentElement.style.gridTemplateColumns=state.infinities>0?'repeat(3,minmax(0,1fr))':'repeat(2,minmax(0,1fr))';
  setText($('topIpCount'),fmt(state.ip));
+ const mainCrunchBtn=$('mainBigCrunchBtn');
+ if(mainCrunchBtn){
+  const canManualCrunch=state.breakInfinityActive&&atInfinity();
+  mainCrunchBtn.style.display=state.breakInfinityActive?'block':'none';
+  mainCrunchBtn.disabled=!canManualCrunch;
+  mainCrunchBtn.textContent='Big Crunch for '+fmt(canManualCrunch?ipGainMultiplier():1)+' IP';
+ }
  document.querySelectorAll('[data-current-multiplier]').forEach(el=>{const id=el.dataset.currentMultiplier;el.textContent='現在の倍率：'+infinityUpgradeCurrentMultiplier(id)+(state.infinityUpgrades.includes(id)?'':'（未購入）');});
  document.querySelectorAll('[data-bi-current-multiplier]').forEach(el=>{el.textContent='現在の倍率：×'+fmtFixed(breakInfinityUpgradeEffect(el.dataset.biCurrentMultiplier),2)+(breakInfinityUpgradeBought(el.dataset.biCurrentMultiplier)?'':'（未購入）');});
  const wasCrunchReady=document.body.classList.contains('crunch-ready');
- const infinityReady=atInfinity();
+ const infinityReady=atInfinity()&&!state.breakInfinityActive;
  document.body.classList.toggle('crunch-ready',infinityReady);
  $('infinityPanel').style.display='none';
  if(infinityReady){document.body.dataset.screen='infinity';$('screenTabs').style.display='none';$('tabContent').hidden=false;$('tabContent').innerHTML='<h2>Infinity</h2><button type="button" class="big-crunch-btn" id="tabCrunchBtn">Big Crunch (+'+fmt(ipGainMultiplier())+' IP)</button>';$('tabCrunchBtn').onclick=()=>state.activeChallenge?completeChallenge():bigCrunch();}
@@ -637,7 +648,7 @@ function switchScreen(name){if(!document.body.classList.contains('crunch-ready')
 
 const biUnlockPanel=$('biUnlockPanel');if(biUnlockPanel)biUnlockPanel.addEventListener('click',()=>{if(state.breakInfinityUnlocked||!breakInfinityCanUnlock())return;state.breakInfinityUnlocked=true;state.breakInfinityActive=true;state.matterLog10=Math.max(Math.log10(Math.max(1,state.matter)),Number(state.matterLog10)||0);save();switchScreen('infinity');});
 tabContent.querySelectorAll('[data-bi-upgrade]').forEach(el=>el.addEventListener('click',()=>{const id=el.dataset.biUpgrade,u=breakInfinityUpgradeData().find(x=>x[0]===id);if(!u||!state.breakInfinityActive||breakInfinityUpgradeBought(id)||state.ip<u[3])return;state.ip-=u[3];state.breakInfinityUpgrades.push(id);save();switchScreen('infinity');}));
-tabContent.querySelectorAll('[data-bi-repeat]').forEach(el=>el.addEventListener('click',()=>{const i=Number(el.dataset.biRepeat),defs=breakInfinityRepeatableData(),d=defs[i];if(!d||!state.breakInfinityActive)return;const level=state.breakInfinityRepeatables[i]||0,max=i===2?10:i===0?8:7,cost=d[3]*Math.pow(d[4],level);if(level>=max||state.ip<cost)return;state.ip-=cost;state.breakInfinityRepeatables[i]=level+1;save();switchScreen('infinity');}));['abBoostMode','abGalaxyValue','abCrunchMode','abCrunchValue'].forEach(id=>{const el=$(id);if(el)el.addEventListener('change',()=>{if(id==='abBoostMode')state.autobuyers.boostMode=el.value;if(id==='abGalaxyValue')state.autobuyers.galaxyValue=Math.max(1,Number(el.value)||1);if(id==='abCrunchMode')state.autobuyers.crunchMode=el.value;if(id==='abCrunchValue')state.autobuyers.crunchValue=Math.max(1,Number(el.value)||1);save();});});[['abBoostLimit','boostLimit'],['abGalaxyLimit','galaxyLimit']].forEach(([id,key])=>{const el=$(id);if(el)el.addEventListener('change',()=>{const raw=el.value;state.autobuyers[key]=raw!==''&&/^[0-9]+$/.test(raw)?raw:'';el.value=state.autobuyers[key];save();});});const c=$('tabCrunchBtn');if(c)c.onclick=bigCrunch;const sv=$('tabSaveBtn');if(sv)sv.onclick=()=>$('saveBtn').click();const rs=$('tabResetBtn');if(rs)rs.onclick=()=>$('resetBtn').click();}}
+tabContent.querySelectorAll('[data-bi-repeat]').forEach(el=>el.addEventListener('click',()=>{const i=Number(el.dataset.biRepeat),defs=breakInfinityRepeatableData(),d=defs[i];if(!d||!state.breakInfinityActive)return;const level=state.breakInfinityRepeatables[i]||0,max=i===2?10:i===0?8:7,cost=d[3]*Math.pow(d[4],level);if(level>=max||state.ip<cost)return;state.ip-=cost;state.breakInfinityRepeatables[i]=level+1;save();switchScreen('infinity');}));['abBoostMode','abGalaxyValue','abCrunchMode','abCrunchValue'].forEach(id=>{const el=$(id);if(el)el.addEventListener('change',()=>{if(id==='abBoostMode')state.autobuyers.boostMode=el.value;if(id==='abGalaxyValue')state.autobuyers.galaxyValue=Math.max(1,Number(el.value)||1);if(id==='abCrunchMode')state.autobuyers.crunchMode=el.value;if(id==='abCrunchValue')state.autobuyers.crunchValue=Math.max(1,Number(el.value)||1);save();});});[['abBoostLimit','boostLimit'],['abGalaxyLimit','galaxyLimit']].forEach(([id,key])=>{const el=$(id);if(el)el.addEventListener('change',()=>{const raw=el.value;state.autobuyers[key]=raw!==''&&/^[0-9]+$/.test(raw)?raw:'';el.value=state.autobuyers[key];save();});});const c=$('tabCrunchBtn');if(c)c.onclick=bigCrunch;const mainCrunch=$('mainBigCrunchBtn');if(mainCrunch)mainCrunch.onclick=()=>{if(state.breakInfinityActive&&atInfinity())bigCrunch();};const sv=$('tabSaveBtn');if(sv)sv.onclick=()=>$('saveBtn').click();const rs=$('tabResetBtn');if(rs)rs.onclick=()=>$('resetBtn').click();}}
 document.querySelectorAll('.screen-tabs button').forEach(b=>b.addEventListener('click',()=>{const target=b.dataset.screen;if(target==='infinity'&&document.body.dataset.screen==='infinity'){infinitySubpage=infinitySubpage==='upgrades'?'break':'upgrades';switchScreen('infinity');return;}if(target==='infinity')infinitySubpage='upgrades';switchScreen(target);}));
 load();
 updateAutobuyerUnlockAlert();autobuyerUnlockAlert=false;previousDimAutobuyerUnlocks=Array.from({length:8},(_,i)=>dimAutobuyerUnlocked(i));
