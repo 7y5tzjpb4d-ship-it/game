@@ -611,7 +611,7 @@ function breakInfinityView(){
  const active=Boolean(state.breakInfinityActive);
  const oneTime=breakInfinityUpgradeData().map(([id,name,desc,cost])=>{
   const bought=breakInfinityUpgradeBought(id),can=active&&!bought&&state.ip>=cost;
-  const showMultiplier=['totalAM','currentAM','achievements'].includes(id);
+  const showMultiplier=['totalAM','currentAM','infinities','slowestChallenge','achievements'].includes(id);
   return `<button type="button" class="infinity-upgrade-btn ${bought?'purchased':''}" data-bi-upgrade="${id}" ${can?'':'disabled'}><strong>${name}</strong><span>${desc}</span>${showMultiplier?`<span data-bi-current-multiplier="${id}">現在の倍率：×${fmtFixed(breakInfinityUpgradeEffect(id),2)}</span>`:''}<small>${bought?'購入済み':`コスト：${fmt(cost)} IP`}</small></button>`;
  }).join('');
  const repeatables=breakInfinityRepeatableData().map(([id,name,desc,baseCost,mult])=>{
