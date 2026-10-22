@@ -771,8 +771,11 @@ function notifyNewAchievements(){state.achievements.forEach((unlocked,i)=>{if(un
 function runAutobuyers(dt, options={}){
  let changed=false;
  for(let i=0;i<8;i++){
-  // Infinity到達後はDimension Autobuyerを止め、Crunch処理を優先する。
-  if(atInfinity())break;
+  // 通常InfinityではCrunchを優先するが、Break Infinity中はInfinity到達後も
+  // Dimension Autobuyerを継続する。atInfinity() はBreak Infinity中に
+  // Number.MAX_VALUEを超えた状態もtrueにするため、無条件breakすると
+  // その先の次元購入が永久に停止してしまう。
+  if(atInfinity()&&!state.breakInfinityActive)break;
   if(!state.autobuyers.dims[i]||!dimAutobuyerUnlocked(i)||!unlocked(i)||(state.activeChallenge===10&&i>=6))continue;
   autobuyerElapsed[i]+=dt;
   if(autobuyerElapsed[i]+1e-9<autobuyerInterval()[i])continue;
