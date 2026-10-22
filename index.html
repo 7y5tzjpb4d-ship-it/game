@@ -604,9 +604,11 @@ function runAutobuyers(dt, options={}){
   if(autobuyerElapsed[i]+1e-9<autobuyerInterval()[i])continue;
   autobuyerElapsed[i]%=autobuyerInterval()[i];
   const mode=state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10';
-  const limit=mode==='1'?1:(dimAutobuyerBulk(i)===Infinity?Infinity:(10-(state.bought[i]%10))+(dimAutobuyerBulk(i)-1)*10);
+  const bulk=dimAutobuyerBulk(i);
+  // Bulk上限時は「無限回」ループせず、購入可能な範囲を上限として扱う。
+  const limit=mode==='1'?1:(bulk===Infinity?10000:(10-(state.bought[i]%10))+(bulk-1)*10);
   // 「次の10個購入ボーナスまで」は必要個数分を全て買える時だけ購入する。
-  let totalCost=0;if(mode!=='1'&&dimAutobuyerBulk(i)!==Infinity){for(let k=0;k<limit;k++){const c=cost(i,k);if(!Number.isFinite(c)){totalCost=Infinity;break;}totalCost+=c;}if(dimensionResource(i)<totalCost)continue;}
+  let totalCost=0;if(mode!=='1'&&bulk!==Infinity){for(let k=0;k<limit;k++){const c=cost(i,k);if(!Number.isFinite(c)){totalCost=Infinity;break;}totalCost+=c;}if(dimensionResource(i)<totalCost)continue;}
   let boughtNow=0;
   while(boughtNow<limit){
    const c=cost(i);if(!Number.isFinite(c)||!canAffordDimension(i,c))break;
