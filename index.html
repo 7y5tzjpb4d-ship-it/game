@@ -335,8 +335,11 @@ function productionRateBigNumber(){let r=dimensionProductionBigNumber(0);if(stat
 function dimensionAmountBig(i){const saved=state.amountBN?.[i];if(saved&&Number.isFinite(Number(saved.mantissa))&&Number.isFinite(Number(saved.exponent)))return BigNumber.from(saved).max(0);const b=BigNumber.from(Math.max(0,state.amount[i]||0));state.amountBN[i]=b.toJSON();return b;}
 function setDimensionAmountBig(i,value){const b=BigNumber.from(value).max(0);state.amountBN[i]=b.toJSON();state.amount[i]=b.toNumber();return b;}
 function dimensionProductionBigNumber(i){return dimensionAmountBig(i).power(dimensionAmountPower(i)).multiply(dimensionMultiplierBigNumber(i));}
+function infinityPowerDimensionMultiplierBigNumber(){return BigNumber.from(state.infinityPowerBN||0).max(1).power(7);}
 function dimensionMultiplierBigNumber(i){
  let m=BigNumber.from(state.activeChallenge===8?1:dimensionBoostMult(i));
+ // Infinity Power's x^7 bonus applies to every normal Dimension's production.
+ m=m.multiply(infinityPowerDimensionMultiplierBigNumber());
  const tenBuy=state.activeChallenge===7?Math.min(2,1+0.2*state.boosts):(state.infinityUpgrades.includes('dimMult')?2.2:2);
  m=m.multiply(BigNumber.from(tenBuy).power(Math.floor(state.bought[i]/10)));
  for(const f of [(i===0&&state.achievements[15])?1.1:1,(i===7&&state.achievements[10])?1.1:1,(i===0&&state.achievements[16])?1.05:1,(i<7&&state.achievements[19])?1.02:1,state.achievements[26]?1+(i+1)*0.01:1,state.achievements[31]?1.1:1])m=m.multiply(f);
@@ -443,8 +446,9 @@ function infinityUpgradeMultiplierValue(id){
 }
 function infinityUpgradeMultiplier(id){return hasInfinityUpgrade(id)?infinityUpgradeMultiplierValue(id):1;}
 function dimensionMult(i){
+ const infinityPowerMultiplier=infinityPowerDimensionMultiplierBigNumber().toNumber();
  const tenBuyMultiplier=state.activeChallenge===7?Math.min(2,1+0.2*state.boosts):(state.infinityUpgrades.includes('dimMult')?2.2:2);
- let mult=1*(state.activeChallenge===8?1:dimensionBoostMult(i))*Math.pow(tenBuyMultiplier,Math.floor(state.bought[i]/10))*(i===0&&state.achievements[15]?1.1:1)*(i===7&&state.achievements[10]?1.1:1)*(i===0&&state.achievements[16]?1.05:1)*(i<7&&state.achievements[19]?1.02:1)*(state.achievements[26]?1+(i+1)*0.01:1)*(state.achievements[31]?1.1:1);
+ let mult=infinityPowerMultiplier*(state.activeChallenge===8?1:dimensionBoostMult(i))*Math.pow(tenBuyMultiplier,Math.floor(state.bought[i]/10))*(i===0&&state.achievements[15]?1.1:1)*(i===7&&state.achievements[10]?1.1:1)*(i===0&&state.achievements[16]?1.05:1)*(i<7&&state.achievements[19]?1.02:1)*(state.achievements[26]?1+(i+1)*0.01:1)*(state.achievements[31]?1.1:1);
  mult*=infinityUpgradeMultiplier('timeMult')*infinityUpgradeMultiplier('timeMult2');
  if(state.breakInfinityUnlocked){for(const id of ['totalAM','currentAM','infinities','achievements','slowestChallenge'])if(breakInfinityUpgradeBought(id))mult*=breakInfinityUpgradeEffect(id);}
  // 未使用IPボーナスは第1次元にのみ適用する。
