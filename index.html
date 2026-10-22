@@ -95,8 +95,9 @@ document.addEventListener('click', requestPortraitOrientation, {once:true});
 </style>
 
 <style id="main-big-crunch-button-style">
-.main-big-crunch-btn{display:block;width:100%;margin:0 0 7px;padding:7px 4px;border:1px solid #c18aff;border-radius:6px;background:linear-gradient(135deg,#6b21a8,#3b0764);color:#fff;font-size:12px;font-weight:800;cursor:pointer}
+.main-big-crunch-btn{display:block;width:100%;margin:0 0 8px;padding:10px 8px;border:1px solid #B67E33;border-radius:10px;background:linear-gradient(145deg,#342719,#211b16);color:#D9AD70;font-size:14px;font-weight:800;cursor:pointer}
 .main-big-crunch-btn:disabled{opacity:.4;cursor:not-allowed}
+#mainBigCrunchWrap{margin:0 0 8px}
 </style>
 </head>
 <body><main>
@@ -104,8 +105,9 @@ document.addEventListener('click', requestPortraitOrientation, {once:true});
 <section class="stats">
  <div class="stat"><small>反物質 / ANTIMATTER</small><strong id="matter">10</strong></div>
  <div class="stat"><small>毎秒の生産量</small><strong id="rate">0</strong></div>
- <div class="stat" id="ipStat" style="display:none"><button type="button" id="mainBigCrunchBtn" class="main-big-crunch-btn" style="display:none">Big Crunch for 0 IP</button><small>所持IP</small><strong id="topIpCount">0</strong></div>
+ <div class="stat" id="ipStat" style="display:none"><small>所持IP</small><strong id="topIpCount">0</strong></div>
 </section>
+<div id="mainBigCrunchWrap" style="display:none"><button type="button" id="mainBigCrunchBtn" class="main-big-crunch-btn">Big Crunch for 0 IP</button></div>
 <section class="panel infinity-panel" id="infinityPanel"><p hidden>反物質がInfinityに到達しました。<br>Infinity Point: <strong id="ipCount">0</strong> · Infinities: <strong id="infinityCount">0</strong></p></section>
 <div class="quick-actions"><button type="button" id="quickMaxAllBtn" class="quick-maxall">Max All</button><button type="button" id="quickBoostBtn" class="quick-boost">次元ブースト</button><button type="button" id="quickTickspeedBtn">Tickspeed購入</button><button type="button" id="quickBuyModeBtn">購入: 1個ずつ</button></div>
 </div>
@@ -247,7 +249,16 @@ function fmtFixed(n,digits){
  const e=Math.floor(Math.log10(n)),m=n/Math.pow(10,e);
  return m.toFixed(digits)+'e'+e;
 }
-function cost(i,offset=0){const n=Math.floor((state.bought[i]+offset)/10);if(state.activeChallenge===6&&i>=2){const c6Base=[100,500,2500,20000,200000,4000000],c6Growth=[1e4,1.2e4,1.8e4,2.6e4,3.2e4,4.2e4];return c6Base[i-2]*Math.pow(c6Growth[i-2],n);}const base=baseCosts[i]*Math.pow(costGrowth[i],n);if(state.breakInfinityActive&&matterLog()>Math.log10(INFINITY)&&n>0){const growth=Math.max(3,10-(state.breakInfinityRepeatables[1]||0));return base*Math.pow(growth,n);}return base;}
+function safeCostFromScaling(base,growth,n,alternateGrowth){
+ const logBase=Math.log10(base),logGrowth=Math.log10(growth);
+ let logCost=logBase+n*logGrowth;
+ if(state.breakInfinityActive&&logCost>Math.log10(INFINITY)){
+  const alt=Math.max(3,alternateGrowth);
+  logCost=Math.log10(INFINITY)+(logCost-Math.log10(INFINITY))*Math.log10(alt)/Math.log10(growth);
+ }
+ return Math.pow(10,Math.min(Math.log10(INFINITY),logCost));
+}
+function cost(i,offset=0){const n=Math.floor((state.bought[i]+offset)/10);if(state.activeChallenge===6&&i>=2){const c6Base=[100,500,2500,20000,200000,4000000],c6Growth=[1e4,1.2e4,1.8e4,2.6e4,3.2e4,4.2e4];return safeCostFromScaling(c6Base[i-2],c6Growth[i-2],n,Math.max(3,10-(state.breakInfinityRepeatables[1]||0)));}return safeCostFromScaling(baseCosts[i],costGrowth[i],n,Math.max(3,10-(state.breakInfinityRepeatables[1]||0)));}
 function dimensionResource(i){return state.activeChallenge===6&&i>=2?state.amount[i-2]:state.matter;}
 function canAffordDimension(i,c=cost(i)){return dimensionResource(i)>=c;}
 function spendDimension(i,c){if(state.activeChallenge===6&&i>=2)state.amount[i-2]-=c;else state.matter-=c;}
@@ -280,8 +291,8 @@ function tickspeedBase(){
  const baseMultiplier=0.8;
  return 1/(baseMultiplier*Math.pow(0.965,(g-2)*strength-2));
 }
-function tickspeedMult(){return Math.pow(tickspeedBase()*((state.achievements[21]||state.achievements[28])?1.02:1),state.tickspeed);}
-function tickspeedCost(){const base=TICKSPEED_BASE_COST*Math.pow(10,state.tickspeed);if(state.breakInfinityActive&&matterLog()>Math.log10(INFINITY)&&state.tickspeed>0)return TICKSPEED_BASE_COST*Math.pow(Math.max(2,10-(state.breakInfinityRepeatables[0]||0)),state.tickspeed);return base;}
+function tickspeedMult(){const base=tickspeedBase()*((state.achievements[21]||state.achievements[28])?1.02:1);return Math.min(INFINITY,Math.pow(base,Math.min(state.tickspeed,10000)));}
+function tickspeedCost(){return safeCostFromScaling(TICKSPEED_BASE_COST,10,state.tickspeed,Math.max(2,10-(state.breakInfinityRepeatables[0]||0)));}
 function dimensionBoostMult(i){
  // NC11でMatterが起こしたBoostは、Dimensionの倍率を増やさない。
  const effectiveBoosts=state.boosts-(state.activeChallenge===11?state.challenge11NoBonusBoosts:0);
@@ -327,7 +338,7 @@ function achievementMultiplier(){
 }
 function productionMult(i){let m=dimensionMult(i)*(i===7?state.sacrificeMult:1)*tickspeedMult()*achievementMultiplier();if(state.activeChallenge===2)m*=Math.max(0,Math.min(1,state.challenge2Recovery));if(state.activeChallenge===3&&i===0)m*=0.01*state.challenge3TimeMult;if(state.activeChallenge===12&&(i===1||i===3||i===5))m=Math.pow(Math.max(1,m),i===1?1.7:(i===3?1.4:1.3));return m;}
 function dimensionAmountPower(i){return state.activeChallenge===12&&i===1?1.5:state.activeChallenge===12&&(i===3||i===5)?1.3:1;}
-function dimensionOutput(i){return Math.pow(Math.max(0,state.amount[i]),dimensionAmountPower(i))*productionMult(i);}
+function dimensionOutput(i){const v=Math.pow(Math.max(0,state.amount[i]),dimensionAmountPower(i))*productionMult(i);return Number.isFinite(v)?Math.min(INFINITY,v):INFINITY;}
 const achievementIds=[11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,31,32,33,34,35,36,37,38,41,42,43,44,45,46,47,48];
 function achievementIndex(id){return achievementIds.indexOf(Number(id));}
 function unlockAchievement(id){const i=achievementIndex(id);if(i>=0)state.achievements[i]=true;}
@@ -392,14 +403,14 @@ function render(){
  setText($('matter'),fmtMatter(state.matter));if(state.activeChallenge===11){const el=$('matter');if(el)el.title='Matter: '+fmtMatter(state.challenge11Matter);}
  const nc11MatterPanel=$('challenge11MatterPanel');if(nc11MatterPanel)nc11MatterPanel.style.display=state.activeChallenge===11?'block':'none';setText($('challenge11MatterDisplay'),fmtMatter(state.challenge11Matter));
  updateAutobuyerUnlockAlert();
- setText($('rate'),fmtFixed(productionRate(),2));
+ setText($('rate'),fmtFixed(Math.min(INFINITY,Number.isFinite(productionRate())?productionRate():INFINITY),2));
  $('ipStat').style.display=state.infinities>0?'block':'none';
  $('ipStat').parentElement.style.gridTemplateColumns=state.infinities>0?'repeat(3,minmax(0,1fr))':'repeat(2,minmax(0,1fr))';
  setText($('topIpCount'),fmt(state.ip));
- const mainCrunchBtn=$('mainBigCrunchBtn');
- if(mainCrunchBtn){
+ const mainCrunchWrap=$('mainBigCrunchWrap'),mainCrunchBtn=$('mainBigCrunchBtn');
+ if(mainCrunchWrap&&mainCrunchBtn){
   const canManualCrunch=state.breakInfinityActive&&atInfinity();
-  mainCrunchBtn.style.display=state.breakInfinityActive?'block':'none';
+  mainCrunchWrap.style.display=state.breakInfinityActive?'block':'none';
   mainCrunchBtn.disabled=!canManualCrunch;
   mainCrunchBtn.textContent='Big Crunch for '+fmt(canManualCrunch?ipGainMultiplier():1)+' IP';
  }
