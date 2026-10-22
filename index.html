@@ -654,6 +654,38 @@ function boost(){
  
  state.boosts++;checkAchievements();if(state.activeChallenge===3)state.challenge3TimeMult=1;if(state.activeChallenge===11)state.challenge11Matter=10;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};render();save();
 }
+function bulkBoostAutobuy(){
+ // Bulk DimBoost: 現在所持している各TierのDimension数から、連続して実行可能なBoost数を算出し、リセットを1回にまとめる。
+ if(!breakInfinityUpgradeBought('bulkBoost')||!canBoost())return false;
+ const originalBoosts=state.boosts;
+ const rawLimit=state.autobuyers?.boostLimit;
+ const configuredLimit=typeof rawLimit==='string'&&/^[0-9]+$/.test(rawLimit)?Number(rawLimit):Infinity;
+ const maxCount=Math.max(0,Math.min(100000,configuredLimit-originalBoosts));
+ let count=0;
+ while(count<maxCount){
+  state.boosts=originalBoosts+count;
+  if(!canBoost())break;
+  count++;
+ }
+ state.boosts=originalBoosts;
+ if(count<=0)return false;
+ state.autobuyers && (autobuyerElapsed[9]=0);
+ state.boosts+=count;
+ checkAchievements();
+ if(state.activeChallenge===3)state.challenge3TimeMult=1;
+ if(state.activeChallenge===11)state.challenge11Matter=10;
+ setMatterBigNumber(startingAntimatter());
+ state.amount=Array(8).fill(0);
+ state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));
+ state.bought=Array(8).fill(0);
+ state.tickspeed=0;
+ state.sacrificeMult=1;
+ state.sacrificeMultBN={mantissa:1,exponent:0};
+ state.sacrificedFirst=0;
+ state.sacrificedFirstBN={mantissa:0,exponent:0};
+ render();save();
+ return true;
+}
 function sacrifice(){
  if(state.boosts<5||(state.activeChallenge===10)||state.amount[state.activeChallenge===12?5:7]<1||state.amount[0]<=0)return;
  const gain=sacrificeGainBigNumber();
@@ -921,7 +953,7 @@ function runAutobuyers(dt, options={}){
  }
  const autobuyerLimitReached=(key,current)=>{const raw=state.autobuyers[key];if(typeof raw!=='string'||!/^[0-9]+$/.test(raw))return false;const limit=Number(raw);return Number.isFinite(limit)&&current>=limit;};
  const galaxyAutobuyerCanAct=()=>state.autobuyers.galaxy&&challengeCompleted(11)&&(state.breakInfinityActive||!atInfinity())&&canGalaxy()&&!autobuyerLimitReached('galaxyLimit',state.galaxies);
- const resetAuto=[{key:'crunch',index:11,unlocked:()=>challengeCompleted(12),ready:()=>crunchAutobuyerReady(),run:()=>state.activeChallenge?completeChallenge():bigCrunch(true)},{key:'galaxy',index:10,unlocked:()=>challengeCompleted(11),ready:()=>(state.breakInfinityActive||!atInfinity())&&canGalaxy()&&!autobuyerLimitReached('galaxyLimit',state.galaxies),run:()=>galaxy()},{key:'boost',index:9,unlocked:()=>challengeCompleted(10),ready:()=>(state.breakInfinityActive||!atInfinity())&&canBoost()&&!autobuyerLimitReached('boostLimit',state.boosts)&&!galaxyAutobuyerCanAct(),run:()=>boost()}];
+ const resetAuto=[{key:'crunch',index:11,unlocked:()=>challengeCompleted(12),ready:()=>crunchAutobuyerReady(),run:()=>state.activeChallenge?completeChallenge():bigCrunch(true)},{key:'galaxy',index:10,unlocked:()=>challengeCompleted(11),ready:()=>(state.breakInfinityActive||!atInfinity())&&canGalaxy()&&!autobuyerLimitReached('galaxyLimit',state.galaxies),run:()=>galaxy()},{key:'boost',index:9,unlocked:()=>challengeCompleted(10),ready:()=>(state.breakInfinityActive||!atInfinity())&&canBoost()&&!autobuyerLimitReached('boostLimit',state.boosts)&&!galaxyAutobuyerCanAct(),run:()=>breakInfinityUpgradeBought('bulkBoost')?bulkBoostAutobuy():boost()}];
  for(const a of resetAuto){if(options.skipBoost&&a.key==='boost')continue;if(!state.autobuyers[a.key]||!a.unlocked())continue;const interval=autobuyerInterval()[a.index];autobuyerElapsed[a.index]=Math.min(interval,autobuyerElapsed[a.index]+dt);if(autobuyerElapsed[a.index]+1e-9>=interval&&a.ready()){autobuyerElapsed[a.index]=0;a.run();changed=true;break;}}
  if(changed)checkAchievements();
  return changed;
