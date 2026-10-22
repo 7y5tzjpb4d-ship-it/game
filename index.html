@@ -159,11 +159,11 @@ function setText(el,value){if(!el)return;const text=String(value);if(el.textCont
 class BigNumber {
  constructor(mantissa=0, exponent=0){
   if(mantissa instanceof BigNumber){this.mantissa=mantissa.mantissa;this.exponent=mantissa.exponent;return;}
-  if(typeof mantissa==='string'&&/^\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?\s*$/i.test(mantissa)){const n=Number(mantissa);if(Number.isFinite(n)){this.mantissa=n;this.exponent=0;}else{const [a,b]=mantissa.toLowerCase().split('e');this.mantissa=Number(a);this.exponent=Number(b)||0;}this.normalize();return;}
+  if(typeof mantissa==='string'&&/^\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?\s*$/i.test(mantissa)){const parts=mantissa.trim().toLowerCase().split('e');this.mantissa=Number(parts[0]);this.exponent=parts.length>1?(Number(parts[1])||0):0;this.normalize();return;}
   this.mantissa=Number(mantissa)||0;this.exponent=Number(exponent)||0;this.normalize();
  }
  normalize(){if(this.mantissa===0||!Number.isFinite(this.mantissa)){if(this.mantissa===0){this.exponent=0;}else{this.mantissa=Math.sign(this.mantissa)||1;this.exponent=Number.MAX_VALUE;}return this;}if(this.mantissa<0){const sign=-1;this.mantissa=-this.mantissa;this._sign=sign;}const shift=Math.floor(Math.log10(this.mantissa));this.mantissa/=Math.pow(10,shift);this.exponent+=shift;if(this._sign){this.mantissa*=this._sign;delete this._sign;}if(Math.abs(this.mantissa)>=10){this.mantissa/=10;this.exponent++;}return this;}
- static from(value){if(value instanceof BigNumber)return new BigNumber(value);if(typeof value==='string'&&/^\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)e[+-]?\d+\s*$/i.test(value)){const [m,e]=value.trim().toLowerCase().split('e');return new BigNumber(Number(m),Number(e));}return new BigNumber(Number(value)||0);}
+ static from(value){if(value instanceof BigNumber)return new BigNumber(value);if(value&&typeof value==='object'&&'mantissa' in value&&'exponent' in value)return new BigNumber(Number(value.mantissa),Number(value.exponent));if(typeof value==='string'&&/^\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)e[+-]?\d+\s*$/i.test(value)){const [m,e]=value.trim().toLowerCase().split('e');return new BigNumber(Number(m),Number(e));}return new BigNumber(Number(value)||0);}
  static fromLog10(log){if(!Number.isFinite(log))return log===Infinity?new BigNumber(1,Number.MAX_VALUE):new BigNumber(0);const e=Math.floor(log);return new BigNumber(Math.pow(10,log-e),e);}
  log10(){return this.mantissa>0?this.exponent+Math.log10(this.mantissa):-Infinity;}
  compare(other){other=BigNumber.from(other);if(this.mantissa<0&&other.mantissa>=0)return -1;if(this.mantissa>=0&&other.mantissa<0)return 1;if(this.exponent!==other.exponent)return (this.exponent>other.exponent?1:-1)*Math.sign(this.mantissa||other.mantissa||1);return this.mantissa===other.mantissa?0:this.mantissa>other.mantissa?1:-1;}
@@ -195,22 +195,26 @@ function spendIPBigNumber(value){const next=getIPBigNumber().subtract(value);if(
 function hasIPAtLeast(value){return getIPBigNumber().compare(value)>=0;}
 function syncBigNumberState(){state.bigNumber={matter:matterDisplayBig(),productionRate:productionRateBigNumber(),ip:getIPBigNumber(),tickspeedPurchases:BigNumber.from(state.tickspeed),tickspeedCost:tickspeedCostBigNumber(),tickspeedMultiplier:tickspeedMultiplierBigNumber(),sacrificeMultiplier:sacrificeMultiplierBigNumber(),dimensionMultipliers:Array.from({length:8},(_,i)=>dimensionMultiplierBigNumber(i)),dimensionProduction:Array.from({length:8},(_,i)=>dimensionProductionBigNumber(i)),dimensionCosts:Array.from({length:8},(_,i)=>costBigNumber(i)),infinityUpgradeMultipliers:Object.fromEntries(infinityUpgradeDataSafe().map(id=>[id,infinityUpgradeMultiplierBigNumber(id)])),breakInfinityUpgradeMultipliers:Object.fromEntries(breakInfinityUpgradeData().map(([id])=>[id,breakInfinityUpgradeEffectBigNumber(id)]))};}
 function infinityUpgradeDataSafe(){return ['timeMult','18Mult','36Mult','resetBoost','dimMult','27Mult','45Mult','galaxyBoost','timeMult2','unspentBonus','resetMult','passiveGen','skipReset1','skipReset2','skipReset3','skipResetGalaxy'];}
-function atInfinity(){return state.breakInfinityActive ? (Number(state.matterLog10)||0)>Math.log10(INFINITY)+1e-9 : state.matter>=INFINITY*0.999;}
-function matterBigNumber(){if(state.breakInfinityActive){const bn=state.matterBN&&Number.isFinite(Number(state.matterBN.exponent))?BigNumber.from(state.matterBN):null;const legacyLog=Math.log10(Math.max(1,Number(state.matter)||1));const savedLog=Number(state.matterLog10);const logBased=BigNumber.fromLog10(Math.max(legacyLog,Number.isFinite(savedLog)?savedLog:legacyLog));return bn&&bn.compare(logBased)>0?bn:logBased;}return BigNumber.from(state.matter);}
-function matterLog(){return matterBigNumber().log10()||0;}
-function addMatterProduction(rate,dt){
- const rateBN=BigNumber.from(rate);
+function atInfinity(){return state.breakInfinityActive ? matterBigNumber().compare(INFINITY)>0 : state.matter>=INFINITY*0.999;}
+function matterBigNumber(){
  if(state.breakInfinityActive){
-  const current=matterBigNumber();
-  if(rateBN.mantissa>0&&dt>0){
-   const next=current.add(rateBN.multiply(dt));state.matterBN=next.toJSON();state.matterLog10=next.log10();
-  }
-  state.matter=Number.MAX_VALUE;
-  return;
+  const bn=state.matterBN&&typeof state.matterBN==='object'&&'mantissa' in state.matterBN?BigNumber.from(state.matterBN):null;
+  if(bn&&bn.mantissa>0){state.matterLog10=bn.log10();state.matter=bn.toNumber();return bn;}
+  const legacy=Math.max(0,Number(state.matter)||0),log=Number(state.matterLog10);
+  const recovered=Number.isFinite(log)&&log>Math.log10(Math.max(1,legacy))+1e-9?BigNumber.fromLog10(log):BigNumber.from(legacy);
+  state.matterBN=recovered.toJSON();state.matterLog10=recovered.log10();state.matter=recovered.toNumber();return recovered;
  }
- const next=state.matter+rateBN.toNumber()*dt;
- state.matter=Number.isFinite(next)?Math.max(0,next):Number.MAX_VALUE;
- state.matterLog10=Math.log10(Math.max(1,state.matter));
+ const b=BigNumber.from(Math.max(0,Number(state.matter)||0));
+ state.matterBN=b.toJSON();state.matterLog10=b.log10();return b;
+}
+function matterLog(){return matterBigNumber().log10()||0;}
+function setMatterBigNumber(value){const b=BigNumber.from(value).max(0);state.matterBN=b.toJSON();state.matterLog10=b.mantissa>0?b.log10():0;state.matter=b.toNumber();return b;}
+function addMatterProduction(rate,dt){
+ const rateBN=BigNumber.from(rate);if(!(dt>0)||rateBN.mantissa<=0)return;
+ const current=matterBigNumber();
+ const next=current.add(rateBN.multiply(dt));
+ if(state.breakInfinityActive){setMatterBigNumber(next);return;}
+ if(next.exponent>308){state.matter=Number.MAX_VALUE;state.matterLog10=next.log10();state.matterBN=next.toJSON();}else{state.matter=Math.max(0,next.toNumber());state.matterLog10=Math.log10(Math.max(1,state.matter));state.matterBN=BigNumber.from(state.matter).toJSON();}
 }
 
 function breakInfinityUpgradeBought(id){return state.breakInfinityUpgrades.includes(id);}
@@ -301,7 +305,9 @@ function fmtBig(n,digits=3){return BigNumber.from(n).toDisplayString(digits);}
 function fmtFixedBig(n,digits=2){const b=BigNumber.from(n);if(!b.mantissa)return (0).toFixed(digits);if(b.exponent<3&&b.exponent>-7)return b.toNumber().toFixed(digits);return b.mantissa.toFixed(digits)+'e'+b.exponent;}
 function matterDisplayBig(){return matterBigNumber();}
 function productionRateBigNumber(){let r=dimensionProductionBigNumber(0);if(state.activeChallenge===12)r=r.add(dimensionProductionBigNumber(1));return r;}
-function dimensionProductionBigNumber(i){const a=state.amountBN?.[i]?BigNumber.from(state.amountBN[i]):BigNumber.from(Math.max(0,state.amount[i]));return a.power(dimensionAmountPower(i)).multiply(dimensionMultiplierBigNumber(i));}
+function dimensionAmountBig(i){const saved=state.amountBN?.[i];if(saved&&Number.isFinite(Number(saved.mantissa))&&Number.isFinite(Number(saved.exponent)))return BigNumber.from(saved);return BigNumber.from(Math.max(0,state.amount[i]||0));}
+function setDimensionAmountBig(i,value){const b=BigNumber.from(value).max(0);state.amountBN[i]=b.toJSON();state.amount[i]=b.toNumber();return b;}
+function dimensionProductionBigNumber(i){return dimensionAmountBig(i).power(dimensionAmountPower(i)).multiply(dimensionMultiplierBigNumber(i));}
 function dimensionMultiplierBigNumber(i){
  let m=BigNumber.from(state.activeChallenge===8?1:dimensionBoostMult(i));
  const tenBuy=state.activeChallenge===7?Math.min(2,1+0.2*state.boosts):(state.infinityUpgrades.includes('dimMult')?2.2:2);
@@ -341,7 +347,7 @@ function canAffordDimension(i,c=costBigNumber(i)){
 function spendDimension(i,c){
  c=BigNumber.from(c);
  if(state.activeChallenge===6&&i>=2){const remain=BigNumber.from(state.amount[i-2]).subtract(c).max(0);state.amount[i-2]=remain.toNumber();return;}
- if(state.breakInfinityActive){const remain=matterBigNumber().subtract(c).max(0);state.matterBN=remain.toJSON();state.matterLog10=remain.mantissa>0?remain.log10():0;state.matter=Number.MAX_VALUE;return;}
+ if(state.breakInfinityActive){setMatterBigNumber(matterBigNumber().subtract(c).max(0));return;}
  state.matter=Math.max(0,state.matter-c.toNumber());state.matterLog10=Math.log10(Math.max(1,state.matter));
 }
 function maxAffordable(i, limitToNextTen=true){
@@ -421,7 +427,7 @@ function achievementMultiplier(){
 }
 function productionMult(i){let m=dimensionMult(i)*(i===7?state.sacrificeMult:1)*tickspeedMult()*achievementMultiplier();if(state.activeChallenge===2)m*=Math.max(0,Math.min(1,state.challenge2Recovery));if(state.activeChallenge===3&&i===0)m*=0.01*state.challenge3TimeMult;if(state.activeChallenge===12&&(i===1||i===3||i===5))m=Math.pow(Math.max(1,m),i===1?1.7:(i===3?1.4:1.3));return m;}
 function dimensionAmountPower(i){return state.activeChallenge===12&&i===1?1.5:state.activeChallenge===12&&(i===3||i===5)?1.3:1;}
-function dimensionOutput(i){return Math.pow(Math.max(0,state.amount[i]),dimensionAmountPower(i))*productionMult(i);}
+function dimensionOutput(i){return dimensionProductionBigNumber(i).toNumber();}
 const achievementIds=[11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,31,32,33,34,35,36,37,38,41,42,43,44,45,46,47,48];
 function achievementIndex(id){return achievementIds.indexOf(Number(id));}
 function unlockAchievement(id){const i=achievementIndex(id);if(i>=0)state.achievements[i]=true;}
@@ -455,7 +461,7 @@ function infinityStartingAntimatter(){return state.achievements[22]?5000:startin
 function sacrificeTotalMultiplier(total){return Math.max(Math.log10(Math.max(total,1))/10,1)**(state.achievements[17]?2.2:2);}
 function sacrificeGain(){if(state.activeChallenge===8)return Math.pow(Math.max(1,state.amount[0]),0.05)/Math.pow(Math.max(1,state.sacrificedFirst+state.amount[0]),0.04);const next=sacrificeTotalMultiplier(state.sacrificedFirst+state.amount[0]);return next/Math.max(1,state.sacrificeMult);}
 function unlocked(i){if(state.activeChallenge===10&&i>=6)return false;return i<4||state.boosts>=i-3;}
-function productionRate(){let r=dimensionOutput(0);if(state.activeChallenge===12)r+=dimensionOutput(1);return r;}
+function productionRate(){return productionRateBigNumber().toNumber();}
 function boostRequirement(){const n=state.boosts+1;let base=n<=5?20:15*n-55;if(state.activeChallenge===10)base=40+15*Math.max(0,state.boosts-2);return Math.max(1,base-(hasInfinityUpgrade('resetBoost')?9:0));}
 function boostRequirementTier(){const n=state.boosts+1;return state.activeChallenge===10?Math.min(6,n+3):(n<=5?n+3:8);}
 function canBoost(){if(state.activeChallenge===8&&state.boosts>=5)return false;const tier=boostRequirementTier();return state.bought[tier-1]>=boostRequirement();}
@@ -652,20 +658,19 @@ function applyOfflineProgress(seconds){
   state.playTime=Math.max(0,Number(state.playTime)||0)+dt;
   if(state.infinities>0)state.infinityTime=Math.max(0,Number(state.infinityTime)||0)+dt;
   if(state.activeChallenge===2)state.challenge2Recovery=Math.min(1,state.challenge2Recovery+dt/180);
- if(productionRate()>state.matter)state.exceedProductionTime+=dt;else state.exceedProductionTime=0;
+ if(productionRateBigNumber().compare(matterBigNumber())>0)state.exceedProductionTime+=dt;else state.exceedProductionTime=0;
   if(state.activeChallenge===3)state.challenge3TimeMult=Math.min(INFINITY,state.challenge3TimeMult*Math.pow(1.0038065,dt));
   if(state.activeChallenge===11&&state.amount[1]>0)state.challenge11Matter=Math.min(INFINITY,Math.max(10,state.challenge11Matter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,10*dt));
   if(state.ipOffline){const offlineGain=passiveIPRate()*dt;addIPBigNumber(offlineGain);state.totalIPGained=(state.totalIPGained||0)+offlineGain;}
  if(state.breakInfinityActive&&breakInfinityUpgradeBought('fastestInfinity')&&state.fastestInfinity>0)state.infinities+=dt/state.fastestInfinity;
  if(state.breakInfinityActive&&(state.breakInfinityRepeatables[2]||0)>0&&state.fastestInfinity>0){const biIPGain=(ipGainMultiplier()/Math.max(1,state.fastestInfinity))*dt*(state.breakInfinityRepeatables[2]*0.05);addIPBigNumber(biIPGain);state.totalIPGained=(state.totalIPGained||0)+biIPGain;}
   if(state.activeChallenge===12){
-   for(let i=7;i>=2;i--){const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=BigNumber.from(state.amountBN?.[i-2]||state.amount[i-2]);const v=cur.add(prod);state.amountBN[i-2]=v.toJSON();state.amount[i-2]=v.toNumber();}
+   for(let i=7;i>=2;i--){const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-2);const v=cur.add(prod);setDimensionAmountBig(i-2,v);}
   }else{
-   for(let i=7;i>=1;i--){if(state.activeChallenge===10&&i>=6)continue;const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=BigNumber.from(state.amountBN?.[i-1]||state.amount[i-1]);const v=cur.add(prod);state.amountBN[i-1]=v.toJSON();state.amount[i-1]=v.toNumber();}
+   for(let i=7;i>=1;i--){if(state.activeChallenge===10&&i>=6)continue;const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-1);const v=cur.add(prod);setDimensionAmountBig(i-1,v);}
   }
   const rateBN=productionRateBigNumber();
-  const next=state.matter+rateBN.toNumber()*dt;
-  if(state.breakInfinityActive){addMatterProduction(rateBN,dt);}else{state.matter=Number.isFinite(next)?Math.min(next,INFINITY):INFINITY;state.matterLog10=Math.log10(Math.max(1,state.matter));}
+  addMatterProduction(rateBN,dt);
   let challenge11MatterBoosted=false;
   if(state.activeChallenge===11&&state.challenge11Matter>state.matter){
    state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;state.matter=startingAntimatter();state.matterLog10=Math.log10(Math.max(1,state.matter));state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;autobuyerElapsed[9]=0;challenge11MatterBoosted=true;
@@ -678,7 +683,7 @@ function applyOfflineProgress(seconds){
 function save(){try{localStorage.setItem('antimatterFirstSteps',JSON.stringify((({bigNumber,...persisted})=>({...persisted,last:Date.now()}))(state)));}catch(e){}}
 function load(){
  try{const s=JSON.parse(localStorage.getItem('antimatterFirstSteps'));if(s&&Array.isArray(s.amount)&&s.amount.length===8){
-  state.matter=Math.max(0,Number.isFinite(Number(s.matter))?Number(s.matter):10);state.matterBN=s.matterBN||{mantissa:state.matter,exponent:0};state.amountBN=Array.isArray(s.amountBN)?s.amountBN:Array(8).fill(null).map((_,i)=>({mantissa:Number(s.amount?.[i])||0,exponent:0}));state.matterLog10=Math.max(Math.log10(Math.max(1,state.matter)),Number(s.matterLog10)||Math.log10(Math.max(1,state.matter)));state.breakInfinityUnlocked=Boolean(s.breakInfinityUnlocked);state.breakInfinityActive=Boolean(s.breakInfinityActive&&s.breakInfinityUnlocked);state.breakInfinityUpgrades=Array.isArray(s.breakInfinityUpgrades)?s.breakInfinityUpgrades.filter(id=>breakInfinityUpgradeData().some(u=>u[0]===id)):[];state.breakInfinityRepeatables=Array.isArray(s.breakInfinityRepeatables)?Array.from({length:3},(_,i)=>Math.max(0,Math.floor(Number(s.breakInfinityRepeatables[i])||0))):[0,0,0];state.totalAntimatterLog10=Math.max(1,Number(s.totalAntimatterLog10)||1);state.amount=s.amount.map(x=>Math.max(0,Number(x)||0));
+  state.matter=Math.max(0,Number.isFinite(Number(s.matter))?Number(s.matter):10);state.matterBN=s.matterBN||{mantissa:state.matter,exponent:0};state.amountBN=Array.isArray(s.amountBN)?s.amountBN:Array(8).fill(null).map((_,i)=>({mantissa:Number(s.amount?.[i])||0,exponent:0}));state.matterLog10=Math.max(Math.log10(Math.max(1,state.matter)),Number(s.matterLog10)||Math.log10(Math.max(1,state.matter)));state.breakInfinityUnlocked=Boolean(s.breakInfinityUnlocked);state.breakInfinityActive=Boolean(s.breakInfinityActive&&s.breakInfinityUnlocked);if(state.breakInfinityActive){const mb=BigNumber.from(state.matterBN),legacyLog=Number(state.matterLog10);let recovered=mb.mantissa>0?mb:BigNumber.from(state.matter);if(Number.isFinite(legacyLog)&&legacyLog>recovered.log10()+1e-7)recovered=BigNumber.fromLog10(legacyLog);setMatterBigNumber(recovered);}state.breakInfinityUpgrades=Array.isArray(s.breakInfinityUpgrades)?s.breakInfinityUpgrades.filter(id=>breakInfinityUpgradeData().some(u=>u[0]===id)):[];state.breakInfinityRepeatables=Array.isArray(s.breakInfinityRepeatables)?Array.from({length:3},(_,i)=>Math.max(0,Math.floor(Number(s.breakInfinityRepeatables[i])||0))):[0,0,0];state.totalAntimatterLog10=Math.max(1,Number(s.totalAntimatterLog10)||1);state.amount=s.amount.map(x=>Math.max(0,Number(x)||0));state.amountBN=Array.from({length:8},(_,i)=>{const raw=Array.isArray(s.amountBN)?s.amountBN[i]:null;const bn=raw&&Number.isFinite(Number(raw.mantissa))&&Number.isFinite(Number(raw.exponent))?BigNumber.from(raw):BigNumber.from(state.amount[i]);return bn.toJSON();});
   if(Array.isArray(s.bought)&&s.bought.length===8)state.bought=s.bought.map(x=>Math.max(0,Number(x)||0));
   state.boosts=Math.max(0,Number(s.boosts)||0);state.galaxies=Math.max(0,Math.floor(Number(s.galaxies)||0));state.buyMax=true;state.tickspeed=Math.max(0,Math.floor(Number(s.tickspeed)||0));
   if(s.autobuyers&&typeof s.autobuyers==='object'){state.autobuyers={...state.autobuyers,...s.autobuyers,dims:Array.isArray(s.autobuyers.dims)?Array.from({length:8},(_,i)=>Boolean(s.autobuyers.dims[i])):state.autobuyers.dims,unlockedDims:Array.isArray(s.autobuyers.unlockedDims)?Array.from({length:8},(_,i)=>Boolean(s.autobuyers.unlockedDims[i])):Array(8).fill(false),tickspeedUnlocked:Boolean(s.autobuyers.tickspeedUnlocked),intervalUpgradeLevels:Array.isArray(s.autobuyers.intervalUpgradeLevels)?Array.from({length:12},(_,i)=>Math.max(0,Math.floor(Number(s.autobuyers.intervalUpgradeLevels[i])||0))):Array(12).fill(0),dimBulkLevels:Array.isArray(s.autobuyers.dimBulkLevels)?Array.from({length:8},(_,i)=>Math.max(0,Math.min(9,Math.floor(Number(s.autobuyers.dimBulkLevels[i])||0)))):Array(8).fill(0)};}
@@ -744,7 +749,7 @@ function buyInfinityUpgrade(id){const index=infinityUpgradeData.findIndex(x=>x[0
 function buyInfinityExtra(id){if(state.infinities<1||!state.achievements[achievementIndex(41)])return;if(id==='ipOffline'&&!state.ipOffline&&hasIPAtLeast(1000)){spendIPBigNumber(1000);state.ipOffline=true;}else if(id==='ipMult'){const cost=10*Math.pow(10,state.ipMultLevel);if(hasIPAtLeast(cost)){spendIPBigNumber(cost);state.ipMultLevel++;}else return;}else return;save();switchScreen('infinity');}
 function switchScreen(name){if(!document.body.classList.contains('crunch-ready'))lastRegularScreen=name;if(name==='autobuyers'){autobuyerUnlockAlert=false;const alertTab=document.querySelector('.screen-tabs button[data-screen="autobuyers"]');if(alertTab)alertTab.classList.remove('unlock-alert');}document.body.dataset.screen=name;document.querySelectorAll('.screen-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));if(name!=='main'){tabContent.innerHTML=tabViews[name]();tabContent.querySelectorAll('.achievement-tile').forEach(tile=>tile.addEventListener('click',()=>{const modal=document.createElement('div');modal.className='achievement-modal';modal.innerHTML=`<div class="achievement-modal-box"><h3>${tile.dataset.achievementId}. ${tile.dataset.achievementName}</h3><p>${tile.dataset.achievementDesc.replace('報酬：','<br>報酬：')}</p><button type="button">閉じる</button></div>`;modal.addEventListener('click',e=>{if(e.target===modal||e.target.tagName==='BUTTON')modal.remove();});document.body.appendChild(modal);}));tabContent.querySelectorAll('[data-ab-dim]').forEach(el=>el.addEventListener('change',()=>{state.autobuyers.dims[Number(el.dataset.abDim)]=el.checked;save();}));tabContent.querySelectorAll('[data-ab-dim-mode]').forEach(el=>el.addEventListener('change',()=>{state.autobuyers.dimModes=Array.isArray(state.autobuyers.dimModes)?state.autobuyers.dimModes:Array(8).fill(state.autobuyers.dimMode||'10');state.autobuyers.dimModes[Number(el.dataset.abDimMode)]=el.value;save();}));tabContent.querySelectorAll('[data-ab]').forEach(el=>el.addEventListener('change',()=>{state.autobuyers[el.dataset.ab]=el.checked;save();}));const tsMode=$('abTickspeedMode');if(tsMode)tsMode.addEventListener('change',()=>{state.autobuyers.tickspeedMode=tsMode.value==='max'?'max':'single';save();switchScreen('autobuyers');});const toggleAll=tabContent.querySelector('#abToggleAll');if(toggleAll)toggleAll.addEventListener('click',()=>{const allOn=state.autobuyers.dims.every(Boolean)&&state.autobuyers.tickspeed&&state.autobuyers.boost&&state.autobuyers.galaxy&&state.autobuyers.crunch;const next=!allOn;state.autobuyers.dims=state.autobuyers.dims.map((_,i)=>next&&dimAutobuyerUnlocked(i));state.autobuyers.tickspeed=next&&tickspeedAutobuyerUnlocked();state.autobuyers.boost=next&&autobuyerUpgradeUnlocked(9);state.autobuyers.galaxy=next&&autobuyerUpgradeUnlocked(10);state.autobuyers.crunch=next&&autobuyerUpgradeUnlocked(11);save();switchScreen('autobuyers');});tabContent.querySelectorAll('[data-ab-upgrade]').forEach(el=>el.addEventListener('click',()=>buyAutobuyerIntervalUpgrade(Number(el.dataset.abUpgrade))));tabContent.querySelectorAll('[data-ab-bulk-upgrade]').forEach(el=>el.addEventListener('click',()=>buyDimBulkUpgrade(Number(el.dataset.abBulkUpgrade))));tabContent.querySelectorAll('[data-challenge-start]').forEach(el=>el.addEventListener('click',()=>startChallenge(Number(el.dataset.challengeStart))));tabContent.querySelectorAll('[data-challenge-exit]').forEach(el=>el.addEventListener('click',exitChallenge));tabContent.querySelectorAll('[data-challenge-complete]').forEach(el=>el.addEventListener('click',completeChallenge));tabContent.querySelectorAll('[data-infinity-upgrade]').forEach(el=>el.addEventListener('click',()=>buyInfinityUpgrade(el.dataset.infinityUpgrade)));tabContent.querySelectorAll('[data-infinity-extra]').forEach(el=>el.addEventListener('click',()=>buyInfinityExtra(el.dataset.infinityExtra)));
 
-const biUnlockPanel=$('biUnlockPanel');if(biUnlockPanel)biUnlockPanel.addEventListener('click',()=>{if(state.breakInfinityUnlocked||!breakInfinityCanUnlock())return;state.breakInfinityUnlocked=true;state.breakInfinityActive=true;state.matterLog10=Math.max(Math.log10(Math.max(1,state.matter)),Number(state.matterLog10)||0);save();switchScreen('infinity');});
+const biUnlockPanel=$('biUnlockPanel');if(biUnlockPanel)biUnlockPanel.addEventListener('click',()=>{if(state.breakInfinityUnlocked||!breakInfinityCanUnlock())return;state.breakInfinityUnlocked=true;state.breakInfinityActive=true;setMatterBigNumber(BigNumber.from(state.matter));save();switchScreen('infinity');});
 tabContent.querySelectorAll('[data-bi-upgrade]').forEach(el=>el.addEventListener('click',()=>{const id=el.dataset.biUpgrade,u=breakInfinityUpgradeData().find(x=>x[0]===id);if(!u||!state.breakInfinityActive||breakInfinityUpgradeBought(id)||!hasIPAtLeast(u[3]))return;spendIPBigNumber(u[3]);state.breakInfinityUpgrades.push(id);save();switchScreen('infinity');}));
 tabContent.querySelectorAll('[data-bi-repeat]').forEach(el=>el.addEventListener('click',()=>{const i=Number(el.dataset.biRepeat),defs=breakInfinityRepeatableData(),d=defs[i];if(!d||!state.breakInfinityActive)return;const level=state.breakInfinityRepeatables[i]||0,max=i===2?10:i===0?8:7,cost=d[3]*Math.pow(d[4],level);if(level>=max||!hasIPAtLeast(cost))return;spendIPBigNumber(cost);state.breakInfinityRepeatables[i]=level+1;save();switchScreen('infinity');}));['abBoostMode','abGalaxyValue','abCrunchMode','abCrunchValue'].forEach(id=>{const el=$(id);if(el)el.addEventListener('change',()=>{if(id==='abBoostMode')state.autobuyers.boostMode=el.value;if(id==='abGalaxyValue')state.autobuyers.galaxyValue=Math.max(1,Number(el.value)||1);if(id==='abCrunchMode')state.autobuyers.crunchMode=el.value;if(id==='abCrunchValue')state.autobuyers.crunchValue=Math.max(1,Number(el.value)||1);save();});});[['abBoostLimit','boostLimit'],['abGalaxyLimit','galaxyLimit']].forEach(([id,key])=>{const el=$(id);if(el)el.addEventListener('change',()=>{const raw=el.value;state.autobuyers[key]=raw!==''&&/^[0-9]+$/.test(raw)?raw:'';el.value=state.autobuyers[key];save();});});const c=$('tabCrunchBtn');if(c)c.onclick=bigCrunch;const mainCrunch=$('mainBigCrunchBtn');if(mainCrunch)mainCrunch.onclick=()=>{if(state.breakInfinityActive&&atInfinity())bigCrunch();};const sv=$('tabSaveBtn');if(sv)sv.onclick=()=>$('saveBtn').click();const rs=$('tabResetBtn');if(rs)rs.onclick=()=>$('resetBtn').click();}}
 document.querySelectorAll('.screen-tabs button').forEach(b=>b.addEventListener('click',()=>{const target=b.dataset.screen;if(target==='infinity'&&document.body.dataset.screen==='infinity'){infinitySubpage=infinitySubpage==='upgrades'?'break':'upgrades';switchScreen('infinity');return;}if(target==='infinity')infinitySubpage='upgrades';switchScreen(target);}));
@@ -804,14 +809,14 @@ function runAutobuyers(dt, options={}){
 function tick(now){
  const dt=Math.min(.25,(now-last)/1000);last=now;state.playTime+=dt;if(state.infinities>0)state.infinityTime+=dt;
  if(state.activeChallenge===2)state.challenge2Recovery=Math.min(1,state.challenge2Recovery+dt/180);
- if(productionRate()>state.matter)state.exceedProductionTime+=dt;else state.exceedProductionTime=0;
+ if(productionRateBigNumber().compare(matterBigNumber())>0)state.exceedProductionTime+=dt;else state.exceedProductionTime=0;
  if(state.activeChallenge===3)state.challenge3TimeMult=Math.min(INFINITY,state.challenge3TimeMult*Math.pow(1.0038065,dt));
  if(state.activeChallenge===11&&state.amount[1]>0)state.challenge11Matter=Math.min(INFINITY,Math.max(10,state.challenge11Matter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,10*dt));
- if(state.activeChallenge===12){for(let i=7;i>=2;i--){const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=BigNumber.from(state.amountBN?.[i-2]||state.amount[i-2]);const v=cur.add(prod);state.amountBN[i-2]=v.toJSON();state.amount[i-2]=v.toNumber();}}else{for(let i=7;i>=1;i--){if(state.activeChallenge===10&&i>=6)continue;const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=BigNumber.from(state.amountBN?.[i-1]||state.amount[i-1]);const v=cur.add(prod);state.amountBN[i-1]=v.toJSON();state.amount[i-1]=v.toNumber();}}
+ if(state.activeChallenge===12){for(let i=7;i>=2;i--){const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-2);const v=cur.add(prod);setDimensionAmountBig(i-2,v);}}else{for(let i=7;i>=1;i--){if(state.activeChallenge===10&&i>=6)continue;const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-1);const v=cur.add(prod);setDimensionAmountBig(i-1,v);}}
  addIPBigNumber(passiveIPRate()*dt);state.totalIPGained=(state.totalIPGained||0)+passiveIPRate()*dt;
  if(state.breakInfinityActive&&breakInfinityUpgradeBought('fastestInfinity')&&state.fastestInfinity>0)state.infinities+=dt/state.fastestInfinity;
  if(state.breakInfinityActive&&(state.breakInfinityRepeatables[2]||0)>0&&state.fastestInfinity>0){const biIPGain=(ipGainMultiplier()/Math.max(1,state.fastestInfinity))*dt*(state.breakInfinityRepeatables[2]*0.05);addIPBigNumber(biIPGain);state.totalIPGained=(state.totalIPGained||0)+biIPGain;}
- const matterBefore=state.matter;addMatterProduction(productionRate(),dt);if(state.matter>=matterBefore&&state.matter>0)state.totalAntimatterLog10=Math.max(state.totalAntimatterLog10,matterLog());
+ const matterBeforeLog=matterLog();addMatterProduction(productionRateBigNumber(),dt);if(matterLog()>=matterBeforeLog)state.totalAntimatterLog10=Math.max(state.totalAntimatterLog10,matterLog());
  let challenge11MatterBoosted=false;
  if(state.activeChallenge===11&&state.challenge11Matter>state.matter){state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;state.matter=startingAntimatter();state.matterLog10=Math.log10(Math.max(1,state.matter));state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;autobuyerElapsed[9]=0;challenge11MatterBoosted=true;}
  runAutobuyers(dt,{skipBoost:challenge11MatterBoosted});checkAchievements();notifyNewAchievements();
