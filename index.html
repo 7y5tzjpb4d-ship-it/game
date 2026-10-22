@@ -188,8 +188,6 @@ const costGrowth=[1e3,1e4,1e5,1e6,1e8,1e10,1e12,1e15];
 const TICKSPEED_BASE_COST=1e3;
 const state={matterBN:{mantissa:1,exponent:2},amountBN:Array(8).fill(null).map(()=>({mantissa:0,exponent:0})),matter:100,matterLog10:2,breakInfinityUnlocked:false,breakInfinityActive:false,breakInfinityUpgrades:[],breakInfinityRepeatables:[0,0,0],totalAntimatterLog10:2,totalIPGained:1e6,amount:Array(8).fill(0),bought:Array(8).fill(0),boosts:0,galaxies:0,buyMax:true,tickspeed:0,sacrificeMult:1,sacrificedFirst:0,ip:1e6,infinities:20,infinityUpgrades:['timeMult','18Mult','36Mult','resetBoost','dimMult','27Mult','45Mult','galaxyBoost','timeMult2','unspentBonus','resetMult','passiveGen','skipReset1','skipReset2','skipReset3','skipResetGalaxy'],ipMultLevel:0,ipOffline:false,achievements:Array(32).fill(true),exceedProductionTime:0,sacrificedThisInfinity:false,autobuyers:{dims:Array(8).fill(false),tickspeed:false,tickspeedMode:'single',unlockedDims:Array(8).fill(true),tickspeedUnlocked:true,boost:false,galaxy:false,crunch:false,dimModes:Array(8).fill('10'),dimMode:'10',intervalUpgradeLevel:0,intervalUpgradeLevels:Array(12).fill(0),dimBulkLevels:Array(8).fill(0),boostMode:'amount',boostValue:4,boostLimit:'',galaxyMode:'amount',galaxyValue:1,galaxyLimit:'',crunchMode:'amount',crunchValue:1},playTime:0,infinityTime:0,fastestInfinity:0,activeChallenge:0,completedChallenges:Array.from({length:12},(_,i)=>i+1),challengeTimes:{},challenge2Recovery:1,challenge3TimeMult:1,challenge11Matter:0,challenge11NoBonusBoosts:0,last:Date.now()};
 const INFINITY=Number.MAX_VALUE;
-// Compatibility sentinel for legacy reset paths that assign state.matter directly.
-let matterScalarMirror=100;
 function getIPBigNumber(){const v=state.ipBN;if(v&&typeof v==='object'&&Number.isFinite(Number(v.mantissa))&&Number.isFinite(Number(v.exponent)))return new BigNumber(Number(v.mantissa),Number(v.exponent));return BigNumber.from(state.ip||0);}
 function setIPBigNumber(value){const b=BigNumber.from(value).max(0);state.ipBN={mantissa:b.mantissa,exponent:b.exponent};state.ip=b.toNumber();return b;}
 function addIPBigNumber(value){return setIPBigNumber(getIPBigNumber().add(value));}
@@ -199,7 +197,6 @@ function syncBigNumberState(){state.bigNumber={matter:matterDisplayBig(),product
 function infinityUpgradeDataSafe(){return ['timeMult','18Mult','36Mult','resetBoost','dimMult','27Mult','45Mult','galaxyBoost','timeMult2','unspentBonus','resetMult','passiveGen','skipReset1','skipReset2','skipReset3','skipResetGalaxy'];}
 function atInfinity(){return state.breakInfinityActive ? matterBigNumber().compare(INFINITY)>0 : state.matter>=INFINITY*0.999;}
 function matterBigNumber(){
- if(Number.isFinite(Number(state.matter)) && Number(state.matter)!==matterScalarMirror && Number(state.matter)<Number.MAX_VALUE){const legacyNow=BigNumber.from(Math.max(0,Number(state.matter)||0));state.matterBN=legacyNow.toJSON();state.matterLog10=legacyNow.mantissa>0?legacyNow.log10():0;matterScalarMirror=Number(state.matter);}
  if(state.breakInfinityActive){
   const bn=state.matterBN&&typeof state.matterBN==='object'&&'mantissa' in state.matterBN?BigNumber.from(state.matterBN):null;
   if(bn&&bn.mantissa>0){state.matterLog10=bn.log10();state.matter=bn.toNumber();return bn;}
@@ -211,13 +208,13 @@ function matterBigNumber(){
  state.matterBN=b.toJSON();state.matterLog10=b.log10();return b;
 }
 function matterLog(){return matterBigNumber().log10()||0;}
-function setMatterBigNumber(value){const b=BigNumber.from(value).max(0);state.matterBN=b.toJSON();state.matterLog10=b.mantissa>0?b.log10():0;state.matter=b.toNumber();matterScalarMirror=state.matter;return b;}
+function setMatterBigNumber(value){const b=BigNumber.from(value).max(0);state.matterBN=b.toJSON();state.matterLog10=b.mantissa>0?b.log10():0;state.matter=b.toNumber();return b;}
 function addMatterProduction(rate,dt){
  const rateBN=BigNumber.from(rate);if(!(dt>0)||rateBN.mantissa<=0)return;
  const current=matterBigNumber();
  const next=current.add(rateBN.multiply(dt));
- if(state.breakInfinityActive || next.exponent>308){setMatterBigNumber(next);return;}
- setMatterBigNumber(next);
+ if(state.breakInfinityActive){setMatterBigNumber(next);return;}
+ if(next.exponent>308){state.matter=Number.MAX_VALUE;state.matterLog10=next.log10();state.matterBN=next.toJSON();}else{state.matter=Math.max(0,next.toNumber());state.matterLog10=Math.log10(Math.max(1,state.matter));state.matterBN=BigNumber.from(state.matter).toJSON();}
 }
 
 function breakInfinityUpgradeBought(id){return state.breakInfinityUpgrades.includes(id);}
@@ -261,9 +258,9 @@ const challengeDisabledInfinityUpgrades=['skipReset1','skipReset2','skipReset3',
 function hasInfinityUpgrade(id){return state.infinityUpgrades.includes(id)&&!(state.activeChallenge>0&&challengeDisabledInfinityUpgrades.includes(id));}
 function challengePurchaseReset(){if(state.activeChallenge===2)state.challenge2Recovery=0;}
 function resetChallengeTimers(){state.challenge2Recovery=1;state.challenge3TimeMult=1;state.challenge11Matter=state.activeChallenge===11?10:0;}
-function startChallenge(id){if(state.activeChallenge||!challengeUnlocked(id)||id===1)return;state.activeChallenge=id;state.challenge11NoBonusBoosts=0;state.sacrificedThisInfinity=false;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.infinityTime=0;resetChallengeTimers();autobuyerElapsed.fill(0);buildRows();render();save();switchScreen('challenges');}
-function exitChallenge(){if(!state.activeChallenge)return;state.activeChallenge=0;state.challenge11NoBonusBoosts=0;state.sacrificedThisInfinity=false;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.infinityTime=0;resetChallengeTimers();autobuyerElapsed.fill(0);buildRows();render();save();switchScreen('challenges');}
-function completeChallenge(){if(!state.activeChallenge||!atInfinity())return;autobuyerElapsed.fill(0);const id=state.activeChallenge;state.challenge11NoBonusBoosts=0;const elapsed=Math.max(0,state.infinityTime);if(state.amount[7]===0)unlockAchievement(34);if(state.galaxies===1)unlockAchievement(36);if(elapsed<7200)unlockAchievement(37);if(state.galaxies>=1&&!state.sacrificedThisInfinity)unlockAchievement(38);if(!challengeCompleted(id))state.completedChallenges.push(id);state.challengeTimes[id]=state.challengeTimes[id]>0?Math.min(state.challengeTimes[id],elapsed):elapsed;state.activeChallenge=0;addIPBigNumber(ipGainMultiplier());state.totalIPGained=(state.totalIPGained||0)+ipGainMultiplier();state.infinities++;unlockAchievement(21);setMatterBigNumber(infinityStartingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.sacrificedThisInfinity=false;state.infinityTime=0;resetChallengeTimers();checkAchievements();notifyNewAchievements();buildRows();render();save();switchScreen('challenges');}
+function startChallenge(id){if(state.activeChallenge||!challengeUnlocked(id)||id===1)return;state.activeChallenge=id;state.challenge11NoBonusBoosts=0;state.sacrificedThisInfinity=false;state.matter=startingAntimatter();state.matterLog10=Math.log10(Math.max(1,state.matter));state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.infinityTime=0;resetChallengeTimers();autobuyerElapsed.fill(0);buildRows();render();save();switchScreen('challenges');}
+function exitChallenge(){if(!state.activeChallenge)return;state.activeChallenge=0;state.challenge11NoBonusBoosts=0;state.sacrificedThisInfinity=false;state.matter=startingAntimatter();state.matterLog10=Math.log10(Math.max(1,state.matter));state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.infinityTime=0;resetChallengeTimers();autobuyerElapsed.fill(0);buildRows();render();save();switchScreen('challenges');}
+function completeChallenge(){if(!state.activeChallenge||!atInfinity())return;autobuyerElapsed.fill(0);const id=state.activeChallenge;state.challenge11NoBonusBoosts=0;const elapsed=Math.max(0,state.infinityTime);if(state.amount[7]===0)unlockAchievement(34);if(state.galaxies===1)unlockAchievement(36);if(elapsed<7200)unlockAchievement(37);if(state.galaxies>=1&&!state.sacrificedThisInfinity)unlockAchievement(38);if(!challengeCompleted(id))state.completedChallenges.push(id);state.challengeTimes[id]=state.challengeTimes[id]>0?Math.min(state.challengeTimes[id],elapsed):elapsed;state.activeChallenge=0;addIPBigNumber(ipGainMultiplier());state.totalIPGained=(state.totalIPGained||0)+ipGainMultiplier();state.infinities++;unlockAchievement(21);state.matter=infinityStartingAntimatter();state.matterLog10=Math.log10(Math.max(1,state.matter));state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.sacrificedThisInfinity=false;state.infinityTime=0;resetChallengeTimers();checkAchievements();notifyNewAchievements();buildRows();render();save();switchScreen('challenges');}
 function challengeCardStatus(id){if(challengeCompleted(id))return 'クリア済み';if(!challengeUnlocked(id))return '未解放';if(challengeActive(id))return '挑戦中';return '挑戦可能';}
 let lastSave=0,lastRender=0, rows=[];
 const autobuyerElapsed=Array(12).fill(0);
@@ -332,11 +329,18 @@ function infinityUpgradeMultiplierBigNumber(id){return BigNumber.from(infinityUp
 function breakInfinityUpgradeEffectBigNumber(id){return BigNumber.from(breakInfinityUpgradeEffect(id));}
 function safeCostBigNumber(base,growth,n,alternateGrowth){
  const count=Math.max(0,Number(n)||0);
- const normalLog=Math.log10(base)+count*Math.log10(growth);
- if(!state.breakInfinityActive||normalLog<=Math.log10(Number.MAX_VALUE))return BigNumber.fromLog10(normalLog);
+ const baseLog=Math.log10(base), growthLog=Math.log10(growth);
+ const normalLog=baseLog+count*growthLog;
  const capLog=Math.log10(Number.MAX_VALUE);
- const effectiveGrowth=Math.max(2,Number(alternateGrowth)||3);
- const logCost=capLog+Math.max(0,count-Math.max(0,(capLog-Math.log10(base))/Math.log10(growth)))*Math.log10(effectiveGrowth);
+ // Before Break Infinity, preserve the original geometric cost progression.
+ if(!state.breakInfinityActive||normalLog<=capLog)return BigNumber.fromLog10(normalLog);
+ // Post-Infinity scaling increases the cost multiplier itself after each purchase:
+ // x10, x100, x1000... by default; repeatable upgrades reduce the scaling base.
+ const firstPostCount=Math.max(0,Math.ceil((capLog-baseLog)/growthLog));
+ const postCount=Math.max(0,count-firstPostCount);
+ const scaling=Math.max(2,Number(alternateGrowth)||10);
+ const triangular=postCount*(postCount-1)/2;
+ const logCost=capLog+postCount*growthLog+triangular*Math.log10(scaling);
  return BigNumber.fromLog10(logCost);
 }
 function safeCostFromScaling(base,growth,n,alternateGrowth){return safeCostBigNumber(base,growth,n,alternateGrowth).toNumber();}
@@ -351,7 +355,7 @@ function spendDimension(i,c){
  c=BigNumber.from(c);
  if(state.activeChallenge===6&&i>=2){const remain=BigNumber.from(state.amount[i-2]).subtract(c).max(0);state.amount[i-2]=remain.toNumber();return;}
  if(state.breakInfinityActive){setMatterBigNumber(matterBigNumber().subtract(c).max(0));return;}
- setMatterBigNumber(matterBigNumber().subtract(c).max(0));
+ state.matter=Math.max(0,state.matter-c.toNumber());state.matterLog10=Math.log10(Math.max(1,state.matter));
 }
 function maxAffordable(i, limitToNextTen=true){
  let resource=dimensionResource(i), bought=state.bought[i], count=0, spent=BigNumber.from(0), c=costBigNumber(i);
@@ -384,7 +388,7 @@ function tickspeedMult(){const base=tickspeedBase()*((state.achievements[21]||st
 function tickspeedCostBigNumber(){return safeCostBigNumber(TICKSPEED_BASE_COST,10,state.tickspeed,Math.max(2,10-(state.breakInfinityRepeatables[0]||0)));}
 function tickspeedCost(){return tickspeedCostBigNumber();}
 function canAffordTickspeed(c=tickspeedCost()){return matterBigNumber().compare(c)>=0;}
-function spendTickspeed(c){if(state.breakInfinityActive){const remain=matterBigNumber().subtract(c).max(0);state.matterBN=remain.toJSON();state.matterLog10=remain.log10();state.matter=Number.MAX_VALUE;return;}setMatterBigNumber(matterBigNumber().subtract(c).max(0));}
+function spendTickspeed(c){if(state.breakInfinityActive){const remain=matterBigNumber().subtract(c).max(0);state.matterBN=remain.toJSON();state.matterLog10=remain.log10();state.matter=Number.MAX_VALUE;return;}state.matter=Math.max(0,state.matter-BigNumber.from(c).toNumber());state.matterLog10=Math.log10(Math.max(1,state.matter));}
 function dimensionBoostMult(i){
  // NC11でMatterが起こしたBoostは、Dimensionの倍率を増やさない。
  const effectiveBoosts=state.boosts-(state.activeChallenge===11?state.challenge11NoBonusBoosts:0);
@@ -614,7 +618,7 @@ function boost(){
  // 手動・自動を問わず、Boost実行後はAutobuyerの待機時間をリセットする。
  autobuyerElapsed[9]=0;
  
- state.boosts++;checkAchievements();if(state.activeChallenge===3)state.challenge3TimeMult=1;if(state.activeChallenge===11)state.challenge11Matter=10;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;render();save();
+ state.boosts++;checkAchievements();if(state.activeChallenge===3)state.challenge3TimeMult=1;if(state.activeChallenge===11)state.challenge11Matter=10;state.matter=startingAntimatter();state.matterLog10=Math.log10(Math.max(1,state.matter));state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;render();save();
 }
 function sacrifice(){
  if(state.boosts<5||(state.activeChallenge===10)||state.amount[state.activeChallenge===12?5:7]<1||state.amount[0]<=0)return;
@@ -649,7 +653,7 @@ function ipGainMultiplier(){const base=Math.pow(2,Math.max(0,state.ipMultLevel||
 function passiveIPRate(){if(!hasInfinityUpgrade('passiveGen')||!(state.fastestInfinity>0))return 0;return ipGainMultiplier()/(state.fastestInfinity*10);}
 function startingBoosts(){if(hasInfinityUpgrade('skipResetGalaxy'))return 4;if(state.infinityUpgrades.includes('skipReset3'))return 3;if(state.infinityUpgrades.includes('skipReset2'))return 2;if(state.infinityUpgrades.includes('skipReset1'))return 1;return 0;}
 function startingGalaxies(){return state.infinityUpgrades.includes('skipResetGalaxy')?1:0;}
-function bigCrunch(fromAutobuyer=false){if(!atInfinity())return;autobuyerElapsed[11]=0;const completedInfinity=Math.max(0,state.infinityTime);if(state.amount[7]===0)unlockAchievement(34);if(state.galaxies===1)unlockAchievement(36);if(completedInfinity<7200)unlockAchievement(37);if(state.galaxies>=1&&!state.sacrificedThisInfinity)unlockAchievement(38);if(completedInfinity>0)state.fastestInfinity=state.fastestInfinity>0?Math.min(state.fastestInfinity,completedInfinity):completedInfinity;addIPBigNumber(ipGainMultiplier());state.totalIPGained=(state.totalIPGained||0)+ipGainMultiplier();state.infinities++;unlockAchievement(21);setMatterBigNumber(infinityStartingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.sacrificedThisInfinity=false;state.infinityTime=0;checkAchievements();notifyNewAchievements();buildRows();if(fromAutobuyer)autobuyerCrunchInProgress=true;else switchScreen('main');render();autobuyerCrunchInProgress=false;save();}
+function bigCrunch(fromAutobuyer=false){if(!atInfinity())return;autobuyerElapsed[11]=0;const completedInfinity=Math.max(0,state.infinityTime);if(state.amount[7]===0)unlockAchievement(34);if(state.galaxies===1)unlockAchievement(36);if(completedInfinity<7200)unlockAchievement(37);if(state.galaxies>=1&&!state.sacrificedThisInfinity)unlockAchievement(38);if(completedInfinity>0)state.fastestInfinity=state.fastestInfinity>0?Math.min(state.fastestInfinity,completedInfinity):completedInfinity;addIPBigNumber(ipGainMultiplier());state.totalIPGained=(state.totalIPGained||0)+ipGainMultiplier();state.infinities++;unlockAchievement(21);state.matter=infinityStartingAntimatter();state.matterLog10=Math.log10(Math.max(1,state.matter));state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;state.sacrificedThisInfinity=false;state.infinityTime=0;checkAchievements();notifyNewAchievements();buildRows();if(fromAutobuyer)autobuyerCrunchInProgress=true;else switchScreen('main');render();autobuyerCrunchInProgress=false;save();}
 function applyOfflineProgress(seconds){
  // チャレンジ中も、通常プレイと同じチャレンジ固有ルールを適用してオフライン進行する。
  const offlineSeconds=Math.min(86400,Math.max(0,seconds));
@@ -676,7 +680,7 @@ function applyOfflineProgress(seconds){
   addMatterProduction(rateBN,dt);
   let challenge11MatterBoosted=false;
   if(state.activeChallenge===11&&state.challenge11Matter>state.matter){
-   state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;autobuyerElapsed[9]=0;challenge11MatterBoosted=true;
+   state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;state.matter=startingAntimatter();state.matterLog10=Math.log10(Math.max(1,state.matter));state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;autobuyerElapsed[9]=0;challenge11MatterBoosted=true;
   }
   runAutobuyers(dt,{skipBoost:challenge11MatterBoosted});
   remaining-=dt;
@@ -771,11 +775,8 @@ function notifyNewAchievements(){state.achievements.forEach((unlocked,i)=>{if(un
 function runAutobuyers(dt, options={}){
  let changed=false;
  for(let i=0;i<8;i++){
-  // 通常InfinityではCrunchを優先するが、Break Infinity中はInfinity到達後も
-  // Dimension Autobuyerを継続する。atInfinity() はBreak Infinity中に
-  // Number.MAX_VALUEを超えた状態もtrueにするため、無条件breakすると
-  // その先の次元購入が永久に停止してしまう。
-  if(atInfinity()&&!state.breakInfinityActive)break;
+  // Infinity到達後はDimension Autobuyerを止め、Crunch処理を優先する。
+  if(atInfinity())break;
   if(!state.autobuyers.dims[i]||!dimAutobuyerUnlocked(i)||!unlocked(i)||(state.activeChallenge===10&&i>=6))continue;
   autobuyerElapsed[i]+=dt;
   if(autobuyerElapsed[i]+1e-9<autobuyerInterval()[i])continue;
@@ -824,7 +825,7 @@ function tick(now){
  if(state.breakInfinityActive&&(state.breakInfinityRepeatables[2]||0)>0&&state.fastestInfinity>0){const biIPGain=(ipGainMultiplier()/Math.max(1,state.fastestInfinity))*dt*(state.breakInfinityRepeatables[2]*0.05);addIPBigNumber(biIPGain);state.totalIPGained=(state.totalIPGained||0)+biIPGain;}
  const matterBeforeLog=matterLog();addMatterProduction(productionRateBigNumber(),dt);if(matterLog()>=matterBeforeLog)state.totalAntimatterLog10=Math.max(state.totalAntimatterLog10,matterLog());
  let challenge11MatterBoosted=false;
- if(state.activeChallenge===11&&state.challenge11Matter>state.matter){state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;autobuyerElapsed[9]=0;challenge11MatterBoosted=true;}
+ if(state.activeChallenge===11&&state.challenge11Matter>state.matter){state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;state.matter=startingAntimatter();state.matterLog10=Math.log10(Math.max(1,state.matter));state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificedFirst=0;autobuyerElapsed[9]=0;challenge11MatterBoosted=true;}
  runAutobuyers(dt,{skipBoost:challenge11MatterBoosted});checkAchievements();notifyNewAchievements();
  render();if(state.activeChallenge&&document.body.dataset.screen==='challenges'&&now-lastRender>500){switchScreen('challenges');}lastRender=now;
  if(now-lastSave>5000){save();lastSave=now;}
