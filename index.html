@@ -417,7 +417,18 @@ function tickspeedBase(){
  return 1/(baseMultiplier*Math.pow(0.965,(g-2)*strength-2));
 }
 function tickspeedMult(){const base=tickspeedBase()*((state.achievements[21]||state.achievements[28])?1.02:1);return Math.min(INFINITY,Math.pow(base,Math.min(state.tickspeed,10000)));}
-function tickspeedCostBigNumber(){return safeCostBigNumber(TICKSPEED_BASE_COST,10,state.tickspeed,Math.max(2,10-(state.breakInfinityRepeatables[0]||0)));}
+function tickspeedCostBigNumber(){
+ const count=Math.max(0,Number(state.tickspeed)||0);
+ const baseLog=Math.log10(TICKSPEED_BASE_COST),growthLog=Math.log10(10),capLog=Math.log10(Number.MAX_VALUE);
+ const normalLog=baseLog+count*growthLog;
+ // Infinity前は従来どおり×10。Infinity後はアップグレードの値を
+ // 実際の購入コスト倍率として使う（最大レベルなら購入ごとに×2）。
+ if(!state.breakInfinityActive||normalLog<=capLog)return BigNumber.fromLog10(normalLog);
+ const firstPostCount=Math.max(0,Math.ceil((capLog-baseLog)/growthLog));
+ const postCount=Math.max(0,count-firstPostCount);
+ const scaling=Math.max(2,10-(Number(state.breakInfinityRepeatables?.[0])||0));
+ return BigNumber.fromLog10(capLog+postCount*Math.log10(scaling));
+}
 function tickspeedCost(){return tickspeedCostBigNumber();}
 function canAffordTickspeed(c=tickspeedCost()){return matterBigNumber().compare(c)>=0;}
 function spendTickspeed(c){c=BigNumber.from(c);if(!canAffordTickspeed(c))return false;setMatterBigNumber(matterBigNumber().subtract(c));return true;}
