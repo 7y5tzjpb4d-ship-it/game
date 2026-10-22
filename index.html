@@ -253,7 +253,7 @@ function challengePurchaseReset(){if(state.activeChallenge===2)state.challenge2R
 function resetChallengeTimers(){state.challenge2Recovery=1;state.challenge3TimeMult=1;state.challenge11Matter=state.activeChallenge===11?10:0;}
 function startChallenge(id){if(state.activeChallenge||!challengeUnlocked(id)||id===1)return;state.activeChallenge=id;state.challenge11NoBonusBoosts=0;state.sacrificedThisInfinity=false;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=0;state.galaxies=0;state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};state.infinityTime=0;resetChallengeTimers();autobuyerElapsed.fill(0);buildRows();render();save();switchScreen('challenges');}
 function exitChallenge(){if(!state.activeChallenge)return;state.activeChallenge=0;state.challenge11NoBonusBoosts=0;state.sacrificedThisInfinity=false;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};state.infinityTime=0;resetChallengeTimers();autobuyerElapsed.fill(0);buildRows();render();save();switchScreen('challenges');}
-function completeChallenge(){if(!state.activeChallenge||!atInfinity())return;autobuyerElapsed.fill(0);const id=state.activeChallenge;state.challenge11NoBonusBoosts=0;const elapsed=Math.max(0,state.infinityTime);if(state.amount[7]===0)unlockAchievement(34);if(state.galaxies===1)unlockAchievement(36);if(elapsed<7200)unlockAchievement(37);if(state.galaxies>=1&&!state.sacrificedThisInfinity)unlockAchievement(38);if(!challengeCompleted(id))state.completedChallenges.push(id);state.challengeTimes[id]=state.challengeTimes[id]>0?Math.min(state.challengeTimes[id],elapsed):elapsed;state.activeChallenge=0;addIPBigNumber(ipGainMultiplier());state.totalIPGained=(state.totalIPGained||0)+ipGainMultiplier();state.infinities++;unlockAchievement(21);setMatterBigNumber(infinityStartingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};state.sacrificedThisInfinity=false;state.infinityTime=0;resetChallengeTimers();checkAchievements();notifyNewAchievements();buildRows();render();save();switchScreen('challenges');}
+function completeChallenge(){if(!state.activeChallenge||!atInfinity())return;autobuyerElapsed.fill(0);const id=state.activeChallenge;state.challenge11NoBonusBoosts=0;const elapsed=Math.max(0,state.infinityTime);if(state.amount[7]===0)unlockAchievement(34);if(state.galaxies===1)unlockAchievement(36);if(elapsed<7200)unlockAchievement(37);if(state.galaxies>=1&&!state.sacrificedThisInfinity)unlockAchievement(38);if(!challengeCompleted(id))state.completedChallenges.push(id);state.challengeTimes[id]=state.challengeTimes[id]>0?Math.min(state.challengeTimes[id],elapsed):elapsed;state.activeChallenge=0;addIPBigNumber(ipGainBigNumber());state.totalIPGained=(state.totalIPGained||0)+ipGainMultiplier();state.infinities++;unlockAchievement(21);setMatterBigNumber(infinityStartingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};state.sacrificedThisInfinity=false;state.infinityTime=0;resetChallengeTimers();checkAchievements();notifyNewAchievements();buildRows();render();save();switchScreen('challenges');}
 function challengeCardStatus(id){if(challengeCompleted(id))return 'クリア済み';if(!challengeUnlocked(id))return '未解放';if(challengeActive(id))return '挑戦中';return '挑戦可能';}
 let lastSave=0,lastRender=0, rows=[];
 const autobuyerElapsed=Array(12).fill(0);
@@ -507,7 +507,7 @@ function render(){
   const canManualCrunch=state.breakInfinityActive&&atInfinity();
   mainCrunchWrap.style.display=state.breakInfinityActive?'block':'none';
   mainCrunchBtn.disabled=!canManualCrunch;
-  mainCrunchBtn.textContent='Big Crunch for '+fmt(canManualCrunch?ipGainMultiplier():1)+' IP';
+  mainCrunchBtn.textContent='Big Crunch for '+fmtBig(canManualCrunch?ipGainBigNumber():1)+' IP';
  }
  document.querySelectorAll('[data-current-multiplier]').forEach(el=>{const id=el.dataset.currentMultiplier;el.textContent='現在の倍率：'+infinityUpgradeCurrentMultiplier(id)+(state.infinityUpgrades.includes(id)?'':'（未購入）');});
  document.querySelectorAll('[data-bi-current-multiplier]').forEach(el=>{el.textContent='現在の倍率：×'+fmtFixedBig(breakInfinityUpgradeEffectBigNumber(el.dataset.biCurrentMultiplier),2)+(breakInfinityUpgradeBought(el.dataset.biCurrentMultiplier)?'':'（未購入）');});
@@ -515,7 +515,7 @@ function render(){
  const infinityReady=atInfinity()&&!state.breakInfinityActive;
  document.body.classList.toggle('crunch-ready',infinityReady);
  $('infinityPanel').style.display='none';
- if(infinityReady){document.body.dataset.screen='infinity';$('screenTabs').style.display='none';$('tabContent').hidden=false;$('tabContent').innerHTML='<h2>Infinity</h2><button type="button" class="big-crunch-btn" id="tabCrunchBtn">Big Crunch (+'+fmt(ipGainMultiplier())+' IP)</button>';$('tabCrunchBtn').onclick=()=>state.activeChallenge?completeChallenge():bigCrunch();}
+ if(infinityReady){document.body.dataset.screen='infinity';$('screenTabs').style.display='none';$('tabContent').hidden=false;$('tabContent').innerHTML='<h2>Infinity</h2><button type="button" class="big-crunch-btn" id="tabCrunchBtn">Big Crunch (+'+fmtBig(ipGainBigNumber())+' IP)</button>';$('tabCrunchBtn').onclick=()=>state.activeChallenge?completeChallenge():bigCrunch();}
  else{$('screenTabs').style.display='';if(wasCrunchReady&&!state.activeChallenge){const destination=autobuyerCrunchInProgress?lastRegularScreen:'main';switchScreen(destination);$('tabContent').hidden=destination==='main';if(destination==='main')$('tabContent').innerHTML='';}}
  setText($('ipCount'),getIPBigNumber().toDisplayString(3));setText($('infinityCount'),fmt(state.infinities));
  setText($('tickspeedMultiplier'),'購入 '+BigNumber.from(state.tickspeed).toDisplayString(0)+'回 · 倍率 ×'+tickspeedMultiplierBigNumber().toDisplayString(3));
@@ -649,11 +649,27 @@ function galaxy(){
  state.sacrificedFirstBN={mantissa:0,exponent:0};
  render();save();
 }
-function ipGainMultiplier(){const base=Math.pow(2,Math.max(0,state.ipMultLevel||0));if(!state.breakInfinityActive||!atInfinity())return base;const extra=Math.max(0,matterLog()-Math.log10(INFINITY));return base*Math.max(1,Math.floor(Math.pow(10,Math.min(12,extra/10))));}
-function passiveIPRate(){if(!hasInfinityUpgrade('passiveGen')||!(state.fastestInfinity>0))return 0;return ipGainMultiplier()/(state.fastestInfinity*10);}
+// Break Infinity後のIP獲得式（wiki.gg: Infinity）:
+// floor(IP_Mult * 10^(log10(今回のInfinity中の最大AM) / 308 - 0.75))
+// AMはこのゲームでは基本的に単調増加するため、Crunch直前のAMを最大値として扱う。
+function floorBigNumber(value){const b=BigNumber.from(value);if(b.mantissa<=0||b.exponent<0)return BigNumber.from(0);if(b.exponent>15)return b;return BigNumber.from(Math.floor(b.toNumber()));}
+function ipGainBigNumber(){
+ const level=Math.max(0,Math.floor(Number(state.ipMultLevel)||0));
+ const ipMult=BigNumber.fromLog10(level*Math.log10(2));
+ if(!state.breakInfinityActive)return ipMult;
+ const amLog=matterBigNumber().log10();
+ if(!Number.isFinite(amLog))return BigNumber.from(0);
+ const exponent=amLog/308-0.75;
+ if(exponent<0)return BigNumber.from(0);
+ return floorBigNumber(ipMult.multiply(BigNumber.fromLog10(exponent)));
+}
+// 既存UI/一部の互換処理向け。報酬の加算には必ずipGainBigNumber()を使う。
+function ipGainMultiplier(){return ipGainBigNumber().toNumber();}
+function passiveIPRateBigNumber(){if(!hasInfinityUpgrade('passiveGen')||!(state.fastestInfinity>0))return BigNumber.from(0);return ipGainBigNumber().divide(state.fastestInfinity*10);}
+function passiveIPRate(){return passiveIPRateBigNumber().toNumber();}
 function startingBoosts(){if(hasInfinityUpgrade('skipResetGalaxy'))return 4;if(state.infinityUpgrades.includes('skipReset3'))return 3;if(state.infinityUpgrades.includes('skipReset2'))return 2;if(state.infinityUpgrades.includes('skipReset1'))return 1;return 0;}
 function startingGalaxies(){return state.infinityUpgrades.includes('skipResetGalaxy')?1:0;}
-function bigCrunch(fromAutobuyer=false){if(!atInfinity())return;autobuyerElapsed[11]=0;const completedInfinity=Math.max(0,state.infinityTime);if(state.amount[7]===0)unlockAchievement(34);if(state.galaxies===1)unlockAchievement(36);if(completedInfinity<7200)unlockAchievement(37);if(state.galaxies>=1&&!state.sacrificedThisInfinity)unlockAchievement(38);if(completedInfinity>0)state.fastestInfinity=state.fastestInfinity>0?Math.min(state.fastestInfinity,completedInfinity):completedInfinity;addIPBigNumber(ipGainMultiplier());state.totalIPGained=(state.totalIPGained||0)+ipGainMultiplier();state.infinities++;unlockAchievement(21);setMatterBigNumber(infinityStartingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};state.sacrificedThisInfinity=false;state.infinityTime=0;checkAchievements();notifyNewAchievements();buildRows();if(fromAutobuyer)autobuyerCrunchInProgress=true;else switchScreen('main');render();autobuyerCrunchInProgress=false;save();}
+function bigCrunch(fromAutobuyer=false){if(!atInfinity())return;autobuyerElapsed[11]=0;const completedInfinity=Math.max(0,state.infinityTime);if(state.amount[7]===0)unlockAchievement(34);if(state.galaxies===1)unlockAchievement(36);if(completedInfinity<7200)unlockAchievement(37);if(state.galaxies>=1&&!state.sacrificedThisInfinity)unlockAchievement(38);if(completedInfinity>0)state.fastestInfinity=state.fastestInfinity>0?Math.min(state.fastestInfinity,completedInfinity):completedInfinity;addIPBigNumber(ipGainBigNumber());state.totalIPGained=(state.totalIPGained||0)+ipGainMultiplier();state.infinities++;unlockAchievement(21);setMatterBigNumber(infinityStartingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};state.sacrificedThisInfinity=false;state.infinityTime=0;checkAchievements();notifyNewAchievements();buildRows();if(fromAutobuyer)autobuyerCrunchInProgress=true;else switchScreen('main');render();autobuyerCrunchInProgress=false;save();}
 function applyOfflineProgress(seconds){
  // チャレンジ中も、通常プレイと同じチャレンジ固有ルールを適用してオフライン進行する。
  const offlineSeconds=Math.min(86400,Math.max(0,seconds));
@@ -668,9 +684,9 @@ function applyOfflineProgress(seconds){
  if(productionRateBigNumber().compare(matterBigNumber())>0)state.exceedProductionTime+=dt;else state.exceedProductionTime=0;
   if(state.activeChallenge===3)state.challenge3TimeMult=Math.min(INFINITY,state.challenge3TimeMult*Math.pow(1.0038065,dt));
   if(state.activeChallenge===11&&state.amount[1]>0)state.challenge11Matter=Math.min(INFINITY,Math.max(10,state.challenge11Matter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,10*dt));
-  if(state.ipOffline){const offlineGain=passiveIPRate()*dt;addIPBigNumber(offlineGain);state.totalIPGained=(state.totalIPGained||0)+offlineGain;}
+  if(state.ipOffline){const offlineGain=passiveIPRateBigNumber().multiply(dt);addIPBigNumber(offlineGain);state.totalIPGained=(state.totalIPGained||0)+offlineGain.toNumber();}
  if(state.breakInfinityActive&&breakInfinityUpgradeBought('fastestInfinity')&&state.fastestInfinity>0)state.infinities+=dt/state.fastestInfinity;
- if(state.breakInfinityActive&&(state.breakInfinityRepeatables[2]||0)>0&&state.fastestInfinity>0){const biIPGain=(ipGainMultiplier()/Math.max(1,state.fastestInfinity))*dt*(state.breakInfinityRepeatables[2]*0.05);addIPBigNumber(biIPGain);state.totalIPGained=(state.totalIPGained||0)+biIPGain;}
+ if(state.breakInfinityActive&&(state.breakInfinityRepeatables[2]||0)>0&&state.fastestInfinity>0){const biIPGain=ipGainBigNumber().divide(Math.max(1,state.fastestInfinity)).multiply(dt*(state.breakInfinityRepeatables[2]*0.05));addIPBigNumber(biIPGain);state.totalIPGained=(state.totalIPGained||0)+biIPGain.toNumber();}
   if(state.activeChallenge===12){
    for(let i=7;i>=2;i--){const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-2);const v=cur.add(prod);setDimensionAmountBig(i-2,v);}
   }else{
@@ -821,9 +837,9 @@ function tick(now){
  if(state.activeChallenge===3)state.challenge3TimeMult=Math.min(INFINITY,state.challenge3TimeMult*Math.pow(1.0038065,dt));
  if(state.activeChallenge===11&&state.amount[1]>0)state.challenge11Matter=Math.min(INFINITY,Math.max(10,state.challenge11Matter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,10*dt));
  if(state.activeChallenge===12){for(let i=7;i>=2;i--){const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-2);const v=cur.add(prod);setDimensionAmountBig(i-2,v);}}else{for(let i=7;i>=1;i--){if(state.activeChallenge===10&&i>=6)continue;const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-1);const v=cur.add(prod);setDimensionAmountBig(i-1,v);}}
- addIPBigNumber(passiveIPRate()*dt);state.totalIPGained=(state.totalIPGained||0)+passiveIPRate()*dt;
+ const passiveGain=passiveIPRateBigNumber().multiply(dt);addIPBigNumber(passiveGain);state.totalIPGained=(state.totalIPGained||0)+passiveGain.toNumber();
  if(state.breakInfinityActive&&breakInfinityUpgradeBought('fastestInfinity')&&state.fastestInfinity>0)state.infinities+=dt/state.fastestInfinity;
- if(state.breakInfinityActive&&(state.breakInfinityRepeatables[2]||0)>0&&state.fastestInfinity>0){const biIPGain=(ipGainMultiplier()/Math.max(1,state.fastestInfinity))*dt*(state.breakInfinityRepeatables[2]*0.05);addIPBigNumber(biIPGain);state.totalIPGained=(state.totalIPGained||0)+biIPGain;}
+ if(state.breakInfinityActive&&(state.breakInfinityRepeatables[2]||0)>0&&state.fastestInfinity>0){const biIPGain=ipGainBigNumber().divide(Math.max(1,state.fastestInfinity)).multiply(dt*(state.breakInfinityRepeatables[2]*0.05));addIPBigNumber(biIPGain);state.totalIPGained=(state.totalIPGained||0)+biIPGain.toNumber();}
  const matterBeforeLog=matterLog();addMatterProduction(productionRateBigNumber(),dt);if(matterLog()>=matterBeforeLog)state.totalAntimatterLog10=Math.max(state.totalAntimatterLog10,matterLog());
  let challenge11MatterBoosted=false;
  if(state.activeChallenge===11&&BigNumber.from(state.challenge11Matter).compare(matterBigNumber())>0){state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};autobuyerElapsed[9]=0;challenge11MatterBoosted=true;}
