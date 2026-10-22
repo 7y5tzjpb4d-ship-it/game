@@ -714,13 +714,20 @@ function passiveIPRate(){return passiveIPRateBigNumber().toNumber();}
 function startingBoosts(){if(hasInfinityUpgrade('skipResetGalaxy'))return 4;if(state.infinityUpgrades.includes('skipReset3'))return 3;if(state.infinityUpgrades.includes('skipReset2'))return 2;if(state.infinityUpgrades.includes('skipReset1'))return 1;return 0;}
 function startingGalaxies(){return state.infinityUpgrades.includes('skipResetGalaxy')?1:0;}
 function bigCrunch(fromAutobuyer=false){if(!canCrunchNow())return;updateCrunchEfficiencyPeak();autobuyerElapsed[11]=0;const completedInfinity=Math.max(0,state.infinityTime);if(state.amount[7]===0)unlockAchievement(34);if(state.galaxies===1)unlockAchievement(36);if(completedInfinity<7200)unlockAchievement(37);if(state.galaxies>=1&&!state.sacrificedThisInfinity)unlockAchievement(38);if(completedInfinity>0)state.fastestInfinity=state.fastestInfinity>0?Math.min(state.fastestInfinity,completedInfinity):completedInfinity;addIPBigNumber(ipGainBigNumber());state.totalIPGained=(state.totalIPGained||0)+ipGainMultiplier();state.infinities++;unlockAchievement(21);state.infinityPeakAMLog10=0;state.infinityCrunchReady=false;setMatterBigNumber(infinityStartingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};state.sacrificedThisInfinity=false;state.infinityTime=0;resetCrunchEfficiencyPeak();checkAchievements();notifyNewAchievements();buildRows();if(fromAutobuyer)autobuyerCrunchInProgress=true;else switchScreen('main');render();autobuyerCrunchInProgress=false;save();}
-function applyOfflineProgress(seconds){
+const OFFLINE_PROGRESS_TICKS=1000000;
+function offlineProgressOverlay(){
+ let el=document.getElementById('offlineProgressOverlay');
+ if(!el){el=document.createElement('div');el.id='offlineProgressOverlay';el.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(10,10,15,.92);display:flex;align-items:center;justify-content:center;padding:20px;color:#f4f4f7;font-family:inherit';el.innerHTML='<div style="width:min(420px,100%);background:#202027;border:1px solid #555560;border-radius:10px;padding:20px"><h2 style="margin:0 0 12px;font-size:18px">オフライン進行を計算中</h2><p id="offlineProgressStatus" style="margin:0 0 12px;font-size:13px">準備中…</p><div style="height:10px;background:#3a3a44;border-radius:5px;overflow:hidden"><div id="offlineProgressBar" style="height:100%;width:0%;background:#6da7ff"></div></div><p id="offlineProgressEta" style="margin:10px 0 0;font-size:12px;color:#c7c7d0">経過時間を計測中…</p></div>';document.body.appendChild(el);}
+ return el;
+}
+async function applyOfflineProgress(seconds){
  // チャレンジ中も、通常プレイと同じチャレンジ固有ルールを適用してオフライン進行する。
  const offlineSeconds=Math.min(86400,Math.max(0,seconds));
  if(offlineSeconds>21600)unlockAchievement(35);
- let remaining=offlineSeconds;
- while(remaining>0){
-  const dt=Math.min(0.25,remaining);
+ if(offlineSeconds<=0)return;
+ const overlay=offlineProgressOverlay(),startedAt=performance.now();
+ const dt=offlineSeconds/OFFLINE_PROGRESS_TICKS;
+ for(let tickIndex=0;tickIndex<OFFLINE_PROGRESS_TICKS;tickIndex++) {
   
   state.playTime=Math.max(0,Number(state.playTime)||0)+dt;
   if(state.infinities>0)state.infinityTime=Math.max(0,Number(state.infinityTime)||0)+dt;
@@ -743,9 +750,17 @@ function applyOfflineProgress(seconds){
    state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};autobuyerElapsed[9]=0;challenge11MatterBoosted=true;
   }
   updateCrunchEfficiencyPeak();runAutobuyers(dt,{skipBoost:challenge11MatterBoosted});
-  remaining-=dt;
+  if((tickIndex+1)%1000===0||tickIndex===OFFLINE_PROGRESS_TICKS-1){
+   const progress=(tickIndex+1)/OFFLINE_PROGRESS_TICKS,elapsed=(performance.now()-startedAt)/1000,eta=progress>0?elapsed*(1-progress)/progress:0;
+   const status=document.getElementById('offlineProgressStatus'),bar=document.getElementById('offlineProgressBar'),etaEl=document.getElementById('offlineProgressEta');
+   if(status)status.textContent=`${(progress*100).toFixed(1)}%（${(tickIndex+1).toLocaleString()} / ${OFFLINE_PROGRESS_TICKS.toLocaleString()} ticks）`;
+   if(bar)bar.style.width=`${(progress*100).toFixed(2)}%`;
+   if(etaEl)etaEl.textContent=`経過 ${formatPlayTime(elapsed)} ／ 残り約 ${formatPlayTime(eta)}`;
+   if((tickIndex+1)%5000===0||tickIndex===OFFLINE_PROGRESS_TICKS-1)await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
+  }
  }
  checkAchievements();notifyNewAchievements();
+ overlay.remove();
 }
 function save(){try{localStorage.setItem('antimatterFirstSteps',JSON.stringify((({bigNumber,...persisted})=>({...persisted,last:Date.now()}))(state)));}catch(e){}}
 function load(){
