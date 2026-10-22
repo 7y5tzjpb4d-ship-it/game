@@ -328,27 +328,28 @@ function sacrificeMultiplierBigNumber(){return BigNumber.from(state.sacrificeMul
 function infinityUpgradeMultiplierBigNumber(id){return BigNumber.from(infinityUpgradeMultiplierValue(id));}
 function breakInfinityUpgradeEffectBigNumber(id){return BigNumber.from(breakInfinityUpgradeEffect(id));}
 function safeCostBigNumber(base,growth,n,alternateGrowth){
- const count=Math.max(0,Number(n)||0);
+ const count=Math.max(0,Math.floor(Number(n)||0));
  const baseLog=Math.log10(base), growthLog=Math.log10(growth);
  const normalLog=baseLog+count*growthLog;
  const capLog=Math.log10(Number.MAX_VALUE);
- // Before Break Infinity, preserve the original geometric cost progression.
+ // Until the ordinary geometric price reaches the Number limit, preserve the
+ // original price exactly. The first scaled tier must continue from that price,
+ // not reset its logarithm to capLog (which caused a price drop at the boundary).
  if(!state.breakInfinityActive||normalLog<=capLog)return BigNumber.fromLog10(normalLog);
- // Post-Infinity scaling increases the cost multiplier itself after each purchase:
- // x10, x100, x1000... by default; repeatable upgrades reduce the scaling base.
- const firstPostCount=Math.max(0,Math.ceil((capLog-baseLog)/growthLog));
- const postCount=Math.max(0,count-firstPostCount);
+ // Count the first tier whose unscaled cost exceeds the cap. Each following
+ // tier increases the cost multiplier by the configured scaling factor.
+ const lastUnscaledCount=Math.floor((capLog-baseLog)/growthLog);
+ const postCount=Math.max(1,count-lastUnscaledCount);
  const scaling=Math.max(2,Number(alternateGrowth)||10);
- const triangular=postCount*(postCount-1)/2;
- const logCost=capLog+postCount*growthLog+triangular*Math.log10(scaling);
+ const triangular=postCount*(postCount+1)/2;
+ const logCost=normalLog+triangular*Math.log10(scaling);
  return BigNumber.fromLog10(logCost);
 }
 function safeCostFromScaling(base,growth,n,alternateGrowth){return safeCostBigNumber(base,growth,n,alternateGrowth).toNumber();}
 function costBigNumber(i,offset=0){const n=Math.floor((state.bought[i]+offset)/10);if(state.activeChallenge===6&&i>=2){const c6Base=[100,500,2500,20000,200000,4000000],c6Growth=[1e4,1.2e4,1.8e4,2.6e4,3.2e4,4.2e4];return safeCostBigNumber(c6Base[i-2],c6Growth[i-2],n,Math.max(3,10-(state.breakInfinityRepeatables[1]||0)));}return safeCostBigNumber(baseCosts[i],costGrowth[i],n,Math.max(3,10-(state.breakInfinityRepeatables[1]||0)));}
 function cost(i,offset=0){return costBigNumber(i,offset);}
 function dimensionResource(i){return state.activeChallenge===6&&i>=2?BigNumber.from(state.amount[i-2]):matterBigNumber();}
-function canAffordDimension(i,c=costBigNumber(i)){
- const resource=dimensionResource(i);
+function canAffordDimension(i,c=costBigNumber(i),resource=dimensionResource(i)){
  return BigNumber.from(resource).compare(c)>=0;
 }
 function spendDimension(i,c){
@@ -360,7 +361,7 @@ function spendDimension(i,c){
 function maxAffordable(i, limitToNextTen=true){
  let resource=dimensionResource(i), bought=state.bought[i], count=0, spent=BigNumber.from(0), c=costBigNumber(i);
  const limit=limitToNextTen?10-(bought%10):10000;
- while(count<limit&&canAffordDimension(i,c)){
+ while(count<limit&&canAffordDimension(i,c,resource)){
   resource=resource.subtract(c).max(0);spent=spent.add(c);count++;bought++;
   c=costBigNumber(i,bought-state.bought[i]);
  }
