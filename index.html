@@ -293,7 +293,7 @@ let lastSave=0,lastRender=0, rows=[];
 const autobuyerElapsed=Array(12).fill(0);
 const autobuyerBaseIntervals=[0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,0.5,4,20,150];
 function autobuyerUpgradeLevels(){state.autobuyers.intervalUpgradeLevels=Array.isArray(state.autobuyers.intervalUpgradeLevels)?Array.from({length:12},(_,i)=>Math.max(0,Math.floor(Number(state.autobuyers.intervalUpgradeLevels[i])||0))):Array(12).fill(0);return state.autobuyers.intervalUpgradeLevels;}
-function autobuyerInterval(){const levels=autobuyerUpgradeLevels();const speed=breakInfinityUpgradeBought('autobuyerSpeed')?2:1;return autobuyerBaseIntervals.map((v,i)=>Math.max(0.1,v*Math.pow(0.6,levels[i])/speed));}
+function autobuyerInterval(){const levels=autobuyerUpgradeLevels();const speed=breakInfinityUpgradeBought('autobuyerSpeed')?2:1;return autobuyerBaseIntervals.map((v,i)=>Math.max(0.1,v*Math.pow(0.6,levels[i]))/(speed&&i!==11?2:1));}
 function autobuyerIntervalUpgradeCost(i){return Math.pow(2,autobuyerUpgradeLevels()[i]||0);}
 function dimBulkLevels(){state.autobuyers.dimBulkLevels=Array.isArray(state.autobuyers.dimBulkLevels)?Array.from({length:8},(_,i)=>Math.max(0,Math.min(9,Math.floor(Number(state.autobuyers.dimBulkLevels[i])||0)))):Array(8).fill(0);return state.autobuyers.dimBulkLevels;}
 function dimAutobuyerBulk(i){const level=dimBulkLevels()[i]||0;return level>=9?Infinity:Math.pow(2,level);}
