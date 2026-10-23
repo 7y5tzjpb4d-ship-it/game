@@ -697,7 +697,8 @@ function render(){
  for(let i=0;i<8;i++){
   const {d,det,amt,b}=rows[i],open=unlocked(i)&&!(challengeRuleActive(10)&&i>=6),c=costBigNumber(i);
   d.className='dim'+(open?'':' locked');
-  setText(det,open?'×'+dimensionMultiplierBigNumber(i).toDisplayString(2):'ブースト '+(i-3)+' 回');
+  const lockedReason=challengeRuleActive(10)&&i>=6?'チャレンジ制限':(i>=4&&state.boosts<i-3?'ブースト '+(i-3)+' 回':'未解禁');
+  setText(det,open?'×'+dimensionMultiplierBigNumber(i).toDisplayString(2):lockedReason);
   setText(amt,BigNumber.from(state.amountBN?.[i]||state.amount[i]).toDisplayString(2));
   const max=state.buyMax?maxAffordable(i):null;
   const costText=costBigNumber(i).toDisplayString(2);
