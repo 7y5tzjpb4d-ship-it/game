@@ -186,7 +186,7 @@ class BigNumber {
   if(typeof mantissa==='string'&&/^\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?\s*$/i.test(mantissa)){const parts=mantissa.trim().toLowerCase().split('e');this.mantissa=Number(parts[0]);this.exponent=parts.length>1?(Number(parts[1])||0):0;this.normalize();return;}
   this.mantissa=Number(mantissa)||0;this.exponent=Number(exponent)||0;this.normalize();
  }
- normalize(){if(this.mantissa===0||!Number.isFinite(this.mantissa)){if(this.mantissa===0){this.exponent=0;}else{this.mantissa=Math.sign(this.mantissa)||1;this.exponent=Number.MAX_VALUE;}return this;}if(this.mantissa<0){const sign=-1;this.mantissa=-this.mantissa;this._sign=sign;}const shift=Math.floor(Math.log10(this.mantissa));this.mantissa/=Math.pow(10,shift);this.exponent+=shift;if(this._sign){this.mantissa*=this._sign;delete this._sign;}if(Math.abs(this.mantissa)>=10){this.mantissa/=10;this.exponent++;}return this;}
+ normalize(){if(this.mantissa===0){this.exponent=0;return this;}if(!Number.isFinite(this.mantissa)){this.mantissa=Math.sign(this.mantissa)||1;this.exponent=308;return this;}if(!Number.isFinite(this.exponent)||Math.abs(this.exponent)>1e7){this.mantissa=Math.sign(this.mantissa)||1;this.exponent=308;}if(this.mantissa<0){const sign=-1;this.mantissa=-this.mantissa;this._sign=sign;}const shift=Math.floor(Math.log10(this.mantissa));this.mantissa/=Math.pow(10,shift);this.exponent+=shift;if(this._sign){this.mantissa*=this._sign;delete this._sign;}if(Math.abs(this.mantissa)>=10){this.mantissa/=10;this.exponent++;}return this;}
  static from(value){if(value instanceof BigNumber)return new BigNumber(value);if(value&&typeof value==='object'&&'mantissa' in value&&'exponent' in value)return new BigNumber(Number(value.mantissa),Number(value.exponent));if(typeof value==='string'&&/^\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)e[+-]?\d+\s*$/i.test(value)){const [m,e]=value.trim().toLowerCase().split('e');return new BigNumber(Number(m),Number(e));}return new BigNumber(Number(value)||0);}
  static fromLog10(log){if(!Number.isFinite(log))return log===Infinity?new BigNumber(1,Number.MAX_VALUE):new BigNumber(0);const e=Math.floor(log);return new BigNumber(Math.pow(10,log-e),e);}
  log10(){return this.mantissa>0?this.exponent+Math.log10(this.mantissa):-Infinity;}
@@ -202,7 +202,7 @@ class BigNumber {
  isFinite(){return Number.isFinite(this.mantissa)&&Number.isFinite(this.exponent);}
  max(other){return this.compare(other)>=0?new BigNumber(this):BigNumber.from(other);}
  min(other){return this.compare(other)<=0?new BigNumber(this):BigNumber.from(other);}
- toDisplayString(digits=2){if(!this.mantissa)return (0).toFixed(digits);if(this.exponent<3&&this.exponent>-7){const n=this.toNumber();if(Number.isFinite(n))return n.toFixed(digits);}return this.mantissa.toFixed(digits)+'e'+(Number.isFinite(this.exponent)?String(Math.round(this.exponent)):'∞');}
+ toDisplayString(digits=2){if(!this.mantissa)return (0).toFixed(digits);if(this.exponent<3&&this.exponent>-7){const n=this.toNumber();if(Number.isFinite(n))return n.toFixed(digits);}const e=Number.isFinite(this.exponent)?Math.round(this.exponent):308;return this.mantissa.toFixed(digits)+'e'+String(Math.min(1e7,Math.max(-1e7,e)));}
  toJSON(){return {mantissa:this.mantissa,exponent:this.exponent};}
 }
 function parseBigNumberInput(raw){
