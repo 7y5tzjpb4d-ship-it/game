@@ -929,10 +929,12 @@ tabContent.querySelectorAll('[data-bi-repeat]').forEach(el=>el.addEventListener(
 // Main画面のCrunchボタンは画面切替前から常に操作できるよう、初期化時に一度だけイベント登録する。
 const mainCrunchButton=$('mainBigCrunchBtn');if(mainCrunchButton)mainCrunchButton.addEventListener('click',()=>{if(state.breakInfinityActive&&canCrunchNow())bigCrunch();});
 document.querySelectorAll('.screen-tabs button').forEach(b=>b.addEventListener('click',()=>{const target=b.dataset.screen;if(target==='main'&&(document.body.dataset.screen==='main'||b.classList.contains('active'))){mainSubpage=mainSubpage==='main'?'infinityDimensions':'main';switchScreen('main');return;}if(target==='infinity'&&document.body.dataset.screen==='infinity'){infinitySubpage=infinitySubpage==='upgrades'?'break':'upgrades';switchScreen('infinity');return;}if(target==='main')mainSubpage='main';if(target==='infinity')infinitySubpage='upgrades';switchScreen(target);}));
+// Preserve saved Autobuyer upgrade levels on reload. Apply test defaults only when no save exists.
+const hasExistingSave=(()=>{try{return Boolean(localStorage.getItem('antimatterFirstSteps'));}catch(e){return false;}})();
 load();
-// TEST MODE: keep Autobuyer unlocks and upgrades consistent on every fresh start.
+// TEST MODE defaults are for a genuinely fresh game/reset, not every browser restart.
 // Activation toggles stay off until manually enabled.
-applyTestAutobuyerSetup();
+if(!hasExistingSave)applyTestAutobuyerSetup();
 save();
 updateAutobuyerUnlockAlert();autobuyerUnlockAlert=false;previousDimAutobuyerUnlocks=Array.from({length:8},(_,i)=>dimAutobuyerUnlocked(i));
 state.buyMax=true;$('buyModeBtn').textContent='最大購入';$('quickBuyModeBtn').textContent='最大購入';$('mobileBuyModeBtn').textContent='最大購入';buildRows();render();
