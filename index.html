@@ -202,7 +202,7 @@ class BigNumber {
  isFinite(){return Number.isFinite(this.mantissa)&&Number.isFinite(this.exponent);}
  max(other){return this.compare(other)>=0?new BigNumber(this):BigNumber.from(other);}
  min(other){return this.compare(other)<=0?new BigNumber(this):BigNumber.from(other);}
- toDisplayString(digits=2){if(!this.mantissa)return (0).toFixed(digits);if(this.exponent<3&&this.exponent>-7){const n=this.toNumber();if(Number.isFinite(n))return n.toFixed(digits);}return this.mantissa.toFixed(digits)+'e'+(Number.isInteger(this.exponent)?String(this.exponent):this.exponent.toFixed(0));}
+ toDisplayString(digits=2){if(!this.mantissa)return (0).toFixed(digits);if(this.exponent<3&&this.exponent>-7){const n=this.toNumber();if(Number.isFinite(n))return n.toFixed(digits);}return this.mantissa.toFixed(digits)+'e'+(Number.isFinite(this.exponent)?String(Math.round(this.exponent)):'∞');}
  toJSON(){return {mantissa:this.mantissa,exponent:this.exponent};}
 }
 function parseBigNumberInput(raw){
@@ -240,7 +240,7 @@ function matterBigNumber(){
  const legacy=BigNumber.from(Math.max(0,Number(state.matter)||0));state.matterBN=legacy.toJSON();state.matterLog10=legacy.mantissa>0?legacy.log10():0;return legacy;
 }
 function matterLog(){return matterBigNumber().log10()||0;}
-function setMatterBigNumber(value){let b=BigNumber.from(value).max(0);if(state.activeInfinityChallenge){const goal=infinityChallengeGoal();if(b.compare(goal)>0)b=goal;}state.matterBN=b.toJSON();state.matterLog10=b.mantissa>0?b.log10():0;state.matter=b.toNumber();state.infinityPeakAMLog10=Math.max(Number(state.infinityPeakAMLog10)||0,state.matterLog10);if(state.breakInfinityActive&&b.compare(INFINITY)>=0)state.infinityCrunchReady=true;return b;}
+function setMatterBigNumber(value){let b=BigNumber.from(value).max(0);/* Recover malformed legacy/save exponents instead of letting one corrupted value poison every production tick and UI render. */if(!Number.isFinite(b.exponent)||Math.abs(b.exponent)>1e7){b=BigNumber.from(Number.MAX_VALUE);}if(state.activeInfinityChallenge){const goal=infinityChallengeGoal();if(b.compare(goal)>0)b=goal;}state.matterBN=b.toJSON();state.matterLog10=b.mantissa>0?b.log10():0;state.matter=b.toNumber();if(!Number.isFinite(state.infinityPeakAMLog10)||Math.abs(Number(state.infinityPeakAMLog10))>1e7)state.infinityPeakAMLog10=state.matterLog10;state.infinityPeakAMLog10=Math.max(Number(state.infinityPeakAMLog10)||0,state.matterLog10);if(state.breakInfinityActive&&b.compare(INFINITY)>=0)state.infinityCrunchReady=true;return b;}
 function canCrunchNow(){if(state.activeInfinityChallenge)return matterBigNumber().compare(infinityChallengeGoal())>=0;return state.breakInfinityActive?Boolean(state.infinityCrunchReady||atInfinity()):atInfinity();}
 function addMatterProduction(rate,dt){
  const rateBN=BigNumber.from(rate);if(!(dt>0)||rateBN.mantissa<=0)return;
@@ -865,7 +865,8 @@ function ipGainBigNumber(){
  const level=Math.max(0,Math.floor(Number(state.ipMultLevel)||0));
  const ipMult=BigNumber.fromLog10(level*Math.log10(2));
  if(!state.breakInfinityActive)return ipMult;
- const amLog=Number(state.infinityPeakAMLog10);
+ let amLog=Number(state.infinityPeakAMLog10);
+ if(!Number.isFinite(amLog)||Math.abs(amLog)>1e7)amLog=matterBigNumber().log10();
  if(!Number.isFinite(amLog))return BigNumber.from(0);
  const exponent=amLog/308-0.75;
  if(exponent<0)return BigNumber.from(0);
