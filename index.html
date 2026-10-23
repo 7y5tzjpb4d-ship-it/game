@@ -992,7 +992,7 @@ const infinityDimensionDefs=[
 ];
 function ensureInfinityDimensionState(){
  if(!Array.isArray(state.infinityDimensions))state.infinityDimensions=[];
- state.infinityDimensions=Array.from({length:8},(_,i)=>{const d=state.infinityDimensions[i]||{};return {amount:BigNumber.from(d.amount||0).max(0).toJSON(),bought:Math.max(0,Math.floor(Number(d.bought)||0)),unlocked:Boolean(d.unlocked)||Number(state.totalAntimatterLog10||0)>=infinityDimensionDefs[i].unlock};});
+ state.infinityDimensions=Array.from({length:8},(_,i)=>{const d=state.infinityDimensions[i]||{};const amount=BigNumber.from(d.amount||0).max(0);let bought=Math.max(0,Math.floor(Number(d.bought)||0));/* Migrate legacy saves where bought counted 10-unit purchases rather than individual dimensions. */if(bought>0&&bought<10&&amount.compare(10)>=0)bought*=10;return {amount:amount.toJSON(),bought,unlocked:Boolean(d.unlocked)||Number(state.totalAntimatterLog10||0)>=infinityDimensionDefs[i].unlock};});
  if(!state.infinityPowerBN||!Number.isFinite(Number(state.infinityPowerBN.exponent)))state.infinityPowerBN=BigNumber.from(0).toJSON();
  state.infinityDimensions.forEach((d,i)=>{if(Number(state.totalAntimatterLog10||0)>=infinityDimensionDefs[i].unlock)d.unlocked=true;});
 }
