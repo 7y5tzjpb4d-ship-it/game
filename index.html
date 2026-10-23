@@ -772,7 +772,8 @@ function passiveIPRate(){return passiveIPRateBigNumber().toNumber();}
 function startingBoosts(){if(hasInfinityUpgrade('skipResetGalaxy'))return 4;if(state.infinityUpgrades.includes('skipReset3'))return 3;if(state.infinityUpgrades.includes('skipReset2'))return 2;if(state.infinityUpgrades.includes('skipReset1'))return 1;return 0;}
 function startingGalaxies(){return state.infinityUpgrades.includes('skipResetGalaxy')?1:0;}
 function bigCrunch(fromAutobuyer=false){if(!canCrunchNow())return;updateCrunchEfficiencyPeak();autobuyerElapsed[11]=0;const completedInfinity=Math.max(0,state.infinityTime);if(state.amount[7]===0)unlockAchievement(34);if(state.galaxies===1)unlockAchievement(36);if(completedInfinity<7200)unlockAchievement(37);if(state.galaxies>=1&&!state.sacrificedThisInfinity)unlockAchievement(38);if(completedInfinity>0)state.fastestInfinity=state.fastestInfinity>0?Math.min(state.fastestInfinity,completedInfinity):completedInfinity;const completedIPGain=ipGainBigNumber();recordInfinityIPPerMinute(completedIPGain,completedInfinity);addIPBigNumber(completedIPGain);state.totalIPGained=(state.totalIPGained||0)+completedIPGain.toNumber();state.infinities++;unlockAchievement(21);state.infinityPeakAMLog10=0;state.infinityCrunchReady=false;setMatterBigNumber(infinityStartingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.galaxies=startingGalaxies();state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};state.sacrificedThisInfinity=false;state.infinityTime=0;resetCrunchEfficiencyPeak();checkAchievements();notifyNewAchievements();buildRows();if(fromAutobuyer)autobuyerCrunchInProgress=true;else switchScreen('main');render();autobuyerCrunchInProgress=false;save();}
-const OFFLINE_PROGRESS_TICKS=1000000;
+const OFFLINE_PROGRESS_DEFAULT_TICKS=100000;
+// Use 100,000 ticks for offline progress simulation.
 let offlineProgressSkipRequested=false;
 function offlineProgressOverlay(){
  let el=document.getElementById('offlineProgressOverlay');
@@ -786,11 +787,13 @@ async function applyOfflineProgress(seconds){
  if(offlineSeconds<=0)return;
  const overlay=offlineProgressOverlay(),startedAt=performance.now();
  offlineProgressSkipRequested=false;
- const dt=offlineSeconds/OFFLINE_PROGRESS_TICKS;
- for(let tickIndex=0;tickIndex<OFFLINE_PROGRESS_TICKS;tickIndex++) {
+ const offlineTicks=OFFLINE_PROGRESS_DEFAULT_TICKS;
+ const dt=offlineSeconds/offlineTicks;
+ for(let tickIndex=0;tickIndex<offlineTicks;tickIndex++) {
   if(offlineProgressSkipRequested)break;
   
   state.playTime=Math.max(0,Number(state.playTime)||0)+dt;
+  updateInfinityDimensionProduction(dt);
   if(state.infinities>0)state.infinityTime=Math.max(0,Number(state.infinityTime)||0)+dt;
   if(state.activeChallenge===2)state.challenge2Recovery=Math.min(1,state.challenge2Recovery+dt/180);
  if(productionRateBigNumber().compare(matterBigNumber())>0)state.exceedProductionTime+=dt;else state.exceedProductionTime=0;
@@ -806,18 +809,20 @@ async function applyOfflineProgress(seconds){
   }
   const rateBN=productionRateBigNumber();
   addMatterProduction(rateBN,dt);
+  // Match the online tick: reaching Infinity completes an active Normal Challenge immediately.
+  if(state.activeChallenge&&atInfinity())completeChallenge();
   let challenge11MatterBoosted=false;
   if(state.activeChallenge===11&&BigNumber.from(state.challenge11Matter).compare(matterBigNumber())>0){
    state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=10;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};autobuyerElapsed[9]=0;challenge11MatterBoosted=true;
   }
   updateCrunchEfficiencyPeak();runAutobuyers(dt,{skipBoost:challenge11MatterBoosted});
-  if((tickIndex+1)%1000===0||tickIndex===OFFLINE_PROGRESS_TICKS-1){
-   const progress=(tickIndex+1)/OFFLINE_PROGRESS_TICKS,elapsed=(performance.now()-startedAt)/1000,eta=progress>0?elapsed*(1-progress)/progress:0;
+  if((tickIndex+1)%Math.max(1,Math.floor(offlineTicks/100))===0||tickIndex===offlineTicks-1){
+   const progress=(tickIndex+1)/offlineTicks,elapsed=(performance.now()-startedAt)/1000,eta=progress>0?elapsed*(1-progress)/progress:0;
    const status=document.getElementById('offlineProgressStatus'),bar=document.getElementById('offlineProgressBar'),etaEl=document.getElementById('offlineProgressEta');
-   if(status)status.textContent=`${(progress*100).toFixed(1)}%（${(tickIndex+1).toLocaleString()} / ${OFFLINE_PROGRESS_TICKS.toLocaleString()} ticks）`;
+   if(status)status.textContent=`${(progress*100).toFixed(1)}%（${(tickIndex+1).toLocaleString()} / ${offlineTicks.toLocaleString()} ticks）`;
    if(bar)bar.style.width=`${(progress*100).toFixed(2)}%`;
    if(etaEl)etaEl.textContent=`経過 ${formatPlayTime(elapsed)} ／ 残り約 ${formatPlayTime(eta)}`;
-   if((tickIndex+1)%5000===0||tickIndex===OFFLINE_PROGRESS_TICKS-1)await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
+   if((tickIndex+1)%Math.max(1,Math.floor(offlineTicks/200))===0||tickIndex===offlineTicks-1)await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
   }
  }
  checkAchievements();notifyNewAchievements();
