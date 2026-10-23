@@ -1087,9 +1087,11 @@ function runAutobuyers(dt, options={}){
   // 通常モードのみInfinity到達時にCrunch処理を優先して停止する。
   if(!state.breakInfinityActive && atInfinity())break;
   if(!state.autobuyers.dims[i]||!dimAutobuyerUnlocked(i)||!unlocked(i)||(challengeRuleActive(10)&&i>=6))continue;
-  autobuyerElapsed[i]+=dt;
-  if(autobuyerElapsed[i]+1e-9<autobuyerInterval()[i])continue;
-  autobuyerElapsed[i]%=autobuyerInterval()[i];
+  const interval=autobuyerInterval()[i];
+  autobuyerElapsed[i]=Math.min(interval,autobuyerElapsed[i]+dt);
+  if(autobuyerElapsed[i]+1e-9<interval)continue;
+  // 本家仕様：購入可能になるまではタイマーを満了状態で維持し、
+  // 資源不足で購入できなかった場合に待機時間をリセットしない。
   const mode=state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10';
   const bulk=dimAutobuyerBulk(i);
   // Bulk上限時は「無限回」ループせず、購入可能な範囲を上限として扱う。
@@ -1101,7 +1103,7 @@ function runAutobuyers(dt, options={}){
    const c=cost(i);if(!canAffordDimension(i,c))break;
    if(!spendDimension(i,c))break;setDimensionAmountBig(i,dimensionAmountBig(i).add(1));state.bought[i]++;onICDimensionPurchased(i,c);boughtNow++;if(challengeRuleActive(4)){for(let j=0;j<i;j++)setDimensionAmountBig(j,0);}
   }
-  if(boughtNow){if(challengeRuleActive(2))challengePurchaseReset();if(state.activeChallenge===9&&state.bought[i]%10===0)applyChallenge9CostStep(cost(i,-1),i);state.achievements[i]=true;if(i===0&&dimensionAmountBig(0).compare('1e150')>=0)state.achievements[15]=true;changed=true;}
+  if(boughtNow){autobuyerElapsed[i]=0;if(challengeRuleActive(2))challengePurchaseReset();if(state.activeChallenge===9&&state.bought[i]%10===0)applyChallenge9CostStep(cost(i,-1),i);state.achievements[i]=true;if(i===0&&dimensionAmountBig(0).compare('1e150')>=0)state.achievements[15]=true;changed=true;}
  }
  if(state.autobuyers.tickspeed&&tickspeedAutobuyerUnlocked()){
   autobuyerElapsed[8]+=dt;
