@@ -906,7 +906,7 @@ function breakInfinityView(){
   const level=state.breakInfinityRepeatables[index]||0;
   const cost=baseCost*Math.pow(mult,level),max=index===2?10:index===0?8:7;
   const currentScaling=index===0?Math.max(2,10-level):index===1?Math.max(3,10-level):null;
-  return `<button type="button" class="infinity-upgrade-btn" data-bi-repeat="${index}" ${!active||level>=max||!hasIPAtLeast(cost)?'disabled':''}><strong>${name}</strong><span>${desc}</span>${currentScaling!==null?`<span>現在倍率：×${currentScaling}</span>`:''}${index===2?`<span data-bi-ip-generation-minute>現在の生成量：${fmtBig(bestRecentIPPerMinuteBigNumber().multiply(level*0.05))} IP/分</span>`:''}<small>${level>=max?'最大レベル':`コスト：${fmt(cost)} IP`}</small></button>`;
+  return `<button type="button" class="infinity-upgrade-btn ${level>=max?'purchased':''}" data-bi-repeat="${index}" ${!active||level>=max||!hasIPAtLeast(cost)?'disabled':''}><strong>${name}</strong><span>${desc}</span>${currentScaling!==null?`<span>現在倍率：×${currentScaling}</span>`:''}${index===2?`<span data-bi-ip-generation-minute>現在の生成量：${fmtBig(bestRecentIPPerMinuteBigNumber().multiply(level*0.05))} IP/分</span>`:''}<small>${level>=max?'最大レベル':`コスト：${fmt(cost)} IP`}</small></button>`;
  }).join('');
  return `<h2>Break Infinity</h2>
  <p>所持IP：<strong>${getIPBigNumber().toDisplayString(3)}</strong> · Infinity回数：${fmt(state.infinities)}</p>
