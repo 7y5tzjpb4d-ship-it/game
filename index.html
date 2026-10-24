@@ -741,14 +741,8 @@ function canBuyAnything(){
  return false;
 }
 function maxAll(){
- // 本家準拠：先にTickspeedを最大購入し、その後第8次元から第1次元へ降順に購入する。
- let guard=0;
- while(guard<10000){
-  const c=tickspeedCost();
-  if(!canAffordTickspeed(c))break;
-  spendTickspeed(c);state.tickspeed++;onICTickspeedPurchased(c);if(challengeRuleActive(2))challengePurchaseReset();guard++;
- }
- for(let i=7;i>=0;i--){
+ // 本家のMax Allと同じ順序：第1次元から第8次元、その後Tickspeed。
+ for(let i=0;i<8;i++){
   if(!unlocked(i)||(challengeRuleActive(10)&&i>=6))continue;
   const max=maxAffordable(i,false);
   const targetBought=Math.floor((state.bought[i]+max.count)/10)*10;
@@ -763,6 +757,16 @@ function maxAll(){
    if(state.activeChallenge===9&&state.bought[i]%10===0)applyChallenge9CostStep(cost(i,-1),i);
   }
   if(boughtNow){if(challengeRuleActive(2))challengePurchaseReset();unlockAchievement(11+i);}
+ }
+ let guard=0;
+ while(guard<10000){
+  const c=tickspeedCost();
+  if(!canAffordTickspeed(c))break;
+  if(!spendTickspeed(c))break;
+  state.tickspeed++;onICTickspeedPurchased(c);
+  if(challengeRuleActive(2))challengePurchaseReset();
+  if(state.activeChallenge===9)applyChallenge9CostStep(c,-1,true);
+  guard++;
  }
  checkAchievements();render();save();
 }
@@ -1110,20 +1114,9 @@ function crunchAutobuyerReady(){if(!canCrunchNow())return false;if(state.activeC
 function runAutobuyers(dt, options={}){
  let changed=false;
  if(state.completedInfinityChallenges.includes(2)&&state.autobuyers.sacrifice){const threshold=Number(state.autobuyers.sacrificeValue);const required=Number.isFinite(threshold)&&threshold>1?threshold:2;if(sacrificeGainBigNumber().compare(required)>=0){const before=sacrificeMultiplierBigNumber();sacrifice(true);if(sacrificeMultiplierBigNumber().compare(before)>0)changed=true;}}
- if(state.autobuyers.tickspeed&&tickspeedAutobuyerUnlocked()){
-  autobuyerElapsed[8]+=dt;
-  if(autobuyerElapsed[8]+1e-9>=autobuyerInterval()[8]){
-   autobuyerElapsed[8]%=autobuyerInterval()[8];
-   const buyMaxTickspeed=challengeCompleted(9)&&state.autobuyers.tickspeedMode==='max';
-   let boughtTickspeed=0,guard=0;
-   do{
-    const c=tickspeedCost();if(!canAffordTickspeed(c))break;
-    spendTickspeed(c);state.tickspeed++;onICTickspeedPurchased(c);if(challengeRuleActive(2))challengePurchaseReset();if(state.activeChallenge===9)applyChallenge9CostStep(c,-1,true);boughtTickspeed++;guard++;
-   }while(buyMaxTickspeed&&guard<10000);
-   if(boughtTickspeed)changed=true;
-  }
- }
- for(let i=7;i>=0;i--){
+
+ for(let i=0;i<8;i++){
+  // 本家と同じく、第1次元から第8次元へ各Autobuyerを処理する。
   // Break Infinity中はInfinity境界を超えても次元自動購入を継続する。
   // 通常モードのみInfinity到達時にCrunch処理を優先して停止する。
   if(!state.breakInfinityActive && atInfinity())break;
@@ -1145,6 +1138,20 @@ function runAutobuyers(dt, options={}){
   if(boughtNow){if(challengeRuleActive(2))challengePurchaseReset();if(state.activeChallenge===9&&state.bought[i]%10===0)applyChallenge9CostStep(cost(i,-1),i);state.achievements[i]=true;if(i===0&&dimensionAmountBig(0).compare('1e150')>=0)state.achievements[15]=true;changed=true;}
  }
 
+ // 本家の実行順に合わせ、次元Autobuyerの後にTickspeed Autbuyer's tickを処理する。
+ if(state.autobuyers.tickspeed&&tickspeedAutobuyerUnlocked()){
+  autobuyerElapsed[8]+=dt;
+  if(autobuyerElapsed[8]+1e-9>=autobuyerInterval()[8]){
+   autobuyerElapsed[8]%=autobuyerInterval()[8];
+   const buyMaxTickspeed=challengeCompleted(9)&&state.autobuyers.tickspeedMode==='max';
+   let boughtTickspeed=0,guard=0;
+   do{
+    const c=tickspeedCost();if(!canAffordTickspeed(c))break;
+    spendTickspeed(c);state.tickspeed++;onICTickspeedPurchased(c);if(challengeRuleActive(2))challengePurchaseReset();if(state.activeChallenge===9)applyChallenge9CostStep(c,-1,true);boughtTickspeed++;guard++;
+   }while(buyMaxTickspeed&&guard<10000);
+   if(boughtTickspeed)changed=true;
+  }
+ }
  const autobuyerLimitReached=(key,current)=>{const raw=state.autobuyers[key];if(typeof raw!=='string'||!/^[0-9]+$/.test(raw))return false;const limit=Number(raw);return Number.isFinite(limit)&&current>=limit;};
  const galaxyAutobuyerCanAct=()=>state.autobuyers.galaxy&&challengeCompleted(11)&&(state.breakInfinityActive||!atInfinity())&&canGalaxy()&&!autobuyerLimitReached('galaxyLimit',state.galaxies);
  const resetAuto=[{key:'crunch',index:11,unlocked:()=>challengeCompleted(12),ready:()=>crunchAutobuyerReady(),run:()=>state.activeChallenge?completeChallenge():bigCrunch(true)},{key:'galaxy',index:10,unlocked:()=>challengeCompleted(11),ready:()=>(state.breakInfinityActive||!atInfinity())&&canGalaxy()&&!autobuyerLimitReached('galaxyLimit',state.galaxies),run:()=>galaxy()},{key:'boost',index:9,unlocked:()=>challengeCompleted(10),ready:()=>(state.breakInfinityActive||!atInfinity())&&canBoost()&&!autobuyerLimitReached('boostLimit',state.boosts)&&!galaxyAutobuyerCanAct(),run:()=>breakInfinityUpgradeBought('bulkBoost')?bulkBoostAutobuy():boost()}];
