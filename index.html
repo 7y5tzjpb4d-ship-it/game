@@ -761,7 +761,7 @@ function buyMaxDimensionTier(i, bulk=Infinity){
  // do nothing unless the next complete group-to-10 is affordable, then buy
  // that remainder first and spend remaining bulk on complete groups of ten.
  if(!unlocked(i)||(challengeRuleActive(10)&&i>=6)||!(bulk>0))return 0;
- const goal=BigNumber.from(INFINITY);
+ const goal=BigNumber.from(state.activeInfinityChallenge===5?infinityChallengeGoal():INFINITY);
  let bulkLeft=bulk===Infinity?Infinity:Math.max(0,Math.floor(Number(bulk)||0));
  let boughtNow=0;
  const buyUntilTen=()=>{
