@@ -32,7 +32,7 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 140px;max-width:560p
 
 .sacrifice-panel{margin:0 0 6px;padding:5px 7px;border-radius:4px;background:#211b25;border-color:#60435e;box-shadow:none}.sacrifice-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.sacrifice-row>div{min-width:0;flex:1}.sacrifice-panel .section-title{margin:0 0 1px;font-size:12px}.sacrifice-panel .section-title span{font-size:10px}.sacrifice-panel p{color:var(--muted);font-size:10px;margin:0}.sacrifice-buy{flex:0 0 auto;width:200px!important;min-width:200px!important;height:34px!important;min-height:34px!important;padding:3px!important;font-size:10px!important;background:#493047!important;border-color:#96658c!important;white-space:nowrap}.sacrifice-buy:disabled{opacity:.35!important}
 @media(max-width:540px){.sacrifice-panel{padding:4px 5px!important;margin-bottom:5px!important}.sacrifice-panel .section-title{font-size:11px!important}.sacrifice-panel p{font-size:9px!important}.sacrifice-buy{width:156px!important;min-width:156px!important;height:30px!important;min-height:30px!important;font-size:9px!important}}
-.achievement-toast-container{position:fixed;top:16px;right:16px;z-index:2000;display:flex;flex-direction:column;gap:8px;pointer-events:none;width:min(340px,calc(100vw - 32px))}.achievement-toast{background:#22222a;border:1px solid #b49a48;border-left:5px solid #e0a526;border-radius:6px;padding:12px 14px;color:#fff;box-shadow:0 4px 16px #0008;animation:achievementToastIn .25s ease-out}.achievement-toast-title{font-size:11px;color:#e0c36c;font-weight:800;letter-spacing:.04em}.achievement-toast-name{font-weight:800;margin-top:3px}.achievement-toast-desc{font-size:12px;color:#ccc;margin-top:4px}@keyframes achievementToastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.achievement-toast-container{position:fixed;top:16px;right:16px;z-index:2000;display:flex;flex-direction:column;gap:8px;pointer-events:none;width:min(340px,calc(100vw - 32px))}.achievement-toast{background:#22222a;border:1px solid #b49a48;border-left:5px solid #e0a526;border-radius:6px;padding:12px 14px;color:#fff;box-shadow:0 4px 16px #0008;animation:achievementToastIn .25s ease-out}.achievement-toast-title{font-size:11px;color:#e0c36c;font-weight:800;letter-spacing:.04em}.achievement-toast-name{font-weight:800;margin-top:3px}.achievement-toast-desc{font-size:12px;color:#ccc;margin-top:4px}.content-unlock-toast{border-left-color:#65d69a;border-color:#43865f}.content-unlock-toast .achievement-toast-title{color:#8fe4ae}@keyframes achievementToastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 </style>
 <style id="screen-tabs-style">
 .screen-tabs{display:flex;gap:4px;justify-content:flex-start;margin:10px 0 0;padding:5px;background:#111116;border:1px solid #41414a;border-radius:4px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;scrollbar-width:thin;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
@@ -664,6 +664,7 @@ function render(){
  setText($('matter'),matterDisplayBig().toDisplayString(2));if(state.activeChallenge===11||state.activeInfinityChallenge===6){const el=$('matter');if(el)el.title='Matter: '+fmtMatter(state.activeInfinityChallenge===6?state.icMatter:state.challenge11Matter);}
  const nc11MatterPanel=$('challenge11MatterPanel');if(nc11MatterPanel)nc11MatterPanel.style.display=(state.activeChallenge===11||state.activeInfinityChallenge===6)?'block':'none';setText($('challenge11MatterLabel'),state.activeInfinityChallenge===6?'インフィニティチャレンジ6':'チャレンジ11');setText($('challenge11MatterDisplay'),fmtMatter(state.activeInfinityChallenge===6?state.icMatter:state.challenge11Matter));
  updateAutobuyerUnlockAlert();
+ notifyNewContentUnlocks();
  const productionRateBN=productionRateBigNumber();
  const rateText=productionRateBN.toDisplayString(2)+'/s';
  setText($('rate'),rateText);
@@ -1083,6 +1084,29 @@ const infinityDimensionDefs=[
  {unlock:54000,cost:'1e250',growth:1e25,step:5},
  {unlock:60000,cost:'1e280',growth:1e30,step:5}
 ];
+// IC / ID の新規解禁を検出し、画面を見ていなくても通知を表示する。
+let observedICUnlocks=null;
+let observedIDUnlocks=null;
+function showContentUnlockToast(title,name,desc){
+ let container=document.querySelector('.achievement-toast-container');
+ if(!container){container=document.createElement('div');container.className='achievement-toast-container';container.setAttribute('aria-live','polite');document.body.appendChild(container);}
+ const toast=document.createElement('div');toast.className='achievement-toast content-unlock-toast';
+ const heading=document.createElement('div');heading.className='achievement-toast-title';heading.textContent=title;
+ const label=document.createElement('div');label.className='achievement-toast-name';label.textContent=name;
+ const detail=document.createElement('div');detail.className='achievement-toast-desc';detail.textContent=desc;
+ toast.append(heading,label,detail);container.appendChild(toast);
+ setTimeout(()=>{toast.style.transition='opacity .25s, transform .25s';toast.style.opacity='0';toast.style.transform='translateX(20px)';setTimeout(()=>toast.remove(),300);},5000);
+}
+function notifyNewContentUnlocks(){
+ const icNow=infinityChallengeData.map(c=>infinityChallengeUnlocked(c.id));
+ const idNow=infinityDimensionDefs.map(d=>Number(state.totalAntimatterLog10||0)>=d.unlock);
+ // 初回はロード済みデータを基準値にし、セーブ読込直後に通知が大量発生するのを防ぐ。
+ if(observedICUnlocks===null||observedIDUnlocks===null){observedICUnlocks=icNow;observedIDUnlocks=idNow;return;}
+ icNow.forEach((unlocked,i)=>{if(unlocked&&!observedICUnlocks[i]){const c=infinityChallengeData[i];showContentUnlockToast('Infinity Challenge Unlocked!',`IC${c.id}: ${c.name}`,`解禁条件 ${c.unlock} Antimatter を達成しました。Challenge画面から挑戦できます。`);}});
+ idNow.forEach((unlocked,i)=>{if(unlocked&&!observedIDUnlocks[i]){showContentUnlockToast('Infinity Dimension Unlocked!',`Infinity Dimension ${i+1}`,`解禁条件 1e${infinityDimensionDefs[i].unlock} Antimatter を達成しました。Infinity Dimension画面で確認できます。`);}});
+ observedICUnlocks=icNow;observedIDUnlocks=idNow;
+}
+
 function ensureInfinityDimensionState(){
  if(!Array.isArray(state.infinityDimensions))state.infinityDimensions=[];
  state.infinityDimensions=Array.from({length:8},(_,i)=>{const d=state.infinityDimensions[i]||{};const amount=BigNumber.from(d.amount||0).max(0);let bought=Math.max(0,Math.floor(Number(d.bought)||0));/* Migrate legacy saves where bought counted 10-unit purchases rather than individual dimensions. */if(bought>0&&bought<10&&amount.compare(10)>=0)bought*=10;return {amount:amount.toJSON(),bought,unlocked:Boolean(d.unlocked)||Number(state.totalAntimatterLog10||0)>=infinityDimensionDefs[i].unlock};});
