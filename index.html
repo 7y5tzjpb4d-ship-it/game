@@ -317,8 +317,7 @@ function resetInfinityChallengeRun(){setMatterBigNumber(infinityStartingAntimatt
 function startInfinityChallenge(id){if(!infinityChallengeUnlocked(id)||state.activeInfinityChallenge||state.activeChallenge)return;state.eighthDimensionBoughtThisInfinity=false;challengeSubpage='infinity';state.activeInfinityChallenge=id;state.breakInfinityUnlocked=true;state.breakInfinityActive=true;unlockAchievement(51);state.ic2SacrificeTimer=0;state.ic5CostSteps=Array(8).fill(0);state.ic8ProductionMultiplier=1;state.icLastBoughtDimension=-1;state.icMatter=id===6?1:10;resetInfinityChallengeRun();state.challenge2Recovery=1;state.challenge3TimeMult=1;state.challenge11Matter=1;buildRows();render();save();switchScreen('challenges');}
 function exitInfinityChallenge(){if(!state.activeInfinityChallenge)return;challengeSubpage='infinity';state.activeInfinityChallenge=0;resetInfinityChallengeRun();state.boosts=startingBoosts();state.galaxies=startingGalaxies();buildRows();render();save();switchScreen('challenges');}
 function completeInfinityChallenge(){const id=state.activeInfinityChallenge;if(!id||matterBigNumber().compare(infinityChallengeGoal(id))<0)return false;const elapsed=Math.max(0,state.infinityTime);checkInfinityCompletionAchievements(elapsed,0);if(id===5&&elapsed<=15)unlockAchievement(81);const gain=ipGainBigNumber();if(gain.compare('1e150')>=0)unlockAchievement(85);if(!infinityChallengeCompleted(id))state.completedInfinityChallenges.push(id);if(state.completedInfinityChallenges.length>=8)unlockAchievement(82);recordInfinityIPPerMinute(gain,elapsed);addIPBigNumber(gain);state.totalIPGained=(state.totalIPGained||0)+gain.toNumber();state.infinities+=infinityCountGainForRun(elapsed);state.fastestInfinity=state.fastestInfinity>0?Math.min(state.fastestInfinity,elapsed):elapsed;state.activeInfinityChallenge=0;unlockAchievement(21);state.eighthDimensionBoughtThisInfinity=false;resetInfinityChallengeRun();state.boosts=startingBoosts();state.galaxies=startingGalaxies();checkAchievements();notifyNewAchievements();buildRows();render();save();switchScreen('challenges');return true;}
-function applyIC5CostBump(i){if(state.activeInfinityChallenge!==5)return;/* Official buyOneDimension/buyUntilTen invokes challengeCostBump before incrementing bought, so compare each dimension's current cost at that exact point. */const target=costBigNumber(i);const costs=Array.from({length:8},(_,j)=>costBigNumber(j));for(let j=0;j<8;j++){if(j===i)continue;const comparison=BigNumber.from(costs[j]).compare(target);if((i<=3&&comparison<0)||(i>=4&&comparison>0))state.ic5CostSteps[j]=(state.ic5CostSteps[j]||0)+1;}}
-function onICDimensionPurchased(i){if(i===7)state.eighthDimensionBoughtThisInfinity=true;if(state.activeInfinityChallenge===4)state.icLastBoughtDimension=i;if(state.activeInfinityChallenge===8)state.ic8ProductionMultiplier=1;}
+function onICDimensionPurchased(i,purchasedCost){if(i===7)state.eighthDimensionBoughtThisInfinity=true;if(state.activeInfinityChallenge===4)state.icLastBoughtDimension=i;if(state.activeInfinityChallenge===5){const target=BigNumber.from(purchasedCost);/* Match the official IC5 strict cost comparisons: tiers 1-4 increase only dimensions with strictly lower costs; tiers 5-8 increase only dimensions with strictly higher costs. Compare the full BigNumber, including mantissa. */const costs=Array.from({length:8},(_,j)=>costBigNumber(j));for(let j=0;j<8;j++){if(j===i)continue;const comparison=BigNumber.from(costs[j]).compare(target);if((i<=3&&comparison<0)||(i>=4&&comparison<0))state.ic5CostSteps[j]=(state.ic5CostSteps[j]||0)+1;}}if(state.activeInfinityChallenge===8)state.ic8ProductionMultiplier=1;}
 function onICTickspeedPurchased(){if(state.activeInfinityChallenge===8)state.ic8ProductionMultiplier=1;}
 function challengeUnlocked(id){return id<=9?state.infinities>=1:state.infinities>=16;}
 function challengeCompleted(id){return state.completedChallenges.includes(id);}
@@ -761,12 +760,9 @@ function buyMaxDimensionTier(i, bulk=Infinity){
   const resource=dimensionResource(i);
   if(resource.compare(totalCost)<0)return false;
   if(!spendDimension(i,totalCost))return false;
-  // buyUntilTen() in the official source applies the challenge bump before
-  // increasing amount/bought.
-  applyIC5CostBump(i);
   setDimensionAmountBig(i,dimensionAmountBig(i).add(remainder));
   state.bought[i]+=remainder;
-  onICDimensionPurchased(i);
+  onICDimensionPurchased(i,unitCost);
   if(challengeRuleActive(4)){for(let j=0;j<i;j++)setDimensionAmountBig(j,0);}
   if(state.activeChallenge===9)applyChallenge9CostStep(unitCost,i);
   boughtNow+=remainder;
@@ -783,9 +779,8 @@ function buyMaxDimensionTier(i, bulk=Infinity){
    const unitCost=cost(i),remainder=10;
    if(unitCost.compare(goal)>=0||dimensionResource(i).compare(unitCost.multiply(remainder))<0)break;
    if(!spendDimension(i,unitCost.multiply(remainder)))break;
-   applyIC5CostBump(i);
    setDimensionAmountBig(i,dimensionAmountBig(i).add(remainder));
-   state.bought[i]+=remainder;onICDimensionPurchased(i);
+   state.bought[i]+=remainder;onICDimensionPurchased(i,unitCost);
    if(challengeRuleActive(4)){for(let j=0;j<i;j++)setDimensionAmountBig(j,0);}
    applyChallenge9CostStep(unitCost,i);
    boughtNow+=remainder;bulkLeft--;
@@ -800,9 +795,8 @@ function buyMaxDimensionTier(i, bulk=Infinity){
   const unitCost=cost(i),groupCost=unitCost.multiply(10);
   if(dimensionResource(i).compare(groupCost)<0)break;
   if(!spendDimension(i,groupCost))break;
-  applyIC5CostBump(i);
   setDimensionAmountBig(i,dimensionAmountBig(i).add(10));
-  state.bought[i]+=10;onICDimensionPurchased(i);
+  state.bought[i]+=10;onICDimensionPurchased(i,unitCost);
   if(challengeRuleActive(4)){for(let j=0;j<i;j++)setDimensionAmountBig(j,0);}
   boughtNow+=10;bulkLeft--;groups++;
  }
@@ -811,10 +805,7 @@ function buyMaxDimensionTier(i, bulk=Infinity){
 function buyOneDimensionTier(i){
  if(!unlocked(i)||(challengeRuleActive(10)&&i>=6))return 0;
  const c=cost(i);if(!canAffordDimension(i,c)||!spendDimension(i,c))return 0;
- // The official game applies IC5 cost bumps only on the 10th purchase,
- // and before incrementing bought so comparisons use pre-purchase costs.
- if(state.bought[i]%10===9)applyIC5CostBump(i);
- setDimensionAmountBig(i,dimensionAmountBig(i).add(1));state.bought[i]++;onICDimensionPurchased(i);
+ setDimensionAmountBig(i,dimensionAmountBig(i).add(1));state.bought[i]++;onICDimensionPurchased(i,c);
  if(challengeRuleActive(4)){for(let j=0;j<i;j++)setDimensionAmountBig(j,0);}
  if(state.activeChallenge===9&&state.bought[i]%10===0)applyChallenge9CostStep(cost(i,-1),i);
  return 1;
