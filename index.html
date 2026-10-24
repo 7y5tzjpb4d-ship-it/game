@@ -758,7 +758,14 @@ function render(){
 function buy(i){
  if(!unlocked(i)||(challengeRuleActive(10)&&i>=6))return;
  const buyCount=state.buyMax?maxAffordable(i).count:1;let boughtNow=0;
- for(let k=0;k<buyCount;k++){const c=cost(i);if(!canAffordDimension(i,c))break;if(!spendDimension(i,c))break;setDimensionAmountBig(i,dimensionAmountBig(i).add(1));state.bought[i]++;onICDimensionPurchased(i,c);boughtNow++;if(challengeRuleActive(4)){for(let j=0;j<i;j++)setDimensionAmountBig(j,0);} }
+ for(let k=0;k<buyCount;k++){
+  const c=cost(i);if(!canAffordDimension(i,c)||!spendDimension(i,c))break;
+  // IC5 cost bumps occur only when this purchase completes a group of ten.
+  // Apply the bump before incrementing bought, matching the source purchase order.
+  if(state.bought[i]%10===9)applyIC5CostBump(i);
+  setDimensionAmountBig(i,dimensionAmountBig(i).add(1));state.bought[i]++;onICDimensionPurchased(i);boughtNow++;
+  if(challengeRuleActive(4)){for(let j=0;j<i;j++)setDimensionAmountBig(j,0);}
+ }
  if(boughtNow){if(challengeRuleActive(2))challengePurchaseReset();if(state.activeChallenge===9&&state.bought[i]%10===0)applyChallenge9CostStep(cost(i,-1),i);if(i>=0)unlockAchievement(11+i);if(i===0&&dimensionAmountBig(0).compare('1e150')>=0)unlockAchievement(28);checkAchievements();render();save();}
 }
 
