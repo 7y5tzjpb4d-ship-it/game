@@ -1165,48 +1165,77 @@ function crunchAutobuyerReady(){if(!canCrunchNow())return false;if(state.activeC
 function runAutobuyers(dt, options={}){
  let changed=false;
  const intervals=autobuyerInterval();
- // Autobuyers.all order in the original source starts with AD tiers 1 through 8.
- // Their elapsed timers keep accumulating while unaffordable; only a successful
- // canTick gate consumes the interval, matching IntervaledAutobuyerState.
- for(let i=0;i<8;i++){
+ // Keep elapsed time independent of activation/affordability. Like the original,
+ // a buyer which has waited long enough fires as soon as its purchase is possible.
+ // The scheduler then processes the purchase groups in a fixed priority order.
+ for(let i=0;i<autobuyerElapsed.length;i++)autobuyerElapsed[i]+=dt;
+
+ // Dimension autobuyers are processed from the highest tier down to the first.
+ // This prevents low-tier purchases from consuming antimatter before a higher
+ // tier's purchase is evaluated during the same automation pass.
+ for(let i=7;i>=0;i--){
   if(!state.autobuyers.dims[i]||!dimAutobuyerUnlocked(i)||!unlocked(i)||(challengeRuleActive(10)&&i>=6))continue;
-  autobuyerElapsed[i]+=dt;
+  if(autobuyerElapsed[i]+1e-9<intervals[i])continue;
   const mode=state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10';
-  const affordable=mode==='1'?canAffordDimension(i,cost(i)):(()=>{const rem=state.bought[i]%10===0?10:10-(state.bought[i]%10);return dimensionResource(i).compare(cost(i).multiply(rem))>=0;})();
-  if(!affordable||autobuyerElapsed[i]+1e-9<intervals[i])continue;
-  autobuyerElapsed[i]=0;
+  const affordable=mode==='1'
+   ? canAffordDimension(i,cost(i))
+   : (()=>{const rem=state.bought[i]%10===0?10:10-(state.bought[i]%10);return dimensionResource(i).compare(cost(i).multiply(rem))>=0;})();
+  if(!affordable)continue;
   const boughtNow=mode==='1'?buyOneDimensionTier(i):buyMaxDimensionTier(i,dimAutobuyerBulk(i));
-  if(boughtNow){if(challengeRuleActive(2))challengePurchaseReset();state.achievements[i]=true;if(i===0&&dimensionAmountBig(0).compare('1e150')>=0)state.achievements[15]=true;changed=true;}
+  if(boughtNow){
+   autobuyerElapsed[i]=0;
+   if(challengeRuleActive(2))challengePurchaseReset();
+   state.achievements[i]=true;
+   if(i===0&&dimensionAmountBig(0).compare('1e150')>=0)state.achievements[15]=true;
+   changed=true;
+  }
  }
- // The canonical Autobuyers.all list puts Big Crunch after all dimensions and
- // before Tickspeed, then Galaxy, Dimension Boost, and Sacrifice.
- autobuyerElapsed[11]+=dt;
+
+ // Original automation priority: Dimensions -> Tickspeed -> DimBoost -> Galaxy
+ // -> Big Crunch. A reset action is deliberately evaluated after purchases.
+ if(state.autobuyers.tickspeed&&tickspeedAutobuyerUnlocked()&&autobuyerElapsed[8]+1e-9>=intervals[8]&&canAffordTickspeed()){
+  const buyMaxTickspeed=challengeCompleted(9)&&state.autobuyers.tickspeedMode==='max';
+  let boughtTickspeed=0,guard=0;
+  do{
+   const c=tickspeedCost();
+   if(!canAffordTickspeed(c)||!spendTickspeed(c))break;
+   state.tickspeed++;onICTickspeedPurchased(c);
+   if(challengeRuleActive(2))challengePurchaseReset();
+   if(state.activeChallenge===9)applyChallenge9CostStep(c,-1,true);
+   boughtTickspeed++;guard++;
+  }while(buyMaxTickspeed&&guard<10000);
+  if(boughtTickspeed){autobuyerElapsed[8]=0;changed=true;}
+ }
+
+ const autobuyerLimitReached=(key,current)=>{
+  const raw=state.autobuyers[key];
+  if(typeof raw!=='string'||!/^[0-9]+$/.test(raw))return false;
+  const limit=Number(raw);
+  return Number.isFinite(limit)&&current>=limit;
+ };
+ const galaxyReady=()=>state.autobuyers.galaxy&&challengeCompleted(11)&&(state.breakInfinityActive||!atInfinity())&&canGalaxy()&&!autobuyerLimitReached('galaxyLimit',state.galaxies);
+ const boostReady=()=>state.autobuyers.boost&&challengeCompleted(10)&&(state.breakInfinityActive||!atInfinity())&&canBoost()&&!autobuyerLimitReached('boostLimit',state.boosts);
+
+ if(!options.skipBoost&&boostReady()&&autobuyerElapsed[9]+1e-9>=intervals[9]){
+  const didBoost=breakInfinityUpgradeBought('bulkBoost')?bulkBoostAutobuy():boost();
+  if(didBoost){autobuyerElapsed[9]=0;changed=true;}
+ }
+ if(galaxyReady()&&autobuyerElapsed[10]+1e-9>=intervals[10]){
+  const before=state.galaxies;galaxy();
+  if(state.galaxies>before){autobuyerElapsed[10]=0;changed=true;}
+ }
+
  if(state.autobuyers.crunch&&challengeCompleted(12)&&autobuyerElapsed[11]+1e-9>=intervals[11]&&crunchAutobuyerReady()){
   autobuyerElapsed[11]=0;
   if(state.activeChallenge)completeChallenge();else bigCrunch(true);
   changed=true;
  }
- if(state.autobuyers.tickspeed&&tickspeedAutobuyerUnlocked()){
-  autobuyerElapsed[8]+=dt;
-  const modeReady=canAffordTickspeed();
-  if(modeReady&&autobuyerElapsed[8]+1e-9>=intervals[8]){
-   autobuyerElapsed[8]=0;
-   const buyMaxTickspeed=challengeCompleted(9)&&state.autobuyers.tickspeedMode==='max';
-   let boughtTickspeed=0,guard=0;
-   do{const c=tickspeedCost();if(!canAffordTickspeed(c)||!spendTickspeed(c))break;state.tickspeed++;onICTickspeedPurchased(c);if(challengeRuleActive(2))challengePurchaseReset();if(state.activeChallenge===9)applyChallenge9CostStep(c,-1,true);boughtTickspeed++;guard++;}while(buyMaxTickspeed&&guard<10000);
-   if(boughtTickspeed)changed=true;
-  }
- }
- const autobuyerLimitReached=(key,current)=>{const raw=state.autobuyers[key];if(typeof raw!=='string'||!/^[0-9]+$/.test(raw))return false;const limit=Number(raw);return Number.isFinite(limit)&&current>=limit;};
- const galaxyReady=()=>state.autobuyers.galaxy&&challengeCompleted(11)&&(state.breakInfinityActive||!atInfinity())&&canGalaxy()&&!autobuyerLimitReached('galaxyLimit',state.galaxies);
- autobuyerElapsed[10]+=dt;
- if(galaxyReady()&&autobuyerElapsed[10]+1e-9>=intervals[10]){autobuyerElapsed[10]=0;galaxy();changed=true;}
- const boostReady=()=>state.autobuyers.boost&&challengeCompleted(10)&&(state.breakInfinityActive||!atInfinity())&&canBoost()&&!autobuyerLimitReached('boostLimit',state.boosts)&&!galaxyReady();
- autobuyerElapsed[9]+=dt;
- if(!options.skipBoost&&boostReady()&&autobuyerElapsed[9]+1e-9>=intervals[9]){autobuyerElapsed[9]=0;if(breakInfinityUpgradeBought('bulkBoost'))bulkBoostAutobuy();else boost();changed=true;}
  if(state.completedInfinityChallenges.includes(2)&&state.autobuyers.sacrifice){
   const threshold=Number(state.autobuyers.sacrificeValue),required=Number.isFinite(threshold)&&threshold>1?threshold:2;
-  if(sacrificeGainBigNumber().compare(required)>=0){const before=sacrificeMultiplierBigNumber();sacrifice(true);if(sacrificeMultiplierBigNumber().compare(before)>0)changed=true;}
+  if(sacrificeGainBigNumber().compare(required)>=0){
+   const before=sacrificeMultiplierBigNumber();sacrifice(true);
+   if(sacrificeMultiplierBigNumber().compare(before)>0)changed=true;
+  }
  }
  if(changed)checkAchievements();
  return changed;
