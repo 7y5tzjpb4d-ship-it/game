@@ -808,18 +808,18 @@ function canBuyAnything(){
  return false;
 }
 function maxAll(){
- // 本家 Max All の順序：まず Tickspeed を最大購入し、その後 8th から 1st へ
- // 下位Tier順に「次の10個」単位で購入する。自動購入の実行順とは別の処理。
+ // Official Max All order: buy each Normal Dimension from 1st through 8th,
+ // then buy as many Tickspeed upgrades as possible.
+ for(let i=0;i<8;i++){
+  const boughtNow=buyMaxDimensionTier(i,Infinity);
+  if(boughtNow){if(challengeRuleActive(2))challengePurchaseReset();unlockAchievement(11+i);}
+ }
  let guard=0;
  while(guard<10000){
   const c=tickspeedCost();if(!canAffordTickspeed(c)||!spendTickspeed(c))break;
   state.tickspeed++;onICTickspeedPurchased(c);if(challengeRuleActive(2))challengePurchaseReset();
   if(state.activeChallenge===9)applyChallenge9CostStep(c,-1,true);
   guard++;
- }
- for(let i=7;i>=0;i--){
-  const boughtNow=buyMaxDimensionTier(i,Infinity);
-  if(boughtNow){if(challengeRuleActive(2))challengePurchaseReset();unlockAchievement(11+i);}
  }
  checkAchievements();render();save();
 }
