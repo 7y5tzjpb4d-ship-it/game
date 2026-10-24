@@ -1269,7 +1269,8 @@ function tick(now){
  let challenge11MatterBoosted=false;
  if(challengeRuleActive(11)&&BigNumber.from(state.challenge11Matter).compare(matterBigNumber())>0){state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=1;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};autobuyerElapsed[9]=0;challenge11MatterBoosted=true;}
  updateCrunchEfficiencyPeak();runAutobuyers(dt,{skipBoost:challenge11MatterBoosted});checkAchievements();notifyNewAchievements();
- render();updateReplicantiCountdownDisplay();if(document.body.dataset.screen==='main'&&mainSubpage==='infinityDimensions'&&now-lastInfinityDimensionRender>=250){lastInfinityDimensionRender=now;switchScreen('main');}if(document.body.dataset.screen==='infinity'&&infinitySubpage==='replicanti'&&now-lastReplicantiRender>=500){lastReplicantiRender=now;switchScreen('infinity');}if((state.activeChallenge||state.activeInfinityChallenge)&&document.body.dataset.screen==='challenges'&&now-lastRender>500){switchScreen('challenges');}lastRender=now;
+ render();updateReplicantiCountdownDisplay();// Infinity Dimension画面は約30fpsで再描画し、数値更新のカクつきを軽減する。
+ if(document.body.dataset.screen==='main'&&mainSubpage==='infinityDimensions'&&now-lastInfinityDimensionRender>=33){lastInfinityDimensionRender=now;switchScreen('main');}if(document.body.dataset.screen==='infinity'&&infinitySubpage==='replicanti'&&now-lastReplicantiRender>=500){lastReplicantiRender=now;switchScreen('infinity');}if((state.activeChallenge||state.activeInfinityChallenge)&&document.body.dataset.screen==='challenges'&&now-lastRender>500){switchScreen('challenges');}lastRender=now;
  if(now-lastSave>5000){save();lastSave=now;}
  requestAnimationFrame(tick);
 }
