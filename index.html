@@ -1118,10 +1118,18 @@ function runAutobuyers(dt, options={}){
   autobuyerElapsed[i]%=autobuyerInterval()[i];
   const mode=state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10';
   const bulk=dimAutobuyerBulk(i);
-  // Bulk上限時は「無限回」ループせず、購入可能な範囲を上限として扱う。
-  const limit=mode==='1'?1:(bulk===Infinity?(hasAchievement(61)?Infinity:10000):(10-(state.bought[i]%10))+(bulk-1)*10);
-  // Bulk購入は購入ごとに現在の価格と所持資源を確認する。事前の合計価格判定は
-  // cost(i, k) の第2引数が購入回数ではないため誤判定を起こし、Bulk 2以上で停止する。
+  // 「次の10個購入ボーナス」モードはMax Allと同様、所持資源で買える数を見積もり、
+  // 購入後の累計購入数が10の倍数になるところまでに限定する。
+  // 以前はBulk最大時にInfinity個を上限として1個ずつ買い続け、10個ボーナスに
+  // 到達しない端数まで先に購入してしまうため、上位次元用の資源を浪費していた。
+  let limit=1;
+  if(mode!=='1'){
+   const available=maxAffordable(i,false).count;
+   const toNextTen=Math.max(0,Math.floor((state.bought[i]+available)/10)*10-state.bought[i]);
+   const bulkLimit=bulk===Infinity?Infinity:(10-(state.bought[i]%10))+(bulk-1)*10;
+   limit=Math.min(toNextTen,bulkLimit);
+  }
+  // 各購入の直前に価格と所持資源を再確認し、Bulk購入を安全に処理する。
   let boughtNow=0;
   while(boughtNow<limit){
    const c=cost(i);if(!canAffordDimension(i,c))break;
