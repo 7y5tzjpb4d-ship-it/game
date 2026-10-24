@@ -474,10 +474,12 @@ function totalGalaxyCount(){return Math.max(0,Number(state.galaxies)||0)+Math.ma
 function galaxyStrength(){return (hasInfinityUpgrade('galaxyBoost')?2:1)*(breakInfinityUpgradeBought('galaxyEffect')?1.5:1)*(infinityChallengeCompleted(5)?1.1:1)*(hasAchievement(86)?1.01:1);}
 function tickspeedBase(){
  const g=totalGalaxyCount();
+ const normalGalaxies=Math.max(0,Math.floor(Number(state.galaxies)||0));
  const strength=galaxyStrength();
  if(g<3){
   const baseIntervals=challengeRuleActive(5)?[1/1.08,1/1.07632,1/1.072]:[1/1.1245,1/1.11888888,1/1.11267177];
-  return Math.min(100,1/(baseIntervals[g]-g*strength*0.02));
+  const baseIndex=Math.min(2,normalGalaxies);
+  return Math.min(100,1/(baseIntervals[baseIndex]-g*strength*0.02));
  }
  const baseMultiplier=challengeRuleActive(5)?0.83:0.8;
  return 1/(baseMultiplier*Math.pow(0.965,(g-2)*strength-2));
@@ -1151,11 +1153,37 @@ function replicantiInfinityDimensionMultiplier(){if(!state.replicantiUnlocked)re
 function infinityDimensionProductionMultiplier(){const icReward=infinityChallengeCompleted(1)?Math.pow(1.3,state.completedInfinityChallenges.length):1;const ic6Reward=infinityChallengeCompleted(6)?Math.pow(Math.max(1,tickspeedMult()),0.0005):1;const achievementReward=hasAchievement(75)?achievementMultiplier():1;return BigNumber.from(icReward*ic6Reward*achievementReward).multiply(replicantiInfinityDimensionMultiplier());}
 function replicantiChanceCost(){return BigNumber.fromLog10(150+15*state.replicantiChanceUpgrades);}
 function replicantiIntervalCost(){return BigNumber.fromLog10(140+10*state.replicantiIntervalUpgrades);}
-function replicantiGalaxyCost(){const n=Math.max(0,state.replicantiGalaxyUpgrades);return BigNumber.fromLog10(170+25*n+5*n*(n-1)/2);}
+function replicantiGalaxyCost(){
+ const n=Math.max(0,Math.floor(Number(state.replicantiGalaxyUpgrades)||0));
+ let logCost=170+25*n+5*n*(n-1)/2;
+ const distinctStart=100;
+ if(n>=distinctStart){
+  const distinct=n-distinctStart;
+  logCost+=50*distinct*(distinct-1+2*5)/2;
+ }
+ const remoteStart=1000;
+ if(n>=remoteStart){
+  const remote=n-remoteStart;
+  logCost+=5*remote*(remote+1)*(2*remote+1)/6;
+ }
+ return BigNumber.fromLog10(logCost);
+}
 function unlockReplicanti(){if(state.replicantiUnlocked||!hasIPAtLeast('1e140'))return;spendIPBigNumber('1e140');state.replicantiUnlocked=true;state.replicanti=1;state.replicantiTimer=0;save();switchScreen('infinity');}
 function buyReplicantiUpgrade(type){if(!state.replicantiUnlocked)return;if(type==='chance'){if(state.replicantiChanceUpgrades>=99||!hasIPAtLeast(replicantiChanceCost()))return;spendIPBigNumber(replicantiChanceCost());state.replicantiChanceUpgrades++;state.replicantiChance= Math.min(100,1+state.replicantiChanceUpgrades);}else if(type==='interval'){if(state.replicantiInterval<=50||!hasIPAtLeast(replicantiIntervalCost()))return;spendIPBigNumber(replicantiIntervalCost());state.replicantiIntervalUpgrades++;state.replicantiInterval=Math.max(50,1000*Math.pow(.9,state.replicantiIntervalUpgrades));}else if(type==='galaxy'){if(!hasIPAtLeast(replicantiGalaxyCost()))return;spendIPBigNumber(replicantiGalaxyCost());state.replicantiGalaxyUpgrades++;}save();switchScreen('infinity');}
 function buyReplicantiGalaxy(){if(!state.replicantiUnlocked||state.replicanti<Number.MAX_VALUE||state.replicantiGalaxies>=state.replicantiGalaxyUpgrades)return;state.replicantiGalaxies++;state.replicanti=1;state.replicantiTimer=0;galaxyResetForReplicanti();save();switchScreen('infinity');}
-function galaxyResetForReplicanti(){setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.boosts=startingBoosts();state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};}
+function galaxyResetForReplicanti(){
+ autobuyerElapsed[10]=0;
+ resetDimensionAutobuyerTicksAfterPrestige();
+ if(state.activeChallenge===9){state.challenge9CostSteps=Array(8).fill(0);state.challenge9TickspeedCostBumps=0;}
+ if(challengeRuleActive(3))state.challenge3TimeMult=1;
+ if(state.activeInfinityChallenge===4)state.icLastBoughtDimension=-1;
+ if(state.activeInfinityChallenge===5)state.ic5CostSteps=Array(8).fill(0);
+ setMatterBigNumber(startingAntimatter());
+ state.amount=Array(8).fill(0);
+ state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));
+ state.bought=Array(8).fill(0);
+ state.boosts=(state.activeChallenge||state.activeInfinityChallenge)?0:startingBoosts();
+}
 function replicantiSecondsRemaining(){if(!state.replicantiUnlocked)return null;const r=Math.max(1,Number(state.replicanti)||1);if(r>=Number.MAX_VALUE)return 0;const chance=Math.max(0,Math.min(100,Number(state.replicantiChance)||0))/100;const interval=Math.max(50,Number(state.replicantiInterval)||1000)/1000;if(chance<=0)return Infinity;const logGrowth=Math.log1p(chance);if(!(logGrowth>0))return Infinity;const seconds=(Math.log(Number.MAX_VALUE)-Math.log(r))*interval/logGrowth;return Number.isFinite(seconds)&&seconds>=0?seconds:Infinity;}
 function formatReplicantiTimeRemaining(){const seconds=replicantiSecondsRemaining();if(seconds===null)return '未解放';if(seconds===0)return '到達済み';if(!Number.isFinite(seconds))return '計算不可';if(seconds<60)return `${seconds.toFixed(1)} 秒`;const total=Math.ceil(seconds);const days=Math.floor(total/86400),hours=Math.floor(total%86400/3600),minutes=Math.floor(total%3600/60),secs=total%60;if(days>0)return `${days}日 ${hours}時間 ${minutes}分 ${secs}秒`;if(hours>0)return `${hours}時間 ${minutes}分 ${secs}秒`;if(minutes>0)return `${minutes}分 ${secs}秒`;return `${secs}秒`;}
 function updateReplicantiCountdownDisplay(){if(document.body.dataset.screen!=='infinity'||infinitySubpage!=='replicanti')return;const el=document.getElementById('replicanti-time-remaining');if(el)el.textContent=formatReplicantiTimeRemaining();}
