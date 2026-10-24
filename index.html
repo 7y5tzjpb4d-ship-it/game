@@ -1013,13 +1013,16 @@ async function applyOfflineProgress(seconds){
    state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=1;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};autobuyerElapsed[9]=0;challenge11MatterBoosted=true;
   }
   updateCrunchEfficiencyPeak();runAutobuyers(dt,{skipBoost:challenge11MatterBoosted});
-  if((tickIndex+1)%Math.max(1,Math.floor(offlineTicks/100))===0||tickIndex===offlineTicks-1){
+  // 進捗表示を細かく更新し、描画のたびにブラウザへ制御を返して滑らかに表示する。
+  // 100,000 tick の計算では約1,000回（0.1%刻み）進捗を描画する。
+  const offlineRenderInterval=Math.max(1,Math.floor(offlineTicks/1000));
+  if((tickIndex+1)%offlineRenderInterval===0||tickIndex===offlineTicks-1){
    const progress=(tickIndex+1)/offlineTicks,elapsed=(performance.now()-startedAt)/1000,eta=progress>0?elapsed*(1-progress)/progress:0;
    const status=document.getElementById('offlineProgressStatus'),bar=document.getElementById('offlineProgressBar'),etaEl=document.getElementById('offlineProgressEta');
    if(status)status.textContent=`${(progress*100).toFixed(1)}%（${(tickIndex+1).toLocaleString()} / ${offlineTicks.toLocaleString()} ticks）`;
    if(bar)bar.style.width=`${(progress*100).toFixed(2)}%`;
    if(etaEl)etaEl.textContent=`経過 ${formatPlayTime(elapsed)} ／ 残り約 ${formatPlayTime(eta)}`;
-   if((tickIndex+1)%Math.max(1,Math.floor(offlineTicks/200))===0||tickIndex===offlineTicks-1)await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
+   await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
   }
  }
  checkAchievements();notifyNewAchievements();
