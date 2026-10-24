@@ -626,8 +626,16 @@ function checkInfinityCompletionAchievements(elapsed, challengeId=0){
 }
 function infinityCountGainForRun(elapsed){return hasAchievement(87)&&Number(elapsed)>5?250:1;}
 
-function startingAntimatter(){return hasAchievement(21)?100:10;}
-function infinityStartingAntimatter(){if(hasAchievement(78))return 5e25;if(hasAchievement(55))return 5e10;if(hasAchievement(54))return 5e5;if(hasAchievement(37))return 5000;return startingAntimatter();}
+function startingAntimatter(){
+ // Starting antimatter rewards must apply to Normal Challenge starts as well as
+ // ordinary runs. Higher-tier rewards take precedence over lower-tier rewards.
+ if(hasAchievement(78))return 5e25;
+ if(hasAchievement(55))return 5e10;
+ if(hasAchievement(54))return 5e5;
+ if(hasAchievement(37))return 5000;
+ return hasAchievement(21)?100:10;
+}
+function infinityStartingAntimatter(){return startingAntimatter();}
 function sacrificeTotalMultiplier(total){const t=BigNumber.from(total).max(1);const log=t.log10();const base=Math.max(1,log/10);return BigNumber.from(base).power((hasAchievement(32)||hasAchievement(57)||hasAchievement(88))?2.2:2);}
 function sacrificeGainBigNumber(){const first=dimensionAmountBig(0);const total=sacrificedFirstBigNumber().add(first).max(1);if(infinityChallengeCompleted(2))return total.power(0.01).divide(sacrificeMultiplierBigNumber()).max(1);if(challengeRuleActive(8)){const denom=total.max(1).log10();const numer=first.max(1).log10();if(denom<=0)return BigNumber.from(1);return BigNumber.from(10).power(numer*0.05-denom*0.04).max(1); }const next=sacrificeTotalMultiplier(total);return next.divide(sacrificeMultiplierBigNumber()).max(1);}
 function sacrificeGain(){return sacrificeGainBigNumber().toNumber();}
