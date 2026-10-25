@@ -479,13 +479,15 @@ function applyChallenge9CostStep(purchasedCost, excludeDimension=-1, purchasedTi
 function totalGalaxyCount(){return Math.max(0,Number(state.galaxies)||0)+Math.max(0,Number(state.replicantiGalaxies)||0);}
 function galaxyStrength(){return (hasInfinityUpgrade('galaxyBoost')?2:1)*(breakInfinityUpgradeBought('galaxyEffect')?1.5:1)*(infinityChallengeCompleted(5)?1.1:1)*(hasAchievement(86)?1.01:1);}
 function tickspeedBase(){
- // Tickspeed's low-Galaxy base interval is selected from the effective Galaxy
- // count, which includes Replicanti Galaxies (not only Antimatter Galaxies).
+ // The low-Galaxy base interval is selected by Antimatter Galaxies only;
+ // the effective Galaxy count (including Replicanti Galaxies) determines
+ // the total Galaxy effect applied to that interval.
+ const normalGalaxies=Math.max(0,Number(state.galaxies)||0);
  const g=totalGalaxyCount();
  const strength=galaxyStrength();
  if(g<3){
   const baseIntervals=challengeRuleActive(5)?[1/1.08,1/1.07632,1/1.072]:[1/1.1245,1/1.11888888,1/1.11267177];
-  const baseIndex=Math.min(2,Math.max(0,Math.floor(g)));
+  const baseIndex=Math.min(2,Math.max(0,Math.floor(normalGalaxies)));
   return Math.min(100,1/(baseIntervals[baseIndex]-g*strength*0.02));
  }
  const baseMultiplier=challengeRuleActive(5)?0.83:0.8;
@@ -1043,8 +1045,10 @@ function startingGalaxies(){return state.infinityUpgrades.includes('skipResetGal
 function resetReplicantiOnInfinity(){
  if(!state.replicantiUnlocked)return;
  if(hasAchievement(95)){
+  // Achievement 95 preserves the Replicanti amount and grants/preserves
+  // exactly one Replicanti Galaxy on Infinity, even if the run had none.
   state.replicanti=Math.max(1,Math.min(Number.MAX_VALUE,Number(state.replicanti)||1));
-  state.replicantiGalaxies=Math.min(1,Math.max(0,Math.floor(Number(state.replicantiGalaxies)||0)));
+  state.replicantiGalaxies=1;
  }else{
   state.replicanti=1;
   state.replicantiGalaxies=0;
