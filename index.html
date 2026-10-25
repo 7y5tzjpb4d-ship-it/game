@@ -397,7 +397,6 @@ function dimensionMultiplierBigNumber(i){
  const tenBuy=(challengeRuleActive(7)?Math.min(2,1+0.2*state.boosts):(state.infinityUpgrades.includes('dimMult')?2.2:2))+(hasAchievement(58)?0.01:0);
  m=m.multiply(BigNumber.from(tenBuy).power(Math.floor(state.bought[i]/10)));
  if(state.activeInfinityChallenge===3||infinityChallengeCompleted(3))m=m.multiply(BigNumber.from(1.05+Math.max(0,Number(state.galaxies)||0)/200).power(state.tickspeed));
- if(infinityChallengeCompleted(4))m=m.power(1.05);
  if(infinityChallengeCompleted(8)&&i>=1&&i<=6)m=m.multiply(dimensionMultiplierBigNumber(0).divide(tickspeedMultiplierBigNumber()).multiply(dimensionMultiplierBigNumber(7).divide(tickspeedMultiplierBigNumber())).power(0.02));
  if(state.activeInfinityChallenge===6&&state.amount[1]>0)m=m.divide(BigNumber.from(Math.max(1,state.icMatter)));
  for(const f of [(i===0&&state.achievements[15])?1.1:1,(i===7&&state.achievements[10])?1.1:1,(i===0&&state.achievements[16])?1.05:1,(i<7&&state.achievements[19])?1.02:1,state.achievements[26]?1+(i+1)*0.01:1,state.achievements[31]?1.1:1])m=m.multiply(f);
@@ -420,7 +419,10 @@ function dimensionMultiplierBigNumber(i){
  if(hasAchievement(56)&&state.infinityTime<180)m=m.multiply(Math.max(6/(state.infinityTime/60+3),1));
  if(hasAchievement(65)&&(state.activeChallenge||state.activeInfinityChallenge)&&state.infinityTime<180)m=m.multiply(Math.max(4/(state.infinityTime/60+1),1));
  if(hasAchievement(74)&&(state.activeChallenge||state.activeInfinityChallenge))m=m.multiply(1.4);
- return m.multiply(tickspeedMultiplierBigNumber()).multiply(achievementMultiplier());
+ const finalMultiplier=m.multiply(tickspeedMultiplierBigNumber()).multiply(achievementMultiplier());
+ // IC4's reward raises the complete Antimatter Dimension multiplier, including
+ // tickspeed, achievements, and other applicable bonuses, to the 1.05 power.
+ return infinityChallengeCompleted(4)?finalMultiplier.power(1.05):finalMultiplier;
 }
 function tickspeedMultiplierBigNumber(){if(state.activeInfinityChallenge===3)return BigNumber.from(1);const tickRewardCount=[36,45,66].filter(hasAchievement).length;const base=tickspeedBase()*Math.pow(1.02,tickRewardCount);let mult=BigNumber.from(base).power(Math.min(state.tickspeed,1e9));if(hasAchievement(83)){const galaxies=Math.max(0,Number(state.galaxies)||0);mult=mult.multiply(BigNumber.from(Math.pow(0.95,-galaxies)));}return mult;}
 function sacrificeMultiplierBigNumber(){const b=state.sacrificeMultBN;return b&&Number.isFinite(Number(b.mantissa))&&Number.isFinite(Number(b.exponent))?BigNumber.from(b).max(1):BigNumber.from(state.sacrificeMult||1).max(1);}
@@ -493,7 +495,7 @@ function tickspeedBase(){
  const baseMultiplier=challengeRuleActive(5)?0.83:0.8;
  return 1/(baseMultiplier*Math.pow(0.965,(g-2)*strength-2));
 }
-function tickspeedMult(){if(state.activeInfinityChallenge===3)return 1;const tickRewardCount=[36,45,66].filter(hasAchievement).length;const base=tickspeedBase()*Math.pow(1.02,tickRewardCount);const mult=Math.pow(base,Math.min(state.tickspeed,10000));const galaxies=Math.max(0,Number(state.galaxies)||0);const achievement83Mult=hasAchievement(83)?Math.pow(0.95,-galaxies):1;return Math.min(INFINITY,mult*achievement83Mult);}
+function tickspeedMult(){if(state.activeInfinityChallenge===3)return 1;const tickRewardCount=[36,45,66].filter(hasAchievement).length;const base=tickspeedBase()*Math.pow(1.02,tickRewardCount);const mult=Math.pow(base,Math.min(state.tickspeed,1e9));const galaxies=Math.max(0,Number(state.galaxies)||0);const achievement83Mult=hasAchievement(83)?Math.pow(0.95,-galaxies):1;return Math.min(INFINITY,mult*achievement83Mult);}
 function tickspeedCostBigNumber(){
  const count=Math.max(0,Number(state.tickspeed)||0)+(state.activeChallenge===9?Math.max(0,Number(state.challenge9TickspeedCostBumps)||0):0);
  const baseLog=Math.log10(TICKSPEED_BASE_COST),growthLog=Math.log10(10),capLog=Math.log10(Number.MAX_VALUE);
@@ -597,8 +599,10 @@ function checkInfinityIPAchievements(gain, realElapsed=infinityRealTimeSeconds()
  if(ip.compare('1e300')>=0)unlockAchievement(93);
 }
 function checkReplicantiAchievement(){
+ // On the web version, Achievement 95 requires reaching the Replicanti cap
+ // within one hour; merely owning a Replicanti Galaxy is not sufficient.
  if(state.replicantiUnlocked&&infinityRealTimeSeconds()<=3600&&
-    (Number(state.replicanti)>=Number.MAX_VALUE||Number(state.replicantiGalaxies)>0))unlockAchievement(95);
+    Number(state.replicanti)>=Number.MAX_VALUE)unlockAchievement(95);
 }
 function checkAchievements(){
  if(state.infinities>0)unlockAchievement(21);
