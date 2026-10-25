@@ -1344,8 +1344,40 @@ const mainCrunchButton=$('mainBigCrunchBtn');if(mainCrunchButton)mainCrunchButto
 const mainEternityButton=$('mainEternityBtn');if(mainEternityButton)mainEternityButton.addEventListener('click',()=>{if(canEternity())eternityReset();});
 
 document.querySelectorAll('.screen-tabs button').forEach(b=>b.addEventListener('click',()=>{const target=b.dataset.screen;if(target==='main'&&(document.body.dataset.screen==='main'||b.classList.contains('active'))){mainSubpage=state.eternities>0?(mainSubpage==='main'?'infinityDimensions':mainSubpage==='infinityDimensions'?'timeDimensions':'main'):(mainSubpage==='main'?'infinityDimensions':'main');switchScreen('main');return;}if(target==='infinity'&&document.body.dataset.screen==='infinity'){infinitySubpage=infinitySubpage==='upgrades'?'break':infinitySubpage==='break'?'replicanti':'upgrades';switchScreen('infinity');return;}if(target==='challenges'&&document.body.dataset.screen==='challenges'){challengeSubpage=challengeSubpage==='normal'?'infinity':'normal';switchScreen('challenges');return;}if(target==='main')mainSubpage='main';if(target==='infinity')infinitySubpage='upgrades';if(target==='challenges')challengeSubpage='normal';switchScreen(target);}));
-// 保存データがある場合は読み込み、初回起動時は通常の初期状態を使用する。
+// Eternity実装テスト用：初回Eternity直前のセーブを一度だけ用意する。
+function applyPreEternityTestState(){
+  setIPBigNumber(BigNumber.from('1e310'));
+  state.totalIPGained=BigNumber.from('1e310').toNumber();
+  state.infinities=Math.max(1,Number(state.infinities)||0);
+  state.achievements=Array.from({length:achievementIds.length},()=>true);
+  state.infinityUpgrades=infinityUpgradeData.map(u=>u[0]);
+  state.ipOffline=true;
+  state.breakInfinityUnlocked=true;
+  state.breakInfinityActive=true;
+  state.breakInfinityUpgrades=breakInfinityUpgradeData().map(u=>u[0]);
+  state.breakInfinityRepeatables=[8,7,10];
+  state.completedChallenges=Array.from({length:12},(_,i)=>i+1);
+  state.challengeTimes=Object.fromEntries(Array.from({length:12},(_,i)=>[i+1,0.01]));
+  state.completedInfinityChallenges=Array.from({length:8},(_,i)=>i+1);
+  state.infinityChallengeTimes=Object.fromEntries(Array.from({length:8},(_,i)=>[i+1,0.01]));
+  state.fastestInfinity=0.01;
+  state.autobuyers={...state.autobuyers, dims:Array(8).fill(true),tickspeed:true,tickspeedMode:'max',unlockedDims:Array(8).fill(true),tickspeedUnlocked:true,boost:true,galaxy:true,crunch:true,sacrifice:true,dimModes:Array(8).fill('10'),dimMode:'10',intervalUpgradeLevel:15,intervalUpgradeLevels:Array(12).fill(15),dimBulkLevels:Array(8).fill(9)};
+  state.activeChallenge=0;
+  state.activeInfinityChallenge=0;
+  setMatterBigNumber(BigNumber.from('1.8e308'));
+  state.totalAntimatterLog10=308.2552725051033;
+  state.totalAntimatterProducedBN=BigNumber.from('1.8e308').toJSON();
+  state.infinityPeakAMLog10=308.2552725051033;
+  state.infinityCrunchReady=true;
+  state.eternities=0;
+  setEPBigNumber(0);
+  state.eternityTestSetupApplied=true;
+  try{localStorage.setItem('antimatterEternityTestSetupApplied','1');}catch(e){}
+}
+// 保存データがある場合は読み込み、初回だけEternity直前のテスト状態を適用する。
 load();
+let eternityTestSetupDone=false;try{eternityTestSetupDone=localStorage.getItem('antimatterEternityTestSetupApplied')==='1';}catch(e){}
+if(!eternityTestSetupDone)applyPreEternityTestState();
 if(state.activeInfinityChallenge)challengeSubpage='infinity';
 save();
 updateAutobuyerUnlockAlert();autobuyerUnlockAlert=false;previousDimAutobuyerUnlocks=Array.from({length:8},(_,i)=>dimAutobuyerUnlocked(i));
