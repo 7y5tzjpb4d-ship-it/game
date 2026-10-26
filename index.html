@@ -97,7 +97,8 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 140px;max-width:560p
 @media(max-width:540px){.ts-frame{padding:6px 4px}.ts-resource-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ts-tree-wrap{overflow-x:auto}.ts-tree{min-width:500px}.ts-tree-row{gap:5px;min-height:96px}.ts-study{max-width:94px;min-height:58px}.ts-study span{font-size:8px}}
 
 
-body[data-screen="eternity"] main>*:not(#tabContent){display:none!important}
+body[data-screen="eternity"] main>*:not(#tabContent):not(.screen-tabs){display:none!important}
+body[data-screen="eternity"] .screen-tabs{display:flex!important;visibility:visible!important;position:fixed;left:0;right:0;bottom:0;z-index:1001}
 body[data-screen="eternity"] #tabContent{display:block!important;visibility:visible!important}
 
 
