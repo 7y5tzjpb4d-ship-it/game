@@ -1288,7 +1288,7 @@ function timeShardsFreeTickspeedInfo(){
   let count=0;
   // Free Tickspeed upgrades are awarded at successive Time Shard thresholds.
   // First threshold is 1e3 shards; each subsequent threshold is 1.33x the previous.
-  let next=BigNumber.from(1000);
+  let next=BigNumber.from(1);
   while(count<100000 && shards.compare(next)>=0){
     count++;
     next=next.multiply(BigNumber.from('1.33'));
