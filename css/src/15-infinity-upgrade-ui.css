@@ -1,0 +1,6 @@
+/* Extracted from the original index.html in cascade order. */
+.infinity-upgrade-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0 18px}
+.infinity-upgrade-btn{min-height:100px;padding:9px 7px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;white-space:normal;line-height:1.3;background:#263747;border:1px solid #537b9c;color:#fff;border-radius:5px;font-size:12px}
+.infinity-upgrade-btn .bi-generation-time{font-size:11px;color:inherit;text-align:center}.infinity-upgrade-btn strong{font-size:12px}.infinity-upgrade-btn small{font-size:11px;color:#d3e3f1}.infinity-upgrade-btn:disabled{opacity:.55;filter:grayscale(.7)}.infinity-upgrade-btn.purchased{background:linear-gradient(145deg,#342719,#211b16);border-color:#B67E33;color:#D9AD70}.infinity-upgrade-btn.purchased small{color:#D9AD70}
+.infinity-extra-upgrades{display:flex;gap:8px;margin-top:10px}.infinity-extra-upgrades .infinity-upgrade-btn{flex:1;min-height:95px}
+@media(max-width:540px){.infinity-upgrade-grid{gap:4px}.infinity-upgrade-btn{min-height:100px;padding:6px 3px;font-size:10px}.infinity-upgrade-btn strong{font-size:10px}.infinity-upgrade-btn small{font-size:9px}.infinity-extra-upgrades{gap:4px}}

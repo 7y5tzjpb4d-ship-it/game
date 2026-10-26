@@ -1,0 +1,6 @@
+/* Extracted from the original index.html in cascade order. */
+@media(max-width:540px){
+ .mobile-bottom-actions{display:grid!important;visibility:visible!important;position:fixed!important;left:0!important;right:0!important;bottom:48px!important;z-index:50!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;}
+ .mobile-reset-actions{margin-bottom:8px!important;}
+ main{padding-bottom:110px!important;}
+}
