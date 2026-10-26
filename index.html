@@ -91,7 +91,7 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 140px;max-width:560p
 @media(max-width:540px){.ts-frame{padding:6px 4px}.ts-resource-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ts-tree-wrap{overflow-x:auto}.ts-tree{min-width:500px}.ts-tree-row{gap:5px;min-height:96px}.ts-study{max-width:94px;min-height:58px}.ts-study span{font-size:8px}}
 
 
-body[data-screen="eternity"] main>*:not(#tabContent):not(#screenTabs){display:none!important}
+body[data-screen="eternity"] main>*:not(#tabContent){display:none!important}
 body[data-screen="eternity"] #tabContent{display:block!important;visibility:visible!important}
 
 
@@ -117,13 +117,6 @@ body[data-screen="eternity"] #tabContent{display:block!important;visibility:visi
 .ts-tt-button strong{display:block;color:#080808!important;font-size:1em;overflow-wrap:anywhere}
 .ts-tt-button:disabled{opacity:.45}
 @media(max-width:540px){.ts-tt-grid{grid-template-columns:1fr;gap:8px}.ts-tt-button{min-height:74px}.ts-tt-max{margin-bottom:10px}}
-
-body[data-screen="eternity"] #screenTabs{display:flex!important;visibility:visible!important}
-.ts-tt-max{font-size:16px!important;padding:7px 16px!important;min-height:38px!important;border-width:1px!important}
-.ts-tt-grid{gap:7px!important}
-.ts-tt-button{min-height:58px!important;font-size:15px!important;padding:6px 4px!important;border-width:1px!important;border-radius:6px!important}
-.ts-tt-button strong{font-size:14px!important}
-@media(max-width:540px){.ts-tt-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important}.ts-tt-button{min-height:52px!important;font-size:11px!important;padding:4px 2px!important}.ts-tt-button strong{font-size:10px!important}.ts-tt-max{font-size:14px!important;padding:6px 12px!important}}
 </style>
 <style id="screen-tabs-style">
 .screen-tabs{display:flex;gap:4px;justify-content:flex-start;margin:10px 0 0;padding:5px;background:#111116;border:1px solid #41414a;border-radius:4px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;scrollbar-width:thin;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
@@ -1469,30 +1462,30 @@ function formatPlayTime(seconds){const total=Math.max(0,Math.floor((Number(secon
 // The tree/cost/prerequisite data follows the supplied wiki references. Study effects
 // are intentionally kept separate from this UI implementation.
 const timeStudyData = [
- [11,1,[],'1st Time DimensionにTickspeedの効果を減衰させて適用','base'],
- [21,3,[11],'Replicanti倍率の計算式を強化','base'],[22,2,[11],'Replicantiの最小間隔を50msから1msに短縮','base'],
- [31,3,[21],'Infinity回数に基づくボーナスを強化（ボーナス⁴）','base'],[32,2,[22],'Dimension Boostに応じて獲得Infinity回数が増加','base'],[33,2,[22],'Infinity時にReplicanti Galaxyを半分保持','base'],
- [41,4,[31],'すべてのGalaxyが獲得IPを×1.2','base'],[42,6,[32],'Galaxyに必要な8th Antimatter Dimensionを52個減少','base'],
- [51,3,[41,42],'獲得IP ×1e15','base'],[61,3,[51],'獲得EP ×15','base'],[62,3,[42],'Replicantiの増加速度 ×3（EC5クリアが必要）','ec5'],
- [71,4,[61],'Sacrificeが他のすべてのAntimatter Dimensionにも効果を与える','antimatter'],[72,6,[61],'Sacrificeが4th Infinity Dimensionにも効果を与える','infinity'],[73,5,[61],'Sacrificeが3rd Time Dimensionにも効果を与える','time'],
- [81,4,[71],'Dimension Boostの基本倍率が×10','antimatter'],[82,6,[72],'Dimension BoostがInfinity Dimensionにも効果を与える','infinity'],[83,5,[73],'無料Tickspeedアップグレード数に応じてDimension Boost倍率が上昇','time'],
- [91,4,[81],'今回のEternity経過時間に応じてAntimatter Dimension倍率が上昇','antimatter'],[92,5,[82],'最速Eternity時間に応じてInfinity Dimension倍率が上昇','infinity'],[93,7,[83],'無料Tickspeedアップグレード数に応じてTime Dimension倍率が上昇','time'],
- [101,4,[91],'Antimatter Dimension倍率にReplicanti数を適用','antimatter'],[102,6,[92],'Replicanti GalaxyがReplicanti倍率を強化','infinity'],[103,6,[93],'Replicanti Galaxy数に応じてTime Dimension倍率が上昇','time'],
- [111,12,[101,102,103],'Infinity Point（IP）の計算式を強化','base'],
- [121,9,[111],'Active：直近10回のEternity時間に応じてEPを獲得','active'],[122,9,[111],'Passive：獲得EP ×35','passive'],[123,9,[111],'Idle：今回のEternity経過時間に応じてEPを獲得','idle'],
- [131,5,[121],'Replicanti Galaxyの自動購入を無効化し、獲得量 ×1.5','active'],[132,5,[122],'Replicanti Galaxyの効果 +40%、Replicanti増加速度 ×1.5','passive'],[133,5,[123],'Replicanti増加速度 ÷10、Replicanti Galaxyの効果 ×1.5','idle'],
- [141,4,[131],'今回のInfinity中、IP倍率が時間経過で減衰','active'],[142,4,[132],'獲得IP ×1e25','passive'],[143,4,[133],'今回のInfinity中、IP倍率が時間経過で上昇','idle'],
- [151,8,[141,142,143],'Time Dimension倍率 ×1e4','base'],[161,7,[151],'Antimatter Dimension倍率 ×1e616','base'],[162,7,[151],'Infinity Dimension倍率 ×1e11','base'],
- [171,15,[161,162],'Time ShardによるTickspeed要求量の倍率を×1.33から×1.25に変更','base'],[181,200,[171],'毎秒、Crunch時に獲得するIPの1%を獲得','base'],
- [191,400,[181],'Eternity後、Infinity回数の5%をBanked Infinitiesとして保持','base'],[192,730,[181],'Replicantiが1.80e308を超えて増加可能','base'],[193,300,[181],'Eternity回数に応じてAntimatter Dimension倍率が上昇','base'],
- [201,900,[192],'2つ目のDimensionルートを選択可能','base'],
- [211,120,[191],'Dimension Boostの要求量スケーリングを5段階軽減','base'],[212,150,[191],'Time Shard数に応じてGalaxyの効果が上昇','base'],[213,200,[193],'Replicantiの増加速度 ×20','base'],[214,120,[193],'Sacrificeが8th Antimatter Dimensionを強化','base'],
- [221,900,[211],'Dimension Boost回数に応じてTime Dimension倍率が上昇','light'],[222,900,[211],'Dimension Boostの要求量スケーリングをさらに2軽減','dark'],
- [223,900,[212],'Distant Galaxyのスケーリング開始をGalaxy 7個分遅らせる','light'],[224,900,[212],'Dimension Boost 2000回ごとにDistant Galaxyのスケーリング開始を遅らせる','dark'],
- [225,900,[213],'Replicanti数に応じて追加Replicanti Galaxyを獲得','light'],[226,900,[213],'Replicantiの最大購入数に応じて追加Replicanti Galaxyを獲得','dark'],
- [227,900,[214],'Sacrificeが4th Time Dimensionにも効果を与える','light'],[228,900,[214],'Sacrificeの計算式を強化','dark'],
- [231,500,[221,222],'Dimension Boost回数に応じてDimension Boostの効果が上昇','lightdark'],[232,500,[223,224],'Antimatter Galaxy数に応じてGalaxyの効果が上昇','lightdark'],
- [233,500,[225,226],'Replicanti数に応じてReplicanti Galaxy最大購入アップグレードが安価になる','lightdark'],[234,500,[227,228],'Sacrificeが1st Antimatter Dimensionにも効果を与える','lightdark']
+ [11,1,[],'Tickspeedの効果が1st Time Dimensionにも及ぶ','base'],
+ [21,3,[11],'Replicantiの計算式が変化','base'],[22,2,[11],'Replicantiの最短増殖速度が50ms→1msに短縮','base'],
+ [31,3,[21],'Infinityに到達した回数を参照するアップグレードの効果が向上','base'],[32,2,[22],'Dimension Boostの回数に応じてInfinity到達回数が割増される','base'],[33,2,[22],'Big Crunchの際Replicanti Galaxyの半分を引き継ぐ','base'],
+ [41,4,[31],'所持しているGalaxy1つごとにInfinity Pointの獲得量1.2倍','base'],[42,6,[32],'Galaxy購入に必要な第8次元の数が減少','base'],
+ [51,3,[41,42],'Gain ×1e15 more IP','base'],[61,3,[51],'Gain ×15 more EP','base'],[62,3,[42],'Replicanti are 3× faster (requires EC5 completion)','ec5'],
+ [71,4,[61],'Sacrifice affects all other Antimatter Dimensions','antimatter'],[72,6,[61],'Sacrifice affects the 4th Infinity Dimension','infinity'],[73,5,[61],'Sacrifice affects the 3rd Time Dimension','time'],
+ [81,4,[71],'Base Dimension Boost power becomes ×10','antimatter'],[82,6,[72],'Dimension Boosts affect Infinity Dimensions','infinity'],[83,5,[73],'Dimension Boost multiplier from free Tickspeed upgrades','time'],
+ [91,4,[81],'Antimatter Dimension multiplier from time this Eternity','antimatter'],[92,5,[82],'Infinity Dimension multiplier from fastest Eternity','infinity'],[93,7,[83],'Time Dimension multiplier from free Tickspeed upgrades','time'],
+ [101,4,[91],'Antimatter Dimension multiplier equal to Replicanti','antimatter'],[102,6,[92],'Replicanti Galaxies boost Replicanti multiplier','infinity'],[103,6,[93],'Time Dimension multiplier from Replicanti Galaxies','time'],
+ [111,12,[101,102,103],'Improve the Infinity Point formula','base'],
+ [121,9,[111],'Active: EP based on last 10 Eternities','active'],[122,9,[111],'Passive: gain ×35 EP','passive'],[123,9,[111],'Idle: EP based on time this Eternity','idle'],
+ [131,5,[121],'Automatic Replicanti Galaxies disabled; gain 50% more','active'],[132,5,[122],'Replicanti Galaxies 40% stronger; Replicanti ×1.5 faster','passive'],[133,5,[123],'Replicanti ×10 slower; Replicanti Galaxies 50% stronger','idle'],
+ [141,4,[131],'IP multiplier decays during this Infinity','active'],[142,4,[132],'Gain ×1e25 more IP','passive'],[143,4,[133],'IP multiplier increases during this Infinity','idle'],
+ [151,8,[141,142,143],'Time Dimensions ×1e4','base'],[161,7,[151],'Antimatter Dimensions ×1e616','base'],[162,7,[151],'Infinity Dimensions ×1e11','base'],
+ [171,15,[161,162],'Time Shard Tickspeed requirement scaling: ×1.33 → ×1.25','base'],[181,200,[171],'Gain 1% of IP gained on Crunch each second','base'],
+ [191,400,[181],'Keep 5% of Infinities as Banked Infinities after Eternity','base'],[192,730,[181],'Replicanti can exceed 1.80e308','base'],[193,300,[181],'Antimatter Dimension multiplier based on Eternities','base'],
+ [201,900,[192],'Pick a second Dimension path','base'],
+ [211,120,[191],'Dimension Boost requirement scaling reduced by 5','base'],[212,150,[191],'Galaxies stronger based on Time Shards','base'],[213,200,[193],'Replicanti 20× faster','base'],[214,120,[193],'Sacrifice boosts 8th Antimatter Dimension','base'],
+ [221,900,[211],'Time Dimension multiplier based on Dimension Boosts','light'],[222,900,[211],'Dimension Boost costs scale by another 2 less','dark'],
+ [223,900,[212],'Distant Galaxy scaling starts 7 Galaxies later','light'],[224,900,[212],'Distant Galaxy scaling starts later per 2000 Boosts','dark'],
+ [225,900,[213],'Extra Replicanti Galaxies based on Replicanti amount','light'],[226,900,[213],'Extra Replicanti Galaxies based on max bought','dark'],
+ [227,900,[214],'Sacrifice affects 4th Time Dimension','light'],[228,900,[214],'Sacrifice formula scales better','dark'],
+ [231,500,[221,222],'Dimension Boosts stronger based on their amount','lightdark'],[232,500,[223,224],'Galaxies stronger based on Antimatter Galaxies','lightdark'],
+ [233,500,[225,226],'Max Replicanti Galaxy upgrade cheaper based on Replicanti','lightdark'],[234,500,[227,228],'Sacrifice applies to 1st Antimatter Dimension','lightdark']
 ];
 const tsById = new Map(timeStudyData.map(s=>[s[0],s]));
 function tsOwned(id){return Array.isArray(state.timeStudies)&&state.timeStudies.includes(Number(id));}
