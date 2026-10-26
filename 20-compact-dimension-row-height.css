@@ -1,5 +1,0 @@
-/* Extracted from the original index.html in cascade order. */
-/* Reduce vertical height of each dimension row without changing its columns. */
-#dimensions .dim{min-height:39px!important;height:39px!important;padding:3px 5px!important;gap:5px!important;box-sizing:border-box!important;}
-#dimensions .dim .buy{height:32px!important;min-height:32px!important;max-height:32px!important;padding:2px!important;line-height:1.1!important;}
-@media(max-width:600px){#dimensions .dim{min-height:36px!important;height:36px!important;padding:2px 4px!important;}#dimensions .dim .buy{height:30px!important;min-height:30px!important;max-height:30px!important;}}
