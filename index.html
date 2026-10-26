@@ -456,7 +456,7 @@ function dimensionMultiplierBigNumber(i){
  // tickspeed, achievements, and other applicable bonuses, to the 1.05 power.
  return infinityChallengeCompleted(4)?finalMultiplier.power(1.05):finalMultiplier;
 }
-function tickspeedMultiplierBigNumber(){if(state.activeInfinityChallenge===3)return BigNumber.from(1);const tickRewardCount=[36,45,66].filter(hasAchievement).length;const base=tickspeedBase()*Math.pow(1.02,tickRewardCount);const freeTimeShardTickspeedCount=timeShardsFreeTickspeedInfo().count;let mult=BigNumber.from(base).power(Math.min(Math.max(0,Number(state.tickspeed)||0)+freeTimeShardTickspeedCount,1e9));if(hasAchievement(83)){const galaxies=Math.max(0,Number(state.galaxies)||0);mult=mult.multiply(BigNumber.from(Math.pow(0.95,-galaxies)));}return mult;}
+function tickspeedMultiplierBigNumber(){if(state.activeInfinityChallenge===3)return BigNumber.from(1);const base=tickspeedBase();const freeTimeShardTickspeedCount=timeShardsFreeTickspeedInfo().count;let mult=BigNumber.from(base).power(Math.min(Math.max(0,Number(state.tickspeed)||0)+freeTimeShardTickspeedCount,1e9));if(hasAchievement(83)){const galaxies=Math.max(0,Number(state.galaxies)||0);mult=mult.multiply(BigNumber.from(Math.pow(0.95,-galaxies)));}return mult;}
 function sacrificeMultiplierBigNumber(){const b=state.sacrificeMultBN;return b&&Number.isFinite(Number(b.mantissa))&&Number.isFinite(Number(b.exponent))?BigNumber.from(b).max(1):BigNumber.from(state.sacrificeMult||1).max(1);}
 function setSacrificeMultiplierBigNumber(value){const b=BigNumber.from(value).max(1);state.sacrificeMultBN=b.toJSON();state.sacrificeMult=b.toNumber();return b;}
 function sacrificedFirstBigNumber(){const b=state.sacrificedFirstBN;return b&&Number.isFinite(Number(b.mantissa))&&Number.isFinite(Number(b.exponent))?BigNumber.from(b).max(0):BigNumber.from(state.sacrificedFirst||0).max(0);}
@@ -513,21 +513,24 @@ function applyChallenge9CostStep(purchasedCost, excludeDimension=-1, purchasedTi
 function totalGalaxyCount(){return Math.max(0,Number(state.galaxies)||0)+Math.max(0,Number(state.replicantiGalaxies)||0);}
 function galaxyStrength(){return (hasInfinityUpgrade('galaxyBoost')?2:1)*(breakInfinityUpgradeBought('galaxyEffect')?1.5:1)*(infinityChallengeCompleted(5)?1.1:1)*(hasAchievement(86)?1.01:1);}
 function tickspeedBase(){
- // The low-Galaxy base interval is selected by Antimatter Galaxies only;
- // the effective Galaxy count (including Replicanti Galaxies) determines
- // the total Galaxy effect applied to that interval.
+ // Achievement rewards modify the starting tick interval once, independently
+ // from the number of purchased/free Tickspeed upgrades.
  const normalGalaxies=Math.max(0,Number(state.galaxies)||0);
  const g=totalGalaxyCount();
  const strength=galaxyStrength();
+ let base;
  if(g<3){
   const baseIntervals=challengeRuleActive(5)?[1/1.08,1/1.07632,1/1.072]:[1/1.1245,1/1.11888888,1/1.11267177];
   const baseIndex=Math.min(2,Math.max(0,Math.floor(normalGalaxies)));
-  return Math.min(100,1/(baseIntervals[baseIndex]-g*strength*0.02));
+  base=Math.min(100,1/(baseIntervals[baseIndex]-g*strength*0.02));
+ } else {
+  const baseMultiplier=challengeRuleActive(5)?0.83:0.8;
+  base=1/(baseMultiplier*Math.pow(0.965,(g-2)*strength-2));
  }
- const baseMultiplier=challengeRuleActive(5)?0.83:0.8;
- return 1/(baseMultiplier*Math.pow(0.965,(g-2)*strength-2));
+ const tickRewardCount=[36,45,66].filter(hasAchievement).length;
+ return base*Math.pow(1.02,tickRewardCount);
 }
-function tickspeedMult(){if(state.activeInfinityChallenge===3)return 1;const tickRewardCount=[36,45,66].filter(hasAchievement).length;const base=tickspeedBase()*Math.pow(1.02,tickRewardCount);const mult=Math.pow(base,Math.min(state.tickspeed,1e9));const galaxies=Math.max(0,Number(state.galaxies)||0);const achievement83Mult=hasAchievement(83)?Math.pow(0.95,-galaxies):1;return Math.min(INFINITY,mult*achievement83Mult);}
+function tickspeedMult(){if(state.activeInfinityChallenge===3)return 1;const base=tickspeedBase();const mult=Math.pow(base,Math.min(state.tickspeed,1e9));const galaxies=Math.max(0,Number(state.galaxies)||0);const achievement83Mult=hasAchievement(83)?Math.pow(0.95,-galaxies):1;return Math.min(INFINITY,mult*achievement83Mult);}
 function tickspeedCostBigNumber(){
  const count=Math.max(0,Number(state.tickspeed)||0)+(state.activeChallenge===9?Math.max(0,Number(state.challenge9TickspeedCostBumps)||0):0);
  const baseLog=Math.log10(TICKSPEED_BASE_COST),growthLog=Math.log10(10),capLog=Math.log10(Number.MAX_VALUE);
