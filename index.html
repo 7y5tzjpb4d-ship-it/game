@@ -214,6 +214,7 @@ body.id-screen-active #tabContent{padding:0!important;border:0!important;backgro
 #epStat{border-color:#A047CF;background:linear-gradient(145deg,#2d1b38,#211729);animation:none;transform:none;opacity:1}#epStat small{color:#D8A7F2}#epStat strong{color:#D8A7F2}@media(max-width:540px){.stats{grid-template-columns:repeat(4,minmax(0,1fr))}.stat{min-width:0;padding:6px 1px}.stat small{font-size:8px;overflow-wrap:anywhere}.stat strong{font-size:clamp(11px,3.1vw,15px);overflow-wrap:anywhere}}
 </style>
 <style id="replicanti-screen-style">.replicanti-screen{padding:0;background:transparent;border:0;border-radius:0;color:#D9AD70}.replicanti-screen h2{margin:0 0 10px;color:#B67E33}.replicanti-count{display:flex;flex-direction:column;gap:5px;text-align:center;padding:16px 10px;background:linear-gradient(145deg,#342719,#211b16);border:1px solid #78552b;border-radius:5px;margin:12px 0}.replicanti-count small,.replicanti-count span{font-size:12px;color:#c9c3b8}.replicanti-count strong{font-size:clamp(23px,5vw,34px);overflow-wrap:anywhere;color:#D9AD70}.replicanti-upgrades{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}.replicanti-upgrades button{display:flex;flex-direction:column;justify-content:center;gap:7px;min-width:0;min-height:105px;padding:9px 6px;background:linear-gradient(145deg,#342719,#211b16);border:1px solid #78552b;border-radius:5px;color:#c9c3b8;cursor:pointer}.replicanti-upgrades button.available{background:linear-gradient(145deg,#654820,#3c2a18);border-color:#B67E33;color:#f3dfbf}.replicanti-upgrades button.available:hover{background:linear-gradient(145deg,#795526,#49331d)}.replicanti-upgrades button:disabled{opacity:.48;cursor:not-allowed}.replicanti-upgrades button strong{font-size:13px;color:#D9AD70}.replicanti-upgrades button span{font-size:12px}.replicanti-upgrades button small{font-size:10px;overflow-wrap:anywhere;color:#c9c3b8}.replicanti-primary{padding:10px 14px;background:linear-gradient(145deg,#49351f,#302216);border:1px solid #B67E33;border-radius:5px;color:#f3dfbf;font-weight:700}.replicanti-screen > .replicanti-primary[data-rep-action="unlock"]{display:block;width:min(100%,360px);min-height:60px;margin:28px auto;padding:16px 24px;font-size:18px;line-height:1.4;cursor:pointer;box-sizing:border-box}.replicanti-primary:disabled{opacity:.4;cursor:not-allowed}.replicanti-galaxy{padding:12px;background:linear-gradient(145deg,#342719,#211b16);border:1px solid #78552b;border-radius:5px}.replicanti-galaxy p{font-size:12px;color:#c9c3b8}@media(max-width:540px){.replicanti-upgrades{gap:5px}.replicanti-upgrades button{min-height:105px;padding:6px 3px}.replicanti-upgrades button strong{font-size:11px}.replicanti-upgrades button span{font-size:10px}.replicanti-upgrades button small{font-size:9px}}</style>
+
 <style>
 /* Distinct colors for 5th–8th dimensions */
 #dimensions .dim:nth-child(5) .tier{background:#263f48;color:#8ee8f5}
@@ -229,7 +230,6 @@ body.id-screen-active #tabContent{padding:0!important;border:0!important;backgro
 .achievement-name{font-size:clamp(6px,1.5vw,10px)!important;line-height:1.15!important;overflow-wrap:anywhere!important;margin:2px 0!important}
 @media(max-width:540px){.achievement-grid{grid-template-columns:repeat(8,minmax(0,1fr))!important;gap:2px!important}.achievement-tile{height:clamp(42px,8vh,64px)!important;padding:1px!important}.achievement-name{font-size:clamp(5px,1.45vw,8px)!important}.achievement-id{font-size:7px!important}}
 </style>
-
 <style>
 .ts-ec-row{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;min-height:84px}
 .ts-ec-node{box-sizing:border-box;width:100%;min-height:58px;padding:5px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:1px solid #80618f;border-radius:4px;background:#211729;color:#d7c2e3;position:relative;z-index:3}
@@ -238,9 +238,12 @@ body.id-screen-active #tabContent{padding:0!important;border:0!important;backgro
 .ts-ec-link{stroke:#9b77ac;stroke-dasharray:2 1;opacity:.8}
 @media(max-width:540px){.ts-ec-row{gap:5px;min-height:70px}.ts-ec-node{min-height:48px}.ts-ec-node strong{font-size:10px}.ts-ec-node span{font-size:7px}}
 </style>
-
-
-<style id="time-study-late-layout-fix">
+<style>
+.ts-ec-inline-row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;min-height:84px}
+.ts-ec-inline-row .ts-ec-node{min-height:58px}
+@media(max-width:540px){.ts-ec-inline-row{gap:4px;min-height:70px}.ts-ec-inline-row .ts-ec-node{min-height:48px}}
+</style>
+<style>
 /* Late Eternity progression: EC11/12 branch and Time Dilation studies */
 .ts-ec-row{grid-template-columns:repeat(10,minmax(0,1fr));gap:5px;min-height:84px}
 .ts-ec-late-row{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;min-height:84px}
@@ -251,7 +254,6 @@ body.id-screen-active #tabContent{padding:0!important;border:0!important;backgro
 .ts-dilation-node span{font-size:8px;line-height:1.1}.ts-dilation-node small{font-size:8px}.ts-dilation-node.purchased{border-color:#d8a7f2;background:#3a2448}.ts-dilation-node.available{border-color:#9e6ac0}.ts-dilation-node:disabled{opacity:.7}
 @media(max-width:540px){.ts-ec-row{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}.ts-ec-late-row{grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}.ts-dilation-row{gap:3px}.ts-dilation-node{min-height:52px;font-size:8px}.ts-dilation-node span,.ts-dilation-node small{font-size:7px}}
 </style>
-
 </head>
 <body><main>
 <div class="sticky-tools">
@@ -1618,31 +1620,64 @@ function timeStudyView(){
   [[221,1],[222,2],[223,3],[224,4],[225,5],[226,6],[227,7],[228,8]],
   [[231,1],[232,2],[233,3],[234,4]]
  ];
+ // ECノードは本家Wiki記載の前提Studyの直下に置く。
+ const ecAfter = {
+  42: [{id:5, col:2, study:42}],
+  111: [{id:7, col:2, study:111}],
+  121: [{id:6, col:1, study:121}],
+  123: [{id:8, col:3, study:123}],
+  143: [{id:4, col:2, study:143}],
+  151: [{id:9, col:2, study:151}],
+  171: [{id:1, col:1, study:171},{id:2, col:2, study:171},{id:3, col:3, study:171}],
+  181: [{id:10, col:2, study:181}],
+  231: [{id:11, col:1, study:231}],
+  233: [{id:12, col:2, study:233}]
+ };
+ const displayRows=[];
+ for(let ri=0;ri<rows.length;ri++){
+  displayRows.push({type:'study', sourceIndex:ri, studies:rows[ri]});
+  const ids=rows[ri].map(p=>p[0]);
+  const ec=ids.flatMap(id=>ecAfter[id]||[]);
+  if(ec.length)displayRows.push({type:'ec', nodes:ec});
+ }
  const rowIndex=new Map();
- rows.forEach((row,ri)=>row.forEach(pair=>rowIndex.set(pair[0],{row:ri,col:pair[1]-1,cols:row.some(p=>p[0]>=221&&p[0]<=228)?8:6})));
+ displayRows.forEach((dr,di)=>{
+  if(dr.type!=='study')return;
+  dr.studies.forEach(pair=>rowIndex.set(pair[0],{row:di,col:pair[1]-1,cols:pair.some?.(p=>p[0]>=221&&p[0]<=228)?8:(dr.studies.some(p=>p[0]>=221&&p[0]<=228)?8:6)}));
+ });
  const rowHeight=104;
+ // SVG coordinates match the fixed row grid. Start/end at the visible button edges,
+ // not the row boundaries, so connectors remain attached at every zoom level.
+ const nodeCenterX = node => (node.col + 0.5) * (100 / node.cols);
+ const rowTopY = row => row * rowHeight;
+ const nodeBottomY = row => rowTopY(row) + 78;
+ const nodeTopY = row => rowTopY(row) + 8;
+ const connectorPath = (x1,y1,x2,y2) => {
+  if (Math.abs(x1-x2) < 0.01) return `M ${x1} ${y1} L ${x2} ${y2}`;
+  const midY = y1 + Math.max(8, (y2-y1)*0.5);
+  return `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`;
+ };
  const links=[];
  for(const study of timeStudyData){
   const target=rowIndex.get(study[0]);if(!target)continue;
   for(const req of study[2]){
    const source=rowIndex.get(req);if(!source||source.row>=target.row)continue;
-   const x1=(source.col+0.5)*(100/source.cols),x2=(target.col+0.5)*(100/target.cols);
-   const y1=(source.row+1)*rowHeight-8,y2=target.row*rowHeight+8;
+   const x1=nodeCenterX(source),x2=nodeCenterX(target);
+   const y1=nodeBottomY(source.row),y2=nodeTopY(target.row);
    const active=tsOwned(study[0])&&tsOwned(req);
-   // Direct diagonal connectors prevent elbows from overlapping neighbouring branches (notably around TS51).
-   links.push(`<path class="ts-link ${active?'ts-link-active':''}" d="M ${x1} ${y1} L ${x2} ${y2}"/>`);
+   links.push(`<path class="ts-link ${active?'ts-link-active':''}" d="${connectorPath(x1,y1,x2,y2)}"/>`);
   }
  }
- // EC1-10は対応する既存Studyから接続。EC11/12は最下段の分岐Studyに配置する。
- const ecStudies=[171,171,171,143,42,121,111,123,151,181,231,233];
- const ecLinks=ecStudies.map((study,i)=>{
-  const source=rowIndex.get(study);if(!source)return '';
-  const targetRow=i<10?rows.length+Math.floor(i/6):rows.length+1;
-  const targetCol=i<10?i%6:(i===10?1:2);
-  const x1=(source.col+0.5)*(100/source.cols),x2=(targetCol+0.5)*(100/6);
-  const y1=(source.row+1)*rowHeight-8,y2=targetRow*rowHeight+8;
-  return `<path class="ts-link ts-ec-link" d="M ${x1} ${y1} L ${x2} ${y2}"/>`;
- }).join('');
+ const ecLinks=[];
+ displayRows.forEach((dr,di)=>{
+  if(dr.type!=='ec')return;
+  for(const ec of dr.nodes){
+   const source=rowIndex.get(ec.study);if(!source)continue;
+   const x1=nodeCenterX(source),x2=(ec.col+0.5)*(100/6);
+   const y1=nodeBottomY(source.row),y2=rowTopY(di)+8;
+   ecLinks.push(`<path class="ts-link ts-ec-link" d="${connectorPath(x1,y1,x2,y2)}"/>`);
+  }
+ });
  const dilationDefs=[
   ['d1','Unlock Time Dilation',5000,'EC11×5・EC12×5、合計12,900 TTが必要'],
   ['d2','5th Time Dimensionを解放',1000000,'d1が必要'],
@@ -1657,19 +1692,35 @@ function timeStudyView(){
   const ready=i===0?(state.timeStudyRespec!==true&&(tsOwned(231)||tsOwned(232))&&(tsOwned(233)||tsOwned(234))&&(state.eternityChallengeCompletions?.[11]||0)>=5&&(state.eternityChallengeCompletions?.[12]||0)>=5&&tsTotal()>=12900):dilationOwned(prev)&&tsTotal()>=cost;
   return `<div class="ts-cell"><button type="button" class="ts-dilation-node ${owned?'purchased':ready?'available':'blocked'}" data-dilation-study="${id}" ${owned||!ready?'disabled':''} title="${req}"><strong>${id}</strong><span>${label}</span><small>${cost.toLocaleString('en-US')} TT</small></button></div>`;
  }).join('')}</div>`;
- const dilationLinks=`<path class="ts-link ts-ec-link" d="M 25 ${(rows.length+2)*rowHeight-8} L 25 ${(rows.length+2)*rowHeight+8}"/><path class="ts-link ts-ec-link" d="M 41.666 ${(rows.length+2)*rowHeight-8} L 41.666 ${(rows.length+2)*rowHeight+8}"/>`;
- const connectorSvg=`<svg class="ts-connectors" viewBox="0 0 100 ${(rows.length+4)*104}" preserveAspectRatio="none" aria-hidden="true">${links.join('')}${ecLinks}${dilationLinks}</svg>`;
- const nodes=rows.map((row,ri)=>`<div class="ts-tree-row ${row.some(p=>p[0]>=221&&p[0]<=228)?'ts-row-wide':''}" data-ts-row="${ri}">${Array.from({length:row.some(p=>p[0]>=221&&p[0]<=228)?8:6},(_,i)=>{
-  const pair=row.find(p=>p[1]===i+1);
-  if(!pair)return `<div class="ts-cell empty"></div>`;
-  const id=pair[0],s=tsById.get(id);if(!s)return `<div class="ts-cell empty"></div>`;
-  const owned=tsOwned(id),can=tsCanBuy(s);
-  return `<div class="ts-cell"><button type="button" class="ts-study ${owned?'purchased':can?'available':'blocked'}" data-ts-study="${id}" ${owned||!can?'disabled':''} title="${s[3]}"><strong>${id}</strong><span>${s[3]}</span><small>${s[1]} TT</small></button></div>`;
- }).join('')}</div>`).join('');
- const ecNodes=`<div class="ts-tree-row ts-ec-row" data-ec-row="0">${Array.from({length:10},(_,i)=>{
-  const id=i+1,study=ecStudies[i];
-  return `<div class="ts-cell"><div class="ts-ec-node" title="EC${id}：関連するTime Study ${study} から接続"><strong>EC${id}</strong><span>Eternity Challenge</span></div></div>`;
- }).join('')}</div><div class="ts-tree-row ts-ec-row ts-ec-late-row" data-ec-row="1">${[11,12].map(id=>`<div class="ts-cell"><div class="ts-ec-node" title="EC${id}：Time Study ${id===11?'231 / 232':'233 / 234'} から接続"><strong>EC${id}</strong><span>Eternity Challenge</span></div></div>`).join('')}</div>`;
+ const totalRows=displayRows.length+1;
+ // EC11 and EC12 both feed the Time Dilation unlock row; keep the two routes
+ // separate and terminate them at the top edge of the corresponding controls.
+ const ec11row=displayRows.findIndex(r=>r.type==='ec'&&r.nodes.some(n=>n.id===11));
+ const ec12row=displayRows.findIndex(r=>r.type==='ec'&&r.nodes.some(n=>n.id===12));
+ const dilationY=rowTopY(displayRows.length)+8;
+ const dilationLinks=[
+  ec11row>=0?`<path class="ts-link ts-ec-link" d="${connectorPath(25,rowTopY(ec11row)+72,25,dilationY)}"/>`:'',
+  ec12row>=0?`<path class="ts-link ts-ec-link" d="${connectorPath(41.666,rowTopY(ec12row)+72,41.666,dilationY)}"/>`:''
+ ].join('');
+ const connectorSvg=`<svg class="ts-connectors" viewBox="0 0 100 ${totalRows*104}" preserveAspectRatio="none" aria-hidden="true">${links.join('')}${ecLinks.join('')}${dilationLinks}</svg>`;
+ const nodes=displayRows.map((dr,di)=>{
+  if(dr.type==='ec'){
+   return `<div class="ts-tree-row ts-ec-inline-row" data-ec-row="${dr.nodes.map(n=>n.id).join('-')}">${Array.from({length:6},(_,i)=>{
+    const ec=dr.nodes.find(n=>n.col===i);
+    return ec?`<div class="ts-cell"><div class="ts-ec-node" title="EC${ec.id}：前提Study ${ec.study}"><strong>EC${ec.id}</strong><span>Eternity Challenge</span></div></div>`:`<div class="ts-cell empty"></div>`;
+   }).join('')}</div>`;
+  }
+  const row=dr.studies;
+  const wide=row.some(p=>p[0]>=221&&p[0]<=228);
+  return `<div class="ts-tree-row ${wide?'ts-row-wide':''}" data-ts-row="${dr.sourceIndex}">${Array.from({length:wide?8:6},(_,i)=>{
+   const pair=row.find(p=>p[1]===i+1);
+   if(!pair)return `<div class="ts-cell empty"></div>`;
+   const id=pair[0],study=tsById.get(id);if(!study)return `<div class="ts-cell empty"></div>`;
+   const owned=tsOwned(id),can=tsCanBuy(study);
+   return `<div class="ts-cell"><button type="button" class="ts-study ${owned?'purchased':can?'available':'blocked'}" data-ts-study="${id}" ${owned||!can?'disabled':''} title="${study[3]}"><strong>${id}</strong><span>${study[3]}</span><small>${study[1]} TT</small></button></div>`;
+  }).join('')}</div>`;
+ }).join('');
+ const ecNodes='';
  return `<section class="ts-screen"><div class="ts-frame"><h2>Time Studies</h2>
  <div class="ts-tree-toolbar"><button type="button" data-ts-respec ${tsSpent()===0?'disabled':''}>Respec time studies</button><button type="button" data-ts-buy-all>Buy all studies</button></div>
  <div class="ts-tt-summary">You have <strong>${tsTotal()}</strong> Time Theorems.<div class="ts-tt-purchased">(Purchased ${tsTotal()} total)</div></div>
@@ -1678,7 +1729,7 @@ function timeStudyView(){
    <button type="button" class="ts-resource ts-tt-button" data-ts-buy-tt="am" ${matterBigNumber().compare(BigNumber.fromLog10(20000*(tsTotal()+1)))<0?'disabled':''}><span>Buy Time Theorems</span><strong>Cost: ${BigNumber.fromLog10(20000*(tsTotal()+1)).toDisplayString(3)}</strong></button>
    <button type="button" class="ts-resource ts-tt-button" data-ts-buy-tt="ip" ${!hasIPAtLeast(tsTotal()===0?BigNumber.from(1):BigNumber.fromLog10(100*tsTotal()))?'disabled':''}><span>Buy Time Theorems</span><strong>Cost: ${(tsTotal()===0?BigNumber.from(1):BigNumber.fromLog10(100*tsTotal())).toDisplayString(3)} IP</strong></button>
    <button type="button" class="ts-resource ts-tt-button" data-ts-buy-tt="ep" ${getEPBigNumber().compare(BigNumber.from(2).power(tsTotal()))<0?'disabled':''}><span>Buy Time Theorems</span><strong>Cost: ${BigNumber.from(2).power(tsTotal()).toDisplayString(3)} EP</strong></button>
- </div></div><div class="ts-zoom-controls"><button type="button" data-ts-zoom="out" aria-label="縮小">−</button><span data-ts-zoom-label>100%</span><button type="button" data-ts-zoom="in" aria-label="拡大">＋</button><button type="button" data-ts-zoom="reset">リセット</button><small>ピンチ操作でも拡大縮小できます</small></div><div class="ts-tree-wrap"><div class="ts-tree" style="zoom:${timeStudyZoom}">${connectorSvg}${nodes}${ecNodes}</div></div></div></section>`;
+ </div></div><div class="ts-zoom-controls"><button type="button" data-ts-zoom="out" aria-label="縮小">−</button><span data-ts-zoom-label>100%</span><button type="button" data-ts-zoom="in" aria-label="拡大">＋</button><button type="button" data-ts-zoom="reset">リセット</button><small>ピンチ操作でも拡大縮小できます</small></div><div class="ts-tree-wrap"><div class="ts-tree" style="zoom:${timeStudyZoom}">${connectorSvg}${nodes}${dilationNodes}</div></div></div></section>`;
 }
 const tabViews={eternity:()=>timeStudyView(),autobuyers:()=>`<h2>Autobuyers</h2><button type="button" id="abToggleAll" style="margin:0 0 12px">${state.autobuyers.dims.every(Boolean)&&state.autobuyers.tickspeed&&state.autobuyers.boost&&state.autobuyers.galaxy&&state.autobuyers.crunch&&(!state.completedInfinityChallenges.includes(2)||state.autobuyers.sacrifice)?'全AutobuyerをOFF':'全AutobuyerをON'}</button><div class="ab-grid">${names.map((n,i)=>`<div class="ab-card"><div><strong>${n}</strong><small>${!dimAutobuyerUnlocked(i)?`ロック中：反物質 ${fmtMatter(Math.pow(10,40+i*10))} が必要`:`解禁済み · 間隔：${autobuyerInterval()[i].toFixed(2)}秒 · Bulk Buy：×${dimAutobuyerBulk(i)===Infinity?'∞':dimAutobuyerBulk(i)}`}</small><button type="button" class="ab-mode-button" data-ab-dim-mode-toggle="${i}">購入モード：${(state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10')==='10'?'次の10個購入ボーナスまで':'1個ずつ'} ↻</button>${dimBulkLevels()[i]>=9?'':`<button type="button" data-ab-upgrade="${i}" ${!autobuyerUpgradeUnlocked(i)|| (autobuyerInterval()[i]>0.1000001?!hasIPAtLeast(autobuyerIntervalUpgradeCost(i)):(!dimAutobuyerUnlocked(i)||!hasIPAtLeast(dimBulkUpgradeCost(i))))?'disabled':''}>${!autobuyerUpgradeUnlocked(i)?'ロック中':autobuyerInterval()[i]>0.1000001?`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(i))}）`:`Bulk ×${dimAutobuyerBulk(i)} → ×${dimAutobuyerBulk(i)*2}（IP ${fmt(dimBulkUpgradeCost(i))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab-dim="${i}" ${state.autobuyers.dims[i]?'checked':''} ${!dimAutobuyerUnlocked(i)&&!state.autobuyers.dims[i]?'disabled':''}> ON</label></div>`).join('')}<div class="ab-card"><div><strong>Tickspeed</strong><small>${!tickspeedAutobuyerUnlocked()?`ロック中：反物質 1e140 が必要`:`解禁済み · 間隔：${autobuyerInterval()[8].toFixed(2)}秒 · 購入モード：${challengeCompleted(9)&&state.autobuyers.tickspeedMode==='max'?'最大まで購入':'1個ずつ'}`}</small>${challengeCompleted(9)?`<button type="button" class="ab-mode-button" data-ab-tickspeed-mode-toggle>購入モード：${state.autobuyers.tickspeedMode==='max'?'最大まで購入':'1個ずつ'} ↻</button>`:''}${autobuyerInterval()[8]<=0.1000001?'':`<button type="button" data-ab-upgrade="8" ${!autobuyerUpgradeUnlocked(8)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(8))?'disabled':''}>${!autobuyerUpgradeUnlocked(8)?'NC9クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(8))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="tickspeed" ${state.autobuyers.tickspeed?'checked':''} ${!tickspeedAutobuyerUnlocked()&&!state.autobuyers.tickspeed?'disabled':''}> ON</label></div><div class="ab-card"><div><strong>Dimension Boost</strong><small>${challengeCompleted(10)?`解放済み · 間隔：${autobuyerInterval()[9].toFixed(2)}秒`:'NC10クリアで解放'}</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">購入上限 <input type="text" inputmode="numeric" autocomplete="off" id="abBoostLimit" placeholder="無制限" value="${state.autobuyers.boostLimit??''}" style="width:90px;max-width:100%;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px" ${!challengeCompleted(10)?'disabled':''}></label>${autobuyerInterval()[9]<=0.1000001?'':`<button type="button" data-ab-upgrade="9" ${!autobuyerUpgradeUnlocked(9)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(9))||autobuyerInterval()[9]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(9)?'NC10クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(9))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="boost" ${state.autobuyers.boost?'checked':''} ${!challengeCompleted(10)&&!state.autobuyers.boost?'disabled':''}> ON</label></div><div class="ab-card"><div><strong>Antimatter Galaxy</strong><small>${challengeCompleted(11)?`解放済み · 間隔：${autobuyerInterval()[10].toFixed(2)}秒`:'NC11クリアで解放'}</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">購入上限 <input type="text" inputmode="numeric" autocomplete="off" id="abGalaxyLimit" placeholder="無制限" value="${state.autobuyers.galaxyLimit??''}" style="width:90px;max-width:100%;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px" ${!challengeCompleted(11)?'disabled':''}></label>${autobuyerInterval()[10]<=0.1000001?'':`<button type="button" data-ab-upgrade="10" ${!autobuyerUpgradeUnlocked(10)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(10))||autobuyerInterval()[10]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(10)?'NC11クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(10))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="galaxy" ${state.autobuyers.galaxy?'checked':''} ${!challengeCompleted(11)&&!state.autobuyers.galaxy?'disabled':''}> ON</label></div><div class="ab-card"><div><strong>Big Crunch</strong><small>${challengeCompleted(12)?`解放済み · 間隔：${autobuyerInterval()[11].toFixed(2)}秒`:'NC12クリアで解放'}</small>${state.breakInfinityActive?`<label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">自動Crunch目標IP <input type="text" inputmode="text" autocomplete="off" spellcheck="false" autocapitalize="off" id="abCrunchIPTarget" placeholder="空欄で無効" value="${state.autobuyers.crunchIPTarget??''}" style="width:120px;max-width:100%;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px"></label><small>獲得予定IPが目標以上でCrunch</small>`:''}${autobuyerInterval()[11]<=0.1000001?'':`<button type="button" data-ab-upgrade="11" ${!autobuyerUpgradeUnlocked(11)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(11))||autobuyerInterval()[11]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(11)?'NC12クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(11))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="crunch" ${state.autobuyers.crunch?'checked':''} ${!challengeCompleted(12)&&!state.autobuyers.crunch?'disabled':''}> ON</label></div>${state.completedInfinityChallenges.includes(2)?`<div class="ab-card"><div><strong>自動Sacrifice</strong><small>倍率増加が設定値以上になったら自動Sacrifice</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">Sacrifice倍率<input type="text" inputmode="decimal" autocomplete="off" id="abSacrificeValue" value="${Number.isFinite(Number(state.autobuyers.sacrificeValue))&&Number(state.autobuyers.sacrificeValue)>1?state.autobuyers.sacrificeValue:2}" style="width:90px;max-width:100%;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px"></label></div><label class="ab-toggle"><input type="checkbox" data-ab="sacrifice" ${state.autobuyers.sacrifice?'checked':''}> ON</label></div>`:''}</div>`,challenges:()=>challengeSubpage==='infinity'?infinityChallengeView():`<h2>Challenges</h2><p style="color:var(--muted);font-size:12px;margin:0">Normal Challenges — 目標：1.8e308に到達</p>${state.activeChallenge?`<div class="challenge-description"><strong>挑戦中：NC${state.activeChallenge} — ${challengeData[state.activeChallenge-1].name}</strong><p>${challengeData[state.activeChallenge-1].desc}</p><p>現在の反物質：${matterBigNumber().toDisplayString(3)} / 目標：1.8e308</p>${state.activeChallenge===11?`<p>Normal Matter：${fmtMatter(state.challenge11Matter)}</p>`:''}<div class="challenge-controls">${atInfinity()?`<button type="button" data-challenge-complete>Infinity到達・クリア</button>`:''}<button type="button" data-challenge-exit>中断して通常プレイへ戻る</button></div></div>`:''}<div class="challenge-grid">${challengeData.map(c=>{const done=challengeCompleted(c.id),active=challengeActive(c.id),unlocked=challengeUnlocked(c.id),canStart=unlocked&&!active&&c.id!==1;return `<div class="challenge-card ${done?'completed':''} ${active?'active':''}"><strong>NC${c.id}: ${c.name}</strong><p>${c.desc}</p><p><small>報酬：${c.reward}</small></p>${state.challengeTimes[c.id]>0?`<p><small>最速記録：${formatPlayTime(state.challengeTimes[c.id])}</small></p>`:''}<span class="challenge-status">${challengeCardStatus(c.id)}</span>${active?`<button type="button" data-challenge-exit>中断</button>`:canStart?`<button type="button" data-challenge-start="${c.id}">開始</button>`:c.id===1?`<button type="button" disabled>初回Infinity済み</button>`:`<button type="button" disabled>${done?'クリア済み':unlocked?'挑戦不可':'16 Infinityで解放'}</button>`}</div>`}).join('')}</div>`,infinity:()=>infinitySubpage==='break'?breakInfinityView():infinitySubpage==='replicanti'?replicantiView():infinityUpgradeView(),achievements:()=>`<h2>実績</h2><p>実績による生産倍率：×${achievementMultiplier().toFixed(3)}</p><div class="achievement-grid">${[
 {id:11,name:'You gotta start somewhere',desc:'第1次元を購入する。'},{id:12,name:'100 antimatter is a lot',desc:'第2次元を購入する。'},{id:13,name:'Half life 3 CONFIRMED',desc:'第3次元を購入する。'},{id:14,name:'L4D: Left 4 Dimensions',desc:'第4次元を購入する。'},{id:15,name:'5 Dimension Antimatter Punch',desc:'第5次元を購入する。'},{id:16,name:"We couldn't afford 9",desc:'第6次元を購入する。'},{id:17,name:'Not a luck related achievement',desc:'第7次元を購入する。'},{id:18,name:'90 degrees to infinity',desc:'第8次元を購入する。'},{id:21,name:'To Infinity!',desc:'Big Crunchを実行する。報酬：Infinity後、反物質100から開始。'},{id:22,name:'Boosting the boost',desc:'Dimension Boostを初めて購入する。'},{id:23,name:'The 9th Dimension is a lie',desc:'第8次元をちょうど99個所持する。報酬：第8次元が10%強化される。'},{id:24,name:'Antimatter Apocalypse',desc:'反物質を1e80以上にする。'},{id:25,name:'Boosting to the max',desc:'Dimension Boostを10回購入する。'},{id:26,name:'You got past The Big Wall',desc:'Antimatter Galaxyを購入する。'},{id:27,name:'Double Galaxy',desc:'Antimatter Galaxyを2個購入する。'},{id:28,name:"There's no point in doing that...",desc:'第1次元を1e150個以上所持した状態で、さらに1個購入する。報酬：第1次元が10%強化される。'},
