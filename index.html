@@ -76,7 +76,7 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 140px;max-width:560p
 .ts-screen{margin:0;padding:0;color:#eee2f7;width:100%;max-width:none}
 .ts-frame{border:2px solid #80539a;border-radius:5px;background:#17121d;padding:10px;box-sizing:border-box;width:100%;overflow:hidden}
 .ts-frame h2{text-align:center;border-bottom:1px solid #67427a;padding-bottom:7px;margin-bottom:8px}
-.ts-tree{position:relative;z-index:0;gap:0;min-width:500px;max-width:700px}
+.ts-tree{position:relative;z-index:0;gap:0;min-width:700px;max-width:900px}
 .ts-tree-row{z-index:1;min-height:104px}
 .ts-connectors{position:absolute;inset:0;width:100%;height:100%;z-index:0;overflow:visible;pointer-events:none}
 .ts-link{fill:none;stroke:#6b5a78;stroke-width:.55;vector-effect:non-scaling-stroke;opacity:.95}
@@ -88,7 +88,7 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 140px;max-width:560p
 .ts-study{box-shadow:0 1px 2px #0008}
 .ts-study.available{border-color:#9e6ac0}
 .ts-study.purchased{border-color:#d8a7f2;box-shadow:0 0 0 1px #a76dc6}
-@media(max-width:540px){.ts-frame{padding:6px 4px}.ts-resource-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ts-tree-wrap{overflow-x:auto}.ts-tree{min-width:500px}.ts-tree-row{gap:5px;min-height:96px}.ts-study{max-width:94px;min-height:58px}.ts-study span{font-size:8px}}
+@media(max-width:540px){.ts-frame{padding:6px 4px}.ts-resource-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ts-tree-wrap{overflow-x:auto}.ts-tree{min-width:700px;max-width:900px}.ts-tree-row{gap:5px;min-height:96px}.ts-study{max-width:94px;min-height:58px}.ts-study span{font-size:8px}}
 
 
 body[data-screen="eternity"] main>*:not(#tabContent):not(#screenTabs){display:none!important}
@@ -1576,18 +1576,17 @@ function timeStudyView(){
   [[191,2],[192,3],[193,4]],
   [[201,3]],
   [[211,1],[212,2],[213,4],[214,5]],
-  [[221,1],[222,2],[223,3],[224,4]],
-  [[225,2],[226,3],[227,4],[228,5]],
+  [[221,1],[222,2],[223,3],[224,4],[225,5],[226,6],[227,7],[228,8]],
   [[231,1],[232,2],[233,4],[234,5]]
  ];
  const rowIndex=new Map();
- rows.forEach((row,ri)=>row.forEach(pair=>rowIndex.set(pair[0],{row:ri,col:pair[1]-1})));
+ rows.forEach((row,ri)=>{const cols=Math.max(6,...row.map(pair=>pair[1]));row.forEach(pair=>rowIndex.set(pair[0],{row:ri,col:pair[1]-1,cols}));});
  const links=[];
  for(const study of timeStudyData){
   const target=rowIndex.get(study[0]);if(!target)continue;
   for(const req of study[2]){
    const source=rowIndex.get(req);if(!source||source.row>=target.row)continue;
-   const x1=(source.col+0.5)*(100/6),x2=(target.col+0.5)*(100/6);
+   const x1=(source.col+0.5)*(100/source.cols),x2=(target.col+0.5)*(100/target.cols);
    const y1=(source.row+1)*104-5,y2=target.row*104+5;
    const mid=(y1+y2)/2;
    const active=tsOwned(study[0])&&tsOwned(req);
@@ -1595,13 +1594,13 @@ function timeStudyView(){
   }
  }
  const connectorSvg=`<svg class="ts-connectors" viewBox="0 0 100 ${rows.length*104}" preserveAspectRatio="none" aria-hidden="true">${links.join('')}</svg>`;
- const nodes=rows.map((row,ri)=>`<div class="ts-tree-row" data-ts-row="${ri}">${Array.from({length:6},(_,i)=>{
+ const nodes=rows.map((row,ri)=>{const cols=Math.max(6,...row.map(pair=>pair[1]));return `<div class="ts-tree-row" data-ts-row="${ri}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${Array.from({length:cols},(_,i)=>{
   const pair=row.find(p=>p[1]===i+1);
   if(!pair)return `<div class="ts-cell empty"></div>`;
   const id=pair[0],s=tsById.get(id);if(!s)return `<div class="ts-cell empty"></div>`;
   const owned=tsOwned(id),can=tsCanBuy(s);
   return `<div class="ts-cell"><button type="button" class="ts-study ${owned?'purchased':can?'available':'blocked'}" data-ts-study="${id}" ${owned||!can?'disabled':''} title="${s[3]}"><strong>${id}</strong><span>${s[3]}</span><small>${s[1]} TT</small></button></div>`;
- }).join('')}</div>`).join('');
+ }).join('')}</div>`;}).join('');
  return `<section class="ts-screen"><div class="ts-frame"><h2>Time Studies</h2>
  <div class="ts-tree-toolbar"><button type="button" data-ts-respec ${tsSpent()===0?'disabled':''}>Respec time studies</button><button type="button" data-ts-buy-all>Buy all studies</button></div>
  <div class="ts-tt-summary">You have <strong>${tsTotal()}</strong> Time Theorems.<div class="ts-tt-purchased">(Purchased ${tsTotal()} total)</div></div>
