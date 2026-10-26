@@ -91,7 +91,7 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 140px;max-width:560p
 @media(max-width:540px){.ts-frame{padding:6px 4px}.ts-resource-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ts-tree-wrap{overflow-x:auto}.ts-tree{min-width:500px}.ts-tree-row{gap:5px;min-height:96px}.ts-study{max-width:94px;min-height:58px}.ts-study span{font-size:8px}}
 
 
-body[data-screen="eternity"] main>*:not(#tabContent){display:none!important}
+body[data-screen="eternity"] main>*:not(#tabContent):not(#screenTabs){display:none!important}
 body[data-screen="eternity"] #tabContent{display:block!important;visibility:visible!important}
 
 
@@ -117,6 +117,13 @@ body[data-screen="eternity"] #tabContent{display:block!important;visibility:visi
 .ts-tt-button strong{display:block;color:#080808!important;font-size:1em;overflow-wrap:anywhere}
 .ts-tt-button:disabled{opacity:.45}
 @media(max-width:540px){.ts-tt-grid{grid-template-columns:1fr;gap:8px}.ts-tt-button{min-height:74px}.ts-tt-max{margin-bottom:10px}}
+
+body[data-screen="eternity"] #screenTabs{display:flex!important;visibility:visible!important}
+.ts-tt-max{font-size:16px!important;padding:7px 16px!important;min-height:38px!important;border-width:1px!important}
+.ts-tt-grid{gap:7px!important}
+.ts-tt-button{min-height:58px!important;font-size:15px!important;padding:6px 4px!important;border-width:1px!important;border-radius:6px!important}
+.ts-tt-button strong{font-size:14px!important}
+@media(max-width:540px){.ts-tt-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important}.ts-tt-button{min-height:52px!important;font-size:11px!important;padding:4px 2px!important}.ts-tt-button strong{font-size:10px!important}.ts-tt-max{font-size:14px!important;padding:6px 12px!important}}
 </style>
 <style id="screen-tabs-style">
 .screen-tabs{display:flex;gap:4px;justify-content:flex-start;margin:10px 0 0;padding:5px;background:#111116;border:1px solid #41414a;border-radius:4px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;scrollbar-width:thin;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
