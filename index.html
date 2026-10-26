@@ -1569,9 +1569,9 @@ function timeStudyView(){
   [[191,2],[192,3],[193,4]],
   [[201,3]],
   [[211,1],[212,2],[213,4],[214,5]],
-  [[221,1],[222,2],[223,3],[224,4]],
+  [[221,2],[222,3],[223,4],[224,5]],
   [[225,2],[226,3],[227,4],[228,5]],
-  [[231,1],[232,2],[233,4],[234,5]]
+  [[231,1],[232,2],[233,3],[234,4]]
  ];
  const rowIndex=new Map();
  rows.forEach((row,ri)=>row.forEach(pair=>rowIndex.set(pair[0],{row:ri,col:pair[1]-1})));
@@ -1581,10 +1581,11 @@ function timeStudyView(){
   for(const req of study[2]){
    const source=rowIndex.get(req);if(!source||source.row>=target.row)continue;
    const x1=(source.col+0.5)*(100/6),x2=(target.col+0.5)*(100/6);
-   const y1=(source.row+1)*104-5,y2=target.row*104+5;
-   const mid=(y1+y2)/2;
+   const rowHeight=104;
+   const y1=(source.row+1)*rowHeight-8,y2=target.row*rowHeight+8;
    const active=tsOwned(study[0])&&tsOwned(req);
-   links.push(`<path class="ts-link ${active?'ts-link-active':''}" d="M ${x1} ${y1} V ${mid} H ${x2} V ${y2}"/>`);
+   // Direct diagonal connectors prevent elbows from overlapping neighbouring branches (notably around TS51).
+   links.push(`<path class="ts-link ${active?'ts-link-active':''}" d="M ${x1} ${y1} L ${x2} ${y2}"/>`);
   }
  }
  const connectorSvg=`<svg class="ts-connectors" viewBox="0 0 100 ${rows.length*104}" preserveAspectRatio="none" aria-hidden="true">${links.join('')}</svg>`;
