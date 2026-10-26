@@ -1,0 +1,7 @@
+/* Extracted from the original index.html in cascade order. */
+/* 実績11〜18をスクロールなしで横一列に収める */
+.achievement-grid{display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;grid-auto-flow:row!important;grid-auto-columns:auto!important;gap:3px!important;overflow:visible!important;padding:0!important;margin-top:8px!important;width:100%!important;box-sizing:border-box!important}
+.achievement-tile{min-width:0!important;width:auto!important;min-height:0!important;height:clamp(48px,10vh,76px)!important;padding:2px!important;box-sizing:border-box!important;overflow:hidden!important}
+.achievement-id{font-size:clamp(7px,1.7vw,10px)!important}
+.achievement-name{font-size:clamp(6px,1.5vw,10px)!important;line-height:1.15!important;overflow-wrap:anywhere!important;margin:2px 0!important}
+@media(max-width:540px){.achievement-grid{grid-template-columns:repeat(8,minmax(0,1fr))!important;gap:2px!important}.achievement-tile{height:clamp(42px,8vh,64px)!important;padding:1px!important}.achievement-name{font-size:clamp(5px,1.45vw,8px)!important}.achievement-id{font-size:7px!important}}
