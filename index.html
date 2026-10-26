@@ -76,7 +76,7 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 140px;max-width:560p
 .ts-screen{margin:0;padding:0;color:#eee2f7;width:100%;max-width:none}
 .ts-frame{border:2px solid #80539a;border-radius:5px;background:#17121d;padding:10px;box-sizing:border-box;width:100%;overflow:hidden}
 .ts-frame h2{text-align:center;border-bottom:1px solid #67427a;padding-bottom:7px;margin-bottom:8px}
-.ts-tree{position:relative;z-index:0;gap:0;min-width:700px;max-width:900px}
+.ts-tree{position:relative;z-index:0;gap:0;min-width:500px;max-width:700px}
 .ts-tree-row{z-index:1;min-height:104px}
 .ts-connectors{position:absolute;inset:0;width:100%;height:100%;z-index:0;overflow:visible;pointer-events:none}
 .ts-link{fill:none;stroke:#6b5a78;stroke-width:.55;vector-effect:non-scaling-stroke;opacity:.95}
@@ -88,7 +88,7 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 140px;max-width:560p
 .ts-study{box-shadow:0 1px 2px #0008}
 .ts-study.available{border-color:#9e6ac0}
 .ts-study.purchased{border-color:#d8a7f2;box-shadow:0 0 0 1px #a76dc6}
-@media(max-width:540px){.ts-frame{padding:6px 4px}.ts-resource-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ts-tree-wrap{overflow-x:auto}.ts-tree{min-width:700px;max-width:900px}.ts-tree-row{gap:5px;min-height:96px}.ts-study{max-width:94px;min-height:58px}.ts-study span{font-size:8px}}
+@media(max-width:540px){.ts-frame{padding:6px 4px}.ts-resource-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ts-tree-wrap{overflow-x:auto}.ts-tree{min-width:500px}.ts-tree-row{gap:5px;min-height:96px}.ts-study{max-width:94px;min-height:58px}.ts-study span{font-size:8px}}
 
 
 body[data-screen="eternity"] main>*:not(#tabContent):not(#screenTabs){display:none!important}
@@ -1469,30 +1469,30 @@ function formatPlayTime(seconds){const total=Math.max(0,Math.floor((Number(secon
 // The tree/cost/prerequisite data follows the supplied wiki references. Study effects
 // are intentionally kept separate from this UI implementation.
 const timeStudyData = [
- [11,1,[],'Tickspeedが第1時間次元を強化（効果減少）','base'],
- [21,3,[11],'Replicanti倍率の計算式を強化','base'],[22,2,[11],'Replicanti間隔の上限：50ms → 1ms','base'],
- [31,3,[21],'Infinity回数に応じたボーナスを強化（ボーナス⁴）','base'],[32,2,[22],'Dimension Boostで獲得Infinity回数が増加','base'],[33,2,[22],'Infinity後もReplicanti Galaxyを半分維持','base'],
- [41,4,[31],'すべてのGalaxyがIP獲得量×1.2','base'],[42,6,[32],'Galaxyに必要な第8次元を52個減少','base'],
- [51,3,[41,42],'IP獲得量×1e15','base'],[61,3,[51],'EP獲得量×15','base'],[62,3,[42],'Replicantiの速度×3（EC5クリアが必要）','ec5'],
- [71,4,[61],'Sacrificeが他のすべての反物質次元に影響','antimatter'],[72,6,[61],'Sacrificeが第4インフィニティ次元に影響','infinity'],[73,5,[61],'Sacrificeが第3時間次元に影響','time'],
- [81,4,[71],'Dimension Boostの基本倍率が×10','antimatter'],[82,6,[72],'Dimension Boostがインフィニティ次元に影響','infinity'],[83,5,[73],'無料Tickspeed強化数に応じてDimension Boost倍率が増加','time'],
- [91,4,[81],'今回のEternity経過時間に応じて反物質次元倍率が増加','antimatter'],[92,5,[82],'最速Eternity記録に応じてインフィニティ次元倍率が増加','infinity'],[93,7,[83],'無料Tickspeed強化数に応じて時間次元倍率が増加','time'],
- [101,4,[91],'Replicanti数に応じて反物質次元倍率が増加','antimatter'],[102,6,[92],'Replicanti GalaxyがReplicanti倍率を強化','infinity'],[103,6,[93],'Replicanti Galaxy数に応じて時間次元倍率が増加','time'],
- [111,12,[101,102,103],'Infinity Pointの計算式を強化','base'],
- [121,9,[111],'アクティブ：直近10回のEternityに応じてEP獲得','active'],[122,9,[111],'パッシブ：EP獲得量×35','passive'],[123,9,[111],'放置：今回のEternity経過時間に応じてEP獲得','idle'],
- [131,5,[121],'Replicanti Galaxyの自動購入が無効になる代わりに獲得量+50%','active'],[132,5,[122],'Replicanti Galaxyが40%強化、Replicanti速度×1.5','passive'],[133,5,[123],'Replicanti速度が1/10になる代わりにReplicanti Galaxyが50%強化','idle'],
- [141,4,[131],'今回のInfinity中、IP倍率が減衰','active'],[142,4,[132],'IP獲得量×1e25','passive'],[143,4,[133],'今回のInfinity中、IP倍率が増加','idle'],
- [151,8,[141,142,143],'時間次元倍率×1e4','base'],[161,7,[151],'反物質次元倍率×1e616','base'],[162,7,[151],'インフィニティ次元倍率×1e11','base'],
- [171,15,[161,162],'Time ShardのTickspeed要求増加率：×1.33 → ×1.25','base'],[181,200,[171],'毎秒、Crunchで獲得したIPの1%を獲得','base'],
- [191,400,[181],'Eternity後、Infinity回数の5%を蓄積Infinityとして維持','base'],[192,730,[181],'Replicantiが1.80e308を超えて増加可能','base'],[193,300,[181],'Eternity回数に応じて反物質次元倍率が増加','base'],
- [201,900,[192],'2つ目の次元ルートを選択','base'],
- [211,120,[191],'Dimension Boostの必要数スケーリングを5軽減','base'],[212,150,[191],'Time Shard数に応じてGalaxyが強化','base'],[213,200,[193],'Replicanti速度×20','base'],[214,120,[193],'Sacrificeが第8反物質次元を強化','base'],
- [221,900,[211],'Dimension Boost回数に応じて時間次元倍率が増加','light'],[222,900,[211],'Dimension Boostの必要数スケーリングをさらに2軽減','dark'],
- [223,900,[212],'Distant Galaxyのスケーリング開始を7 Galaxy分遅らせる','light'],[224,900,[212],'Dimension Boost 2000回ごとにDistant Galaxyのスケーリング開始を遅らせる','dark'],
- [225,900,[213],'Replicanti数に応じて追加Replicanti Galaxyを獲得','light'],[226,900,[213],'最大購入数に応じて追加Replicanti Galaxyを獲得','dark'],
- [227,900,[214],'Sacrificeが第4時間次元に影響','light'],[228,900,[214],'Sacrificeの計算式を強化','dark'],
- [231,500,[221,222],'Dimension Boost回数に応じてDimension Boostが強化','lightdark'],[232,500,[223,224],'Antimatter Galaxy数に応じてGalaxyが強化','lightdark'],
- [233,500,[225,226],'Replicanti数に応じてReplicanti Galaxy最大強化のコストが減少','lightdark'],[234,500,[227,228],'Sacrificeが第1反物質次元に適用','lightdark']
+ [11,1,[],'Tickspeed affects the 1st Time Dimension with reduced effect','base'],
+ [21,3,[11],'Improve the Replicanti multiplier formula','base'],[22,2,[11],'Replicanti interval limit: 50 ms → 1 ms','base'],
+ [31,3,[21],'Powers up bonuses based on Infinities (Bonus⁴)','base'],[32,2,[22],'Dimension Boosts increase Infinities gained','base'],[33,2,[22],'Keep half of Replicanti Galaxies on Infinity','base'],
+ [41,4,[31],'All Galaxies give ×1.2 IP','base'],[42,6,[32],'Galaxy requirement: 52 fewer 8th Dimensions','base'],
+ [51,3,[41,42],'Gain ×1e15 more IP','base'],[61,3,[51],'Gain ×15 more EP','base'],[62,3,[42],'Replicanti are 3× faster (requires EC5 completion)','ec5'],
+ [71,4,[61],'Sacrifice affects all other Antimatter Dimensions','antimatter'],[72,6,[61],'Sacrifice affects the 4th Infinity Dimension','infinity'],[73,5,[61],'Sacrifice affects the 3rd Time Dimension','time'],
+ [81,4,[71],'Base Dimension Boost power becomes ×10','antimatter'],[82,6,[72],'Dimension Boosts affect Infinity Dimensions','infinity'],[83,5,[73],'Dimension Boost multiplier from free Tickspeed upgrades','time'],
+ [91,4,[81],'Antimatter Dimension multiplier from time this Eternity','antimatter'],[92,5,[82],'Infinity Dimension multiplier from fastest Eternity','infinity'],[93,7,[83],'Time Dimension multiplier from free Tickspeed upgrades','time'],
+ [101,4,[91],'Antimatter Dimension multiplier equal to Replicanti','antimatter'],[102,6,[92],'Replicanti Galaxies boost Replicanti multiplier','infinity'],[103,6,[93],'Time Dimension multiplier from Replicanti Galaxies','time'],
+ [111,12,[101,102,103],'Improve the Infinity Point formula','base'],
+ [121,9,[111],'Active: EP based on last 10 Eternities','active'],[122,9,[111],'Passive: gain ×35 EP','passive'],[123,9,[111],'Idle: EP based on time this Eternity','idle'],
+ [131,5,[121],'Automatic Replicanti Galaxies disabled; gain 50% more','active'],[132,5,[122],'Replicanti Galaxies 40% stronger; Replicanti ×1.5 faster','passive'],[133,5,[123],'Replicanti ×10 slower; Replicanti Galaxies 50% stronger','idle'],
+ [141,4,[131],'IP multiplier decays during this Infinity','active'],[142,4,[132],'Gain ×1e25 more IP','passive'],[143,4,[133],'IP multiplier increases during this Infinity','idle'],
+ [151,8,[141,142,143],'Time Dimensions ×1e4','base'],[161,7,[151],'Antimatter Dimensions ×1e616','base'],[162,7,[151],'Infinity Dimensions ×1e11','base'],
+ [171,15,[161,162],'Time Shard Tickspeed requirement scaling: ×1.33 → ×1.25','base'],[181,200,[171],'Gain 1% of IP gained on Crunch each second','base'],
+ [191,400,[181],'Keep 5% of Infinities as Banked Infinities after Eternity','base'],[192,730,[181],'Replicanti can exceed 1.80e308','base'],[193,300,[181],'Antimatter Dimension multiplier based on Eternities','base'],
+ [201,900,[192],'Pick a second Dimension path','base'],
+ [211,120,[191],'Dimension Boost requirement scaling reduced by 5','base'],[212,150,[191],'Galaxies stronger based on Time Shards','base'],[213,200,[193],'Replicanti 20× faster','base'],[214,120,[193],'Sacrifice boosts 8th Antimatter Dimension','base'],
+ [221,900,[211],'Time Dimension multiplier based on Dimension Boosts','light'],[222,900,[211],'Dimension Boost costs scale by another 2 less','dark'],
+ [223,900,[212],'Distant Galaxy scaling starts 7 Galaxies later','light'],[224,900,[212],'Distant Galaxy scaling starts later per 2000 Boosts','dark'],
+ [225,900,[213],'Extra Replicanti Galaxies based on Replicanti amount','light'],[226,900,[213],'Extra Replicanti Galaxies based on max bought','dark'],
+ [227,900,[214],'Sacrifice affects 4th Time Dimension','light'],[228,900,[214],'Sacrifice formula scales better','dark'],
+ [231,500,[221,222],'Dimension Boosts stronger based on their amount','lightdark'],[232,500,[223,224],'Galaxies stronger based on Antimatter Galaxies','lightdark'],
+ [233,500,[225,226],'Max Replicanti Galaxy upgrade cheaper based on Replicanti','lightdark'],[234,500,[227,228],'Sacrifice applies to 1st Antimatter Dimension','lightdark']
 ];
 const tsById = new Map(timeStudyData.map(s=>[s[0],s]));
 function tsOwned(id){return Array.isArray(state.timeStudies)&&state.timeStudies.includes(Number(id));}
@@ -1576,17 +1576,18 @@ function timeStudyView(){
   [[191,2],[192,3],[193,4]],
   [[201,3]],
   [[211,1],[212,2],[213,4],[214,5]],
-  [[221,1],[222,2],[223,3],[224,4],[225,5],[226,6],[227,7],[228,8]],
+  [[221,1],[222,2],[223,3],[224,4]],
+  [[225,2],[226,3],[227,4],[228,5]],
   [[231,1],[232,2],[233,4],[234,5]]
  ];
  const rowIndex=new Map();
- rows.forEach((row,ri)=>{const cols=Math.max(6,...row.map(pair=>pair[1]));row.forEach(pair=>rowIndex.set(pair[0],{row:ri,col:pair[1]-1,cols}));});
+ rows.forEach((row,ri)=>row.forEach(pair=>rowIndex.set(pair[0],{row:ri,col:pair[1]-1})));
  const links=[];
  for(const study of timeStudyData){
   const target=rowIndex.get(study[0]);if(!target)continue;
   for(const req of study[2]){
    const source=rowIndex.get(req);if(!source||source.row>=target.row)continue;
-   const x1=(source.col+0.5)*(100/source.cols),x2=(target.col+0.5)*(100/target.cols);
+   const x1=(source.col+0.5)*(100/6),x2=(target.col+0.5)*(100/6);
    const y1=(source.row+1)*104-5,y2=target.row*104+5;
    const mid=(y1+y2)/2;
    const active=tsOwned(study[0])&&tsOwned(req);
@@ -1594,21 +1595,21 @@ function timeStudyView(){
   }
  }
  const connectorSvg=`<svg class="ts-connectors" viewBox="0 0 100 ${rows.length*104}" preserveAspectRatio="none" aria-hidden="true">${links.join('')}</svg>`;
- const nodes=rows.map((row,ri)=>{const cols=Math.max(6,...row.map(pair=>pair[1]));return `<div class="ts-tree-row" data-ts-row="${ri}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${Array.from({length:cols},(_,i)=>{
+ const nodes=rows.map((row,ri)=>`<div class="ts-tree-row" data-ts-row="${ri}">${Array.from({length:6},(_,i)=>{
   const pair=row.find(p=>p[1]===i+1);
   if(!pair)return `<div class="ts-cell empty"></div>`;
   const id=pair[0],s=tsById.get(id);if(!s)return `<div class="ts-cell empty"></div>`;
   const owned=tsOwned(id),can=tsCanBuy(s);
   return `<div class="ts-cell"><button type="button" class="ts-study ${owned?'purchased':can?'available':'blocked'}" data-ts-study="${id}" ${owned||!can?'disabled':''} title="${s[3]}"><strong>${id}</strong><span>${s[3]}</span><small>${s[1]} TT</small></button></div>`;
- }).join('')}</div>`;}).join('');
- return `<section class="ts-screen"><div class="ts-frame"><h2>時間研究</h2>
- <div class="ts-tree-toolbar"><button type="button" data-ts-respec ${tsSpent()===0?'disabled':''}>時間研究をリセット</button><button type="button" data-ts-buy-all>研究を一括購入</button></div>
- <div class="ts-tt-summary">所持タイム・セオレム：<strong>${tsTotal()}</strong><div class="ts-tt-purchased">（累計購入数：${tsTotal()}）</div></div>
- <button type="button" class="ts-tt-max" data-ts-buy-tt-max>タイム・セオレムを最大購入</button>
+ }).join('')}</div>`).join('');
+ return `<section class="ts-screen"><div class="ts-frame"><h2>Time Studies</h2>
+ <div class="ts-tree-toolbar"><button type="button" data-ts-respec ${tsSpent()===0?'disabled':''}>Respec time studies</button><button type="button" data-ts-buy-all>Buy all studies</button></div>
+ <div class="ts-tt-summary">You have <strong>${tsTotal()}</strong> Time Theorems.<div class="ts-tt-purchased">(Purchased ${tsTotal()} total)</div></div>
+ <button type="button" class="ts-tt-max" data-ts-buy-tt-max>Buy max Theorems</button>
  <div class="ts-resource-grid ts-tt-grid">
-   <button type="button" class="ts-resource ts-tt-button" data-ts-buy-tt="am" ${matterBigNumber().compare(BigNumber.fromLog10(20000*(tsTotal()+1)))<0?'disabled':''}><span>タイム・セオレムを購入</span><strong>必要反物質：${BigNumber.fromLog10(20000*(tsTotal()+1)).toDisplayString(3)}</strong></button>
-   <button type="button" class="ts-resource ts-tt-button" data-ts-buy-tt="ip" ${!hasIPAtLeast(tsTotal()===0?BigNumber.from(1):BigNumber.fromLog10(100*tsTotal()))?'disabled':''}><span>タイム・セオレムを購入</span><strong>必要IP：${(tsTotal()===0?BigNumber.from(1):BigNumber.fromLog10(100*tsTotal())).toDisplayString(3)}</strong></button>
-   <button type="button" class="ts-resource ts-tt-button" data-ts-buy-tt="ep" ${getEPBigNumber().compare(BigNumber.from(2).power(tsTotal()))<0?'disabled':''}><span>タイム・セオレムを購入</span><strong>必要EP：${BigNumber.from(2).power(tsTotal()).toDisplayString(3)}</strong></button>
+   <button type="button" class="ts-resource ts-tt-button" data-ts-buy-tt="am" ${matterBigNumber().compare(BigNumber.fromLog10(20000*(tsTotal()+1)))<0?'disabled':''}><span>Buy Time Theorems</span><strong>Cost: ${BigNumber.fromLog10(20000*(tsTotal()+1)).toDisplayString(3)}</strong></button>
+   <button type="button" class="ts-resource ts-tt-button" data-ts-buy-tt="ip" ${!hasIPAtLeast(tsTotal()===0?BigNumber.from(1):BigNumber.fromLog10(100*tsTotal()))?'disabled':''}><span>Buy Time Theorems</span><strong>Cost: ${(tsTotal()===0?BigNumber.from(1):BigNumber.fromLog10(100*tsTotal())).toDisplayString(3)} IP</strong></button>
+   <button type="button" class="ts-resource ts-tt-button" data-ts-buy-tt="ep" ${getEPBigNumber().compare(BigNumber.from(2).power(tsTotal()))<0?'disabled':''}><span>Buy Time Theorems</span><strong>Cost: ${BigNumber.from(2).power(tsTotal()).toDisplayString(3)} EP</strong></button>
  </div></div><div class="ts-tree-wrap"><div class="ts-tree">${connectorSvg}${nodes}</div></div></div></section>`;
 }
 const tabViews={eternity:()=>timeStudyView(),autobuyers:()=>`<h2>Autobuyers</h2><button type="button" id="abToggleAll" style="margin:0 0 12px">${state.autobuyers.dims.every(Boolean)&&state.autobuyers.tickspeed&&state.autobuyers.boost&&state.autobuyers.galaxy&&state.autobuyers.crunch&&(!state.completedInfinityChallenges.includes(2)||state.autobuyers.sacrifice)?'全AutobuyerをOFF':'全AutobuyerをON'}</button><div class="ab-grid">${names.map((n,i)=>`<div class="ab-card"><div><strong>${n}</strong><small>${!dimAutobuyerUnlocked(i)?`ロック中：反物質 ${fmtMatter(Math.pow(10,40+i*10))} が必要`:`解禁済み · 間隔：${autobuyerInterval()[i].toFixed(2)}秒 · Bulk Buy：×${dimAutobuyerBulk(i)===Infinity?'∞':dimAutobuyerBulk(i)}`}</small><button type="button" class="ab-mode-button" data-ab-dim-mode-toggle="${i}">購入モード：${(state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10')==='10'?'次の10個購入ボーナスまで':'1個ずつ'} ↻</button>${dimBulkLevels()[i]>=9?'':`<button type="button" data-ab-upgrade="${i}" ${!autobuyerUpgradeUnlocked(i)|| (autobuyerInterval()[i]>0.1000001?!hasIPAtLeast(autobuyerIntervalUpgradeCost(i)):(!dimAutobuyerUnlocked(i)||!hasIPAtLeast(dimBulkUpgradeCost(i))))?'disabled':''}>${!autobuyerUpgradeUnlocked(i)?'ロック中':autobuyerInterval()[i]>0.1000001?`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(i))}）`:`Bulk ×${dimAutobuyerBulk(i)} → ×${dimAutobuyerBulk(i)*2}（IP ${fmt(dimBulkUpgradeCost(i))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab-dim="${i}" ${state.autobuyers.dims[i]?'checked':''} ${!dimAutobuyerUnlocked(i)&&!state.autobuyers.dims[i]?'disabled':''}> ON</label></div>`).join('')}<div class="ab-card"><div><strong>Tickspeed</strong><small>${!tickspeedAutobuyerUnlocked()?`ロック中：反物質 1e140 が必要`:`解禁済み · 間隔：${autobuyerInterval()[8].toFixed(2)}秒 · 購入モード：${challengeCompleted(9)&&state.autobuyers.tickspeedMode==='max'?'最大まで購入':'1個ずつ'}`}</small>${challengeCompleted(9)?`<button type="button" class="ab-mode-button" data-ab-tickspeed-mode-toggle>購入モード：${state.autobuyers.tickspeedMode==='max'?'最大まで購入':'1個ずつ'} ↻</button>`:''}${autobuyerInterval()[8]<=0.1000001?'':`<button type="button" data-ab-upgrade="8" ${!autobuyerUpgradeUnlocked(8)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(8))?'disabled':''}>${!autobuyerUpgradeUnlocked(8)?'NC9クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(8))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="tickspeed" ${state.autobuyers.tickspeed?'checked':''} ${!tickspeedAutobuyerUnlocked()&&!state.autobuyers.tickspeed?'disabled':''}> ON</label></div><div class="ab-card"><div><strong>Dimension Boost</strong><small>${challengeCompleted(10)?`解放済み · 間隔：${autobuyerInterval()[9].toFixed(2)}秒`:'NC10クリアで解放'}</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">購入上限 <input type="text" inputmode="numeric" autocomplete="off" id="abBoostLimit" placeholder="無制限" value="${state.autobuyers.boostLimit??''}" style="width:90px;max-width:100%;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px" ${!challengeCompleted(10)?'disabled':''}></label>${autobuyerInterval()[9]<=0.1000001?'':`<button type="button" data-ab-upgrade="9" ${!autobuyerUpgradeUnlocked(9)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(9))||autobuyerInterval()[9]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(9)?'NC10クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(9))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="boost" ${state.autobuyers.boost?'checked':''} ${!challengeCompleted(10)&&!state.autobuyers.boost?'disabled':''}> ON</label></div><div class="ab-card"><div><strong>Antimatter Galaxy</strong><small>${challengeCompleted(11)?`解放済み · 間隔：${autobuyerInterval()[10].toFixed(2)}秒`:'NC11クリアで解放'}</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">購入上限 <input type="text" inputmode="numeric" autocomplete="off" id="abGalaxyLimit" placeholder="無制限" value="${state.autobuyers.galaxyLimit??''}" style="width:90px;max-width:100%;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px" ${!challengeCompleted(11)?'disabled':''}></label>${autobuyerInterval()[10]<=0.1000001?'':`<button type="button" data-ab-upgrade="10" ${!autobuyerUpgradeUnlocked(10)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(10))||autobuyerInterval()[10]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(10)?'NC11クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(10))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="galaxy" ${state.autobuyers.galaxy?'checked':''} ${!challengeCompleted(11)&&!state.autobuyers.galaxy?'disabled':''}> ON</label></div><div class="ab-card"><div><strong>Big Crunch</strong><small>${challengeCompleted(12)?`解放済み · 間隔：${autobuyerInterval()[11].toFixed(2)}秒`:'NC12クリアで解放'}</small>${state.breakInfinityActive?`<label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">自動Crunch目標IP <input type="text" inputmode="text" autocomplete="off" spellcheck="false" autocapitalize="off" id="abCrunchIPTarget" placeholder="空欄で無効" value="${state.autobuyers.crunchIPTarget??''}" style="width:120px;max-width:100%;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px"></label><small>獲得予定IPが目標以上でCrunch</small>`:''}${autobuyerInterval()[11]<=0.1000001?'':`<button type="button" data-ab-upgrade="11" ${!autobuyerUpgradeUnlocked(11)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(11))||autobuyerInterval()[11]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(11)?'NC12クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(11))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="crunch" ${state.autobuyers.crunch?'checked':''} ${!challengeCompleted(12)&&!state.autobuyers.crunch?'disabled':''}> ON</label></div>${state.completedInfinityChallenges.includes(2)?`<div class="ab-card"><div><strong>自動Sacrifice</strong><small>倍率増加が設定値以上になったら自動Sacrifice</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">Sacrifice倍率<input type="text" inputmode="decimal" autocomplete="off" id="abSacrificeValue" value="${Number.isFinite(Number(state.autobuyers.sacrificeValue))&&Number(state.autobuyers.sacrificeValue)>1?state.autobuyers.sacrificeValue:2}" style="width:90px;max-width:100%;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px"></label></div><label class="ab-toggle"><input type="checkbox" data-ab="sacrifice" ${state.autobuyers.sacrifice?'checked':''}> ON</label></div>`:''}</div>`,challenges:()=>challengeSubpage==='infinity'?infinityChallengeView():`<h2>Challenges</h2><p style="color:var(--muted);font-size:12px;margin:0">Normal Challenges — 目標：1.8e308に到達</p>${state.activeChallenge?`<div class="challenge-description"><strong>挑戦中：NC${state.activeChallenge} — ${challengeData[state.activeChallenge-1].name}</strong><p>${challengeData[state.activeChallenge-1].desc}</p><p>現在の反物質：${matterBigNumber().toDisplayString(3)} / 目標：1.8e308</p>${state.activeChallenge===11?`<p>Normal Matter：${fmtMatter(state.challenge11Matter)}</p>`:''}<div class="challenge-controls">${atInfinity()?`<button type="button" data-challenge-complete>Infinity到達・クリア</button>`:''}<button type="button" data-challenge-exit>中断して通常プレイへ戻る</button></div></div>`:''}<div class="challenge-grid">${challengeData.map(c=>{const done=challengeCompleted(c.id),active=challengeActive(c.id),unlocked=challengeUnlocked(c.id),canStart=unlocked&&!active&&c.id!==1;return `<div class="challenge-card ${done?'completed':''} ${active?'active':''}"><strong>NC${c.id}: ${c.name}</strong><p>${c.desc}</p><p><small>報酬：${c.reward}</small></p>${state.challengeTimes[c.id]>0?`<p><small>最速記録：${formatPlayTime(state.challengeTimes[c.id])}</small></p>`:''}<span class="challenge-status">${challengeCardStatus(c.id)}</span>${active?`<button type="button" data-challenge-exit>中断</button>`:canStart?`<button type="button" data-challenge-start="${c.id}">開始</button>`:c.id===1?`<button type="button" disabled>初回Infinity済み</button>`:`<button type="button" disabled>${done?'クリア済み':unlocked?'挑戦不可':'16 Infinityで解放'}</button>`}</div>`}).join('')}</div>`,infinity:()=>infinitySubpage==='break'?breakInfinityView():infinitySubpage==='replicanti'?replicantiView():infinityUpgradeView(),achievements:()=>`<h2>実績</h2><p>実績による生産倍率：×${achievementMultiplier().toFixed(3)}</p><div class="achievement-grid">${[
