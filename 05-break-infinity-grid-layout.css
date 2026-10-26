@@ -1,3 +1,0 @@
-/* Extracted from the original index.html in cascade order. */
-#tabContent .break-infinity-upgrade-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-@media(max-width:540px){#tabContent .break-infinity-upgrade-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}}
