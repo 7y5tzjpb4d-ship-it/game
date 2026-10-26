@@ -214,6 +214,44 @@ body.id-screen-active #tabContent{padding:0!important;border:0!important;backgro
 #epStat{border-color:#A047CF;background:linear-gradient(145deg,#2d1b38,#211729);animation:none;transform:none;opacity:1}#epStat small{color:#D8A7F2}#epStat strong{color:#D8A7F2}@media(max-width:540px){.stats{grid-template-columns:repeat(4,minmax(0,1fr))}.stat{min-width:0;padding:6px 1px}.stat small{font-size:8px;overflow-wrap:anywhere}.stat strong{font-size:clamp(11px,3.1vw,15px);overflow-wrap:anywhere}}
 </style>
 <style id="replicanti-screen-style">.replicanti-screen{padding:0;background:transparent;border:0;border-radius:0;color:#D9AD70}.replicanti-screen h2{margin:0 0 10px;color:#B67E33}.replicanti-count{display:flex;flex-direction:column;gap:5px;text-align:center;padding:16px 10px;background:linear-gradient(145deg,#342719,#211b16);border:1px solid #78552b;border-radius:5px;margin:12px 0}.replicanti-count small,.replicanti-count span{font-size:12px;color:#c9c3b8}.replicanti-count strong{font-size:clamp(23px,5vw,34px);overflow-wrap:anywhere;color:#D9AD70}.replicanti-upgrades{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}.replicanti-upgrades button{display:flex;flex-direction:column;justify-content:center;gap:7px;min-width:0;min-height:105px;padding:9px 6px;background:linear-gradient(145deg,#342719,#211b16);border:1px solid #78552b;border-radius:5px;color:#c9c3b8;cursor:pointer}.replicanti-upgrades button.available{background:linear-gradient(145deg,#654820,#3c2a18);border-color:#B67E33;color:#f3dfbf}.replicanti-upgrades button.available:hover{background:linear-gradient(145deg,#795526,#49331d)}.replicanti-upgrades button:disabled{opacity:.48;cursor:not-allowed}.replicanti-upgrades button strong{font-size:13px;color:#D9AD70}.replicanti-upgrades button span{font-size:12px}.replicanti-upgrades button small{font-size:10px;overflow-wrap:anywhere;color:#c9c3b8}.replicanti-primary{padding:10px 14px;background:linear-gradient(145deg,#49351f,#302216);border:1px solid #B67E33;border-radius:5px;color:#f3dfbf;font-weight:700}.replicanti-screen > .replicanti-primary[data-rep-action="unlock"]{display:block;width:min(100%,360px);min-height:60px;margin:28px auto;padding:16px 24px;font-size:18px;line-height:1.4;cursor:pointer;box-sizing:border-box}.replicanti-primary:disabled{opacity:.4;cursor:not-allowed}.replicanti-galaxy{padding:12px;background:linear-gradient(145deg,#342719,#211b16);border:1px solid #78552b;border-radius:5px}.replicanti-galaxy p{font-size:12px;color:#c9c3b8}@media(max-width:540px){.replicanti-upgrades{gap:5px}.replicanti-upgrades button{min-height:105px;padding:6px 3px}.replicanti-upgrades button strong{font-size:11px}.replicanti-upgrades button span{font-size:10px}.replicanti-upgrades button small{font-size:9px}}</style>
+<style>
+/* Distinct colors for 5th–8th dimensions */
+#dimensions .dim:nth-child(5) .tier{background:#263f48;color:#8ee8f5}
+#dimensions .dim:nth-child(6) .tier{background:#493044;color:#f4a6d7}
+#dimensions .dim:nth-child(7) .tier{background:#3d354f;color:#c6b0ff}
+#dimensions .dim:nth-child(8) .tier{background:#49302a;color:#ffb49b}
+</style>
+<style id="achievement-fit-fix">
+/* 実績11〜18をスクロールなしで横一列に収める */
+.achievement-grid{display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;grid-auto-flow:row!important;grid-auto-columns:auto!important;gap:3px!important;overflow:visible!important;padding:0!important;margin-top:8px!important;width:100%!important;box-sizing:border-box!important}
+.achievement-tile{min-width:0!important;width:auto!important;min-height:0!important;height:clamp(48px,10vh,76px)!important;padding:2px!important;box-sizing:border-box!important;overflow:hidden!important}
+.achievement-id{font-size:clamp(7px,1.7vw,10px)!important}
+.achievement-name{font-size:clamp(6px,1.5vw,10px)!important;line-height:1.15!important;overflow-wrap:anywhere!important;margin:2px 0!important}
+@media(max-width:540px){.achievement-grid{grid-template-columns:repeat(8,minmax(0,1fr))!important;gap:2px!important}.achievement-tile{height:clamp(42px,8vh,64px)!important;padding:1px!important}.achievement-name{font-size:clamp(5px,1.45vw,8px)!important}.achievement-id{font-size:7px!important}}
+</style>
+
+<style>
+.ts-ec-row{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;min-height:84px}
+.ts-ec-node{box-sizing:border-box;width:100%;min-height:58px;padding:5px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:1px solid #80618f;border-radius:4px;background:#211729;color:#d7c2e3;position:relative;z-index:3}
+.ts-ec-node strong{font-size:12px;color:#e6c5f8}
+.ts-ec-node span{font-size:8px;line-height:1.1}
+.ts-ec-link{stroke:#9b77ac;stroke-dasharray:2 1;opacity:.8}
+@media(max-width:540px){.ts-ec-row{gap:5px;min-height:70px}.ts-ec-node{min-height:48px}.ts-ec-node strong{font-size:10px}.ts-ec-node span{font-size:7px}}
+</style>
+
+
+<style id="time-study-late-layout-fix">
+/* Late Eternity progression: EC11/12 branch and Time Dilation studies */
+.ts-ec-row{grid-template-columns:repeat(10,minmax(0,1fr));gap:5px;min-height:84px}
+.ts-ec-late-row{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;min-height:84px}
+.ts-ec-late-row .ts-cell:nth-child(1){grid-column:2}
+.ts-ec-late-row .ts-cell:nth-child(2){grid-column:3}
+.ts-dilation-row{grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;min-height:104px}
+.ts-dilation-node{box-sizing:border-box;width:100%;min-height:60px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1px solid #8c58ac;border-radius:4px;background:#211729;color:#eee2f7;text-align:center;position:relative;z-index:3;font-size:9px}
+.ts-dilation-node span{font-size:8px;line-height:1.1}.ts-dilation-node small{font-size:8px}.ts-dilation-node.purchased{border-color:#d8a7f2;background:#3a2448}.ts-dilation-node.available{border-color:#9e6ac0}.ts-dilation-node:disabled{opacity:.7}
+@media(max-width:540px){.ts-ec-row{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}.ts-ec-late-row{grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}.ts-dilation-row{gap:3px}.ts-dilation-node{min-height:52px;font-size:8px}.ts-dilation-node span,.ts-dilation-node small{font-size:7px}}
+</style>
+
 </head>
 <body><main>
 <div class="sticky-tools">
@@ -1595,15 +1633,32 @@ function timeStudyView(){
    links.push(`<path class="ts-link ${active?'ts-link-active':''}" d="M ${x1} ${y1} L ${x2} ${y2}"/>`);
   }
  }
+ // EC1-10は対応する既存Studyから接続。EC11/12は最下段の分岐Studyに配置する。
  const ecStudies=[171,171,171,143,42,121,111,123,151,181,231,233];
  const ecLinks=ecStudies.map((study,i)=>{
   const source=rowIndex.get(study);if(!source)return '';
-  const targetRow=rows.length+Math.floor(i/6),targetCol=i%6;
+  const targetRow=i<10?rows.length+Math.floor(i/6):rows.length+1;
+  const targetCol=i<10?i%6:(i===10?1:2);
   const x1=(source.col+0.5)*(100/source.cols),x2=(targetCol+0.5)*(100/6);
   const y1=(source.row+1)*rowHeight-8,y2=targetRow*rowHeight+8;
   return `<path class="ts-link ts-ec-link" d="M ${x1} ${y1} L ${x2} ${y2}"/>`;
  }).join('');
- const connectorSvg=`<svg class="ts-connectors" viewBox="0 0 100 ${(rows.length+2)*104}" preserveAspectRatio="none" aria-hidden="true">${links.join('')}${ecLinks}</svg>`;
+ const dilationDefs=[
+  ['d1','Unlock Time Dilation',5000,'EC11×5・EC12×5、合計12,900 TTが必要'],
+  ['d2','5th Time Dimensionを解放',1000000,'d1が必要'],
+  ['d3','6th Time Dimensionを解放',10000000,'d2が必要'],
+  ['d4','7th Time Dimensionを解放',100000000,'d3が必要'],
+  ['d5','8th Time Dimensionを解放',1000000000,'d4が必要'],
+  ['d6','Dilated TimeからTime Theoremを獲得',10000000000,'d5が必要']
+ ];
+ const dilationOwned=id=>Array.isArray(state.timeDilationStudies)&&state.timeDilationStudies.includes(id);
+ const dilationNodes=`<div class="ts-tree-row ts-dilation-row" data-dilation-row>${dilationDefs.map(([id,label,cost,req],i)=>{
+  const owned=dilationOwned(id),prev=i===0?null:dilationDefs[i-1][0];
+  const ready=i===0?(state.timeStudyRespec!==true&&(tsOwned(231)||tsOwned(232))&&(tsOwned(233)||tsOwned(234))&&(state.eternityChallengeCompletions?.[11]||0)>=5&&(state.eternityChallengeCompletions?.[12]||0)>=5&&tsTotal()>=12900):dilationOwned(prev)&&tsTotal()>=cost;
+  return `<div class="ts-cell"><button type="button" class="ts-dilation-node ${owned?'purchased':ready?'available':'blocked'}" data-dilation-study="${id}" ${owned||!ready?'disabled':''} title="${req}"><strong>${id}</strong><span>${label}</span><small>${cost.toLocaleString('en-US')} TT</small></button></div>`;
+ }).join('')}</div>`;
+ const dilationLinks=`<path class="ts-link ts-ec-link" d="M 25 ${(rows.length+2)*rowHeight-8} L 25 ${(rows.length+2)*rowHeight+8}"/><path class="ts-link ts-ec-link" d="M 41.666 ${(rows.length+2)*rowHeight-8} L 41.666 ${(rows.length+2)*rowHeight+8}"/>`;
+ const connectorSvg=`<svg class="ts-connectors" viewBox="0 0 100 ${(rows.length+4)*104}" preserveAspectRatio="none" aria-hidden="true">${links.join('')}${ecLinks}${dilationLinks}</svg>`;
  const nodes=rows.map((row,ri)=>`<div class="ts-tree-row ${row.some(p=>p[0]>=221&&p[0]<=228)?'ts-row-wide':''}" data-ts-row="${ri}">${Array.from({length:row.some(p=>p[0]>=221&&p[0]<=228)?8:6},(_,i)=>{
   const pair=row.find(p=>p[1]===i+1);
   if(!pair)return `<div class="ts-cell empty"></div>`;
@@ -1611,10 +1666,10 @@ function timeStudyView(){
   const owned=tsOwned(id),can=tsCanBuy(s);
   return `<div class="ts-cell"><button type="button" class="ts-study ${owned?'purchased':can?'available':'blocked'}" data-ts-study="${id}" ${owned||!can?'disabled':''} title="${s[3]}"><strong>${id}</strong><span>${s[3]}</span><small>${s[1]} TT</small></button></div>`;
  }).join('')}</div>`).join('');
- const ecNodes=Array.from({length:2},(_,r)=>`<div class="ts-tree-row ts-ec-row" data-ec-row="${r}">${Array.from({length:6},(_,c)=>{
-  const id=r*6+c+1,study=ecStudies[id-1];
+ const ecNodes=`<div class="ts-tree-row ts-ec-row" data-ec-row="0">${Array.from({length:10},(_,i)=>{
+  const id=i+1,study=ecStudies[i];
   return `<div class="ts-cell"><div class="ts-ec-node" title="EC${id}：関連するTime Study ${study} から接続"><strong>EC${id}</strong><span>Eternity Challenge</span></div></div>`;
- }).join('')}</div>`).join('');
+ }).join('')}</div><div class="ts-tree-row ts-ec-row ts-ec-late-row" data-ec-row="1">${[11,12].map(id=>`<div class="ts-cell"><div class="ts-ec-node" title="EC${id}：Time Study ${id===11?'231 / 232':'233 / 234'} から接続"><strong>EC${id}</strong><span>Eternity Challenge</span></div></div>`).join('')}</div>`;
  return `<section class="ts-screen"><div class="ts-frame"><h2>Time Studies</h2>
  <div class="ts-tree-toolbar"><button type="button" data-ts-respec ${tsSpent()===0?'disabled':''}>Respec time studies</button><button type="button" data-ts-buy-all>Buy all studies</button></div>
  <div class="ts-tt-summary">You have <strong>${tsTotal()}</strong> Time Theorems.<div class="ts-tt-purchased">(Purchased ${tsTotal()} total)</div></div>
@@ -1659,6 +1714,15 @@ tabContent.querySelectorAll('[data-ts-buy-all]').forEach(el=>el.addEventListener
  switchScreen('eternity');
 }));
 
+tabContent.querySelectorAll('[data-dilation-study]').forEach(el=>el.addEventListener('click',()=>{
+ const id=el.dataset.dilationStudy;
+ const defs={d1:{cost:5000,prev:null},d2:{cost:1000000,prev:'d1'},d3:{cost:10000000,prev:'d2'},d4:{cost:100000000,prev:'d3'},d5:{cost:1000000000,prev:'d4'},d6:{cost:10000000000,prev:'d5'}};
+ const d=defs[id];if(!d)return;
+ state.timeDilationStudies=Array.isArray(state.timeDilationStudies)?state.timeDilationStudies:[];
+ if(state.timeDilationStudies.includes(id)||tsTotal()<d.cost||(d.prev&&!state.timeDilationStudies.includes(d.prev)))return;
+ if(id==='d1'&&(!(state.eternityChallengeCompletions?.[11]>=5)||!(state.eternityChallengeCompletions?.[12]>=5)||!(tsOwned(231)||tsOwned(232))||!(tsOwned(233)||tsOwned(234))||tsTotal()<12900))return;
+ state.timeTheorems=tsTotal()-d.cost;state.timeDilationStudies.push(id);save();switchScreen('eternity');
+}));
 tabContent.querySelectorAll('[data-ts-study]').forEach(el=>el.addEventListener('click',()=>tsPurchase(Number(el.dataset.tsStudy))));
 tabContent.querySelectorAll('[data-ts-zoom]').forEach(el=>el.addEventListener('click',()=>{const action=el.dataset.tsZoom;timeStudyZoom=action==='reset'?1:Math.max(.35,Math.min(2.5,timeStudyZoom+(action==='in'?.15:-.15)));const tree=tabContent.querySelector('.ts-tree');if(tree)tree.style.zoom=String(timeStudyZoom);const label=tabContent.querySelector('[data-ts-zoom-label]');if(label)label.textContent=Math.round(timeStudyZoom*100)+'%';}));
 {const wrap=tabContent.querySelector('.ts-tree-wrap'),tree=tabContent.querySelector('.ts-tree');if(wrap&&tree){let startDistance=0,startZoom=timeStudyZoom;const distance=e=>{const a=e.touches[0],b=e.touches[1];return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);};wrap.addEventListener('touchstart',e=>{if(e.touches.length===2){startDistance=distance(e);startZoom=timeStudyZoom;}},{passive:true});wrap.addEventListener('touchmove',e=>{if(e.touches.length===2&&startDistance>0){e.preventDefault();timeStudyZoom=Math.max(.35,Math.min(2.5,startZoom*distance(e)/startDistance));tree.style.zoom=String(timeStudyZoom);const label=tabContent.querySelector('[data-ts-zoom-label]');if(label)label.textContent=Math.round(timeStudyZoom*100)+'%';}},{passive:false});wrap.addEventListener('touchend',e=>{if(e.touches.length<2)startDistance=0;},{passive:true});}}
@@ -1935,27 +1999,4 @@ main{padding-bottom:155px!important}
  main{padding-bottom:110px!important;}
 }
 </style>
-</body></html><style>
-/* Distinct colors for 5th–8th dimensions */
-#dimensions .dim:nth-child(5) .tier{background:#263f48;color:#8ee8f5}
-#dimensions .dim:nth-child(6) .tier{background:#493044;color:#f4a6d7}
-#dimensions .dim:nth-child(7) .tier{background:#3d354f;color:#c6b0ff}
-#dimensions .dim:nth-child(8) .tier{background:#49302a;color:#ffb49b}
-</style>
-<style id="achievement-fit-fix">
-/* 実績11〜18をスクロールなしで横一列に収める */
-.achievement-grid{display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;grid-auto-flow:row!important;grid-auto-columns:auto!important;gap:3px!important;overflow:visible!important;padding:0!important;margin-top:8px!important;width:100%!important;box-sizing:border-box!important}
-.achievement-tile{min-width:0!important;width:auto!important;min-height:0!important;height:clamp(48px,10vh,76px)!important;padding:2px!important;box-sizing:border-box!important;overflow:hidden!important}
-.achievement-id{font-size:clamp(7px,1.7vw,10px)!important}
-.achievement-name{font-size:clamp(6px,1.5vw,10px)!important;line-height:1.15!important;overflow-wrap:anywhere!important;margin:2px 0!important}
-@media(max-width:540px){.achievement-grid{grid-template-columns:repeat(8,minmax(0,1fr))!important;gap:2px!important}.achievement-tile{height:clamp(42px,8vh,64px)!important;padding:1px!important}.achievement-name{font-size:clamp(5px,1.45vw,8px)!important}.achievement-id{font-size:7px!important}}
-</style>
-
-<style>
-.ts-ec-row{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;min-height:84px}
-.ts-ec-node{box-sizing:border-box;width:100%;min-height:58px;padding:5px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:1px solid #80618f;border-radius:4px;background:#211729;color:#d7c2e3;position:relative;z-index:3}
-.ts-ec-node strong{font-size:12px;color:#e6c5f8}
-.ts-ec-node span{font-size:8px;line-height:1.1}
-.ts-ec-link{stroke:#9b77ac;stroke-dasharray:2 1;opacity:.8}
-@media(max-width:540px){.ts-ec-row{gap:5px;min-height:70px}.ts-ec-node{min-height:48px}.ts-ec-node strong{font-size:10px}.ts-ec-node span{font-size:7px}}
-</style>
+</body></html>
