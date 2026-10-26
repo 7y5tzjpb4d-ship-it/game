@@ -235,9 +235,25 @@ function addEPBigNumber(value){return setEPBigNumber(getEPBigNumber().add(value)
 const ETERNITY_IP_REQUIREMENT=BigNumber.from('1.8e308');
 function canEternity(){return getIPBigNumber().compare(ETERNITY_IP_REQUIREMENT)>0;}
 function eternityPointGain(){const ip=getIPBigNumber();if(ip.compare(ETERNITY_IP_REQUIREMENT)<=0)return BigNumber.from(0);const exponent=ip.log10()/308-0.7;return floorBigNumber(BigNumber.from(5).power(exponent));}
-const timeDimensionBaseCosts=[1,3,9,27,81,243,729,2187];
-function timeDimensionCost(tier){const d=state.timeDimensions[tier];return BigNumber.from(timeDimensionBaseCosts[tier]).multiply(BigNumber.from(10).power(Math.floor((Number(d?.bought)||0)/10)));}
-function timeDimensionMultiplier(tier){const d=state.timeDimensions[tier];return BigNumber.from(2).power(Math.floor((Number(d?.bought)||0)/10));}
+// Time Dimension prices and per-purchase price multipliers, based on the TD reference tables.
+const timeDimensionBaseCosts=[
+  BigNumber.from(1), BigNumber.from(5), BigNumber.from(100), BigNumber.from(1000),
+  BigNumber.from('1e2350'), BigNumber.from('1e2650'), BigNumber.from('1e3000'), BigNumber.from('1e3350')
+];
+const timeDimensionPriceMultipliers=[3,9,27,81,24300,72900,218700,656100];
+function timeDimensionCost(tier){
+  const d=state.timeDimensions[tier];
+  const bought=Math.max(0,Math.floor(Number(d?.bought)||0));
+  const ep=getEPBigNumber();
+  let priceMult=timeDimensionPriceMultipliers[tier];
+  // The first two retroactive scaling thresholds affect TD1–4; the 1e6000
+  // scaling increase affects every TD and is not retroactive in the reference.
+  if(tier<4 && ep.compare(BigNumber.from('1.8e308'))>=0) priceMult*=1.5;
+  if(tier<4 && ep.compare(BigNumber.from('1e1300'))>=0) priceMult=timeDimensionPriceMultipliers[tier]*2.2;
+  if(ep.compare(BigNumber.from('1e6000'))>=0) priceMult=Math.pow(priceMult,4);
+  return timeDimensionBaseCosts[tier].multiply(BigNumber.from(priceMult).power(bought));
+}
+function timeDimensionMultiplier(tier){const d=state.timeDimensions[tier];return BigNumber.from(4).power(Math.max(0,Math.floor((Number(d?.bought)||0))));}
 function canBuyTimeDimension(tier){return state.eternities>0&&tier>=0&&tier<8&&getEPBigNumber().compare(timeDimensionCost(tier))>=0;}
 function buyTimeDimension(tier){if(!canBuyTimeDimension(tier))return false;const cost=timeDimensionCost(tier);if(getEPBigNumber().compare(cost)<0)return false;setEPBigNumber(getEPBigNumber().subtract(cost));const d=state.timeDimensions[tier];d.bought=(Number(d.bought)||0)+1;d.amount=(Number(d.amount)||0)+1;d.multiplier=timeDimensionMultiplier(tier).toJSON();save();if(document.body.dataset.screen==='main'&&mainSubpage==='timeDimensions')switchScreen('main');return true;}
 function updateTimeDimensionProduction(dt){if(state.eternities<=0||!(dt>0))return;const td=state.timeDimensions;for(let i=7;i>=1;i--){const source=td[i];if(source&&source.amount>0){const prod=BigNumber.from(source.amount).multiply(timeDimensionMultiplier(i)).multiply(dt);td[i-1].amount=BigNumber.from(td[i-1].amount||0).add(prod).toNumber();}}if(td[0]&&td[0].amount>0){state.timeShardsBN=BigNumber.from(state.timeShardsBN||0).add(BigNumber.from(td[0].amount).multiply(timeDimensionMultiplier(0)).multiply(dt)).toJSON();}}
@@ -1267,7 +1283,7 @@ function buyInfinityDimension(i){ensureInfinityDimensionState();if(i<0||i>7||!ca
 function fmtIDCost(n){const b=BigNumber.from(n);if(b.mantissa===0)return '0.00';if(b.exponent<3&&b.exponent>=-2)return b.toNumber().toFixed(2);return `${b.mantissa.toFixed(2)}e${b.exponent}`;}
 function infinityDimensionView(){ensureInfinityDimensionState();const power=BigNumber.from(state.infinityPowerBN||0);return `<div class="id-screen"><h2>Infinity Dimensions</h2><p>Infinity Power：<strong>${fmtBig(power)}</strong>　通常次元への倍率：<strong>×${fmtBig(power.max(1).power(7))}</strong></p><p class="id-explain">Infinity DimensionはIPで10個ずつ購入します。第1次元はInfinity Powerを生産し、第2〜第8次元は1つ下の段階を生産します。</p><div class="id-dimension-list">${infinityDimensionDefs.map((def,i)=>{const d=state.infinityDimensions[i],amount=infinityDimensionAmount(i),cost=infinityDimensionCost(i),unlocked=d.unlocked;return `<article class="id-dimension ${unlocked?'':'id-locked'}"><div class="id-tier">${i+1}</div><div class="id-details"><strong>Infinity Dimension ${i+1}</strong><span>所持数：${fmtBig(amount)}（購入 ${fmt(d.bought)}）</span><span>×${fmtBig(infinityDimensionMultiplier(i))}</span><span>${unlocked?``:`解放条件：反物質 1e${def.unlock}`}</span></div><button type="button" class="buy id-buy" data-buy-id="${i}" ${canBuyInfinityDimension(i)?'':'disabled'}>${unlocked?`<small>コスト：${fmtIDCost(cost)} IP</small>`:'ロック中'}</button></article>`;}).join('')}</div></div>`;}
 
-function timeDimensionView(){const ep=getEPBigNumber();return `<div class="td-screen"><h2>Time Dimensions</h2><div class="td-summary">Eternity Points：<strong>${fmtBig(ep)}</strong><br>Time Shards：<strong>${fmtBig(BigNumber.from(state.timeShardsBN||0))}</strong></div><p>時間次元はEPで購入し、下位の時間次元とTime Shardsを生産します。</p><div class="td-list">${timeDimensionBaseCosts.map((base,i)=>{const d=state.timeDimensions[i]||{amount:0,bought:0};const cost=timeDimensionCost(i);const unlocked=ep.compare(base)>=0;return `<article class="td-row"><div class="td-tier">${i+1}</div><div class="td-info"><strong>${i+1}th Time Dimension</strong><span>所持数：${fmtBig(BigNumber.from(d.amount||0))} · 購入数：${fmt(d.bought||0)}</span><span>倍率：×${fmtBig(timeDimensionMultiplier(i))}</span></div><button type="button" class="td-buy" data-buy-td="${i}" ${canBuyTimeDimension(i)?'':'disabled'}><small>コスト：${fmtBig(cost)} EP</small>購入</button></article>`;}).join('')}</div></div>`;}
+function timeDimensionView(){const ep=getEPBigNumber();return `<div class="td-screen"><h2>Time Dimensions</h2><div class="td-summary">Eternity Points：<strong>${fmtBig(ep)}</strong><br>Time Shards：<strong>${fmtBig(BigNumber.from(state.timeShardsBN||0))}</strong></div><p>時間次元はEPで購入し、下位の時間次元とTime Shardsを生産します。</p><div class="td-list">${timeDimensionBaseCosts.map((base,i)=>{const d=state.timeDimensions[i]||{amount:0,bought:0};const cost=timeDimensionCost(i);const unlocked=ep.compare(cost)>=0;return `<article class="td-row"><div class="td-tier">${i+1}</div><div class="td-info"><strong>${i+1}th Time Dimension</strong><span>所持数：${fmtBig(BigNumber.from(d.amount||0))} · 購入数：${fmt(d.bought||0)}</span><span>倍率：×${fmtBig(timeDimensionMultiplier(i))}</span></div><button type="button" class="td-buy" data-buy-td="${i}" ${canBuyTimeDimension(i)?'':'disabled'}><small>コスト：${fmtBig(cost)} EP</small>購入</button></article>`;}).join('')}</div></div>`;}
 function replicantiInfinityDimensionMultiplier(){if(!state.replicantiUnlocked)return BigNumber.from(1);const r=Math.max(1,Number(state.replicanti)||1);const log2=Math.log2(r);return BigNumber.from(Math.max(1,log2*log2));}
 function infinityDimensionProductionMultiplier(){let mult=BigNumber.from(1);if(infinityChallengeCompleted(1))mult=mult.multiply(BigNumber.from(1.3).power(state.completedInfinityChallenges.length));if(infinityChallengeCompleted(6))mult=mult.multiply(tickspeedMultiplierBigNumber().max(1).power(0.0005));if(hasAchievement(75))mult=mult.multiply(achievementMultiplier());return mult.multiply(replicantiInfinityDimensionMultiplier());}
 function replicantiChanceCost(){return BigNumber.fromLog10(150+15*state.replicantiChanceUpgrades);}
