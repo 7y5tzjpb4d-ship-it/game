@@ -1,7 +1,0 @@
-/* Extracted from the original index.html in cascade order. */
-@media(max-width:540px){
-  .mobile-bottom-actions{display:none!important;}
-  #mobileGalaxyBtn{display:block!important;visibility:visible!important;}
-  .mobile-reset-actions{grid-template-columns:1fr 1fr!important;}
-}
-.bottom,.notice{display:none!important;}
