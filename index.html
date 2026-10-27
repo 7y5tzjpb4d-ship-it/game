@@ -315,16 +315,6 @@ body.id-screen-active #tabContent{padding:0!important;border:0!important;backgro
 .ts-cell{position:relative;z-index:2;}
 @media(max-width:540px){.ts-dilation-unlock-row .ts-cell{grid-column:3 / span 2}.ts-dilation-upgrades-row{grid-template-columns:repeat(5,minmax(0,1fr))}}
 
-/* Fix: SVG connector coordinates use a 104px row grid. Keep every tree row exactly aligned to it. */
-.ts-tree > .ts-tree-row { box-sizing:border-box !important; height:104px !important; min-height:104px !important; max-height:104px !important; }
-.ts-tree > .ts-tree-row > .ts-cell { min-height:0 !important; height:100% !important; }
-.ts-connectors { position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; }
-.ts-dilation-node { min-height:60px; }
-@media(max-width:540px) {
- .ts-tree > .ts-tree-row { height:104px !important; min-height:104px !important; max-height:104px !important; }
- .ts-tree > .ts-tree-row > .ts-cell { min-height:0 !important; height:100% !important; }
-}
-
 </style>
 <style>
 /* Inlined from css/src/15-infinity-upgrade-ui.css */
@@ -474,6 +464,23 @@ main{padding-bottom:155px!important}
 }
 
 </style>
+
+<style id="ts-connector-layer-fix">
+/* Time Study connectors must be behind every node; node fills must hide lines beneath them. */
+.ts-tree { position:relative !important; isolation:isolate; }
+.ts-connectors { position:absolute !important; inset:0 auto auto 0 !important; z-index:0 !important; pointer-events:none !important; overflow:visible !important; }
+.ts-tree-row { position:relative !important; z-index:1 !important; }
+.ts-cell { position:relative !important; z-index:2 !important; }
+.ts-study, .ts-ec-node, .ts-dilation-node {
+  position:relative !important; z-index:3 !important;
+  background-color:#211729 !important;
+  opacity:1 !important;
+}
+.ts-study.purchased, .ts-dilation-node.purchased { background-color:#3a2448 !important; }
+.ts-study.available, .ts-dilation-node.available { background-color:#211729 !important; }
+.ts-ec-node { background-color:#211729 !important; }
+</style>
+
 </head>
 <body><main>
 <div class="sticky-tools">
@@ -1911,7 +1918,7 @@ function timeStudyView(){
  // not the row boundaries, so connectors remain attached at every zoom level.
  const nodeCenterX = node => (node.col + 0.5) * (100 / node.cols);
  const rowTopY = row => row * rowHeight;
- const nodeBottomY = row => rowTopY(row) + 82;
+ const nodeBottomY = row => rowTopY(row) + 78;
  const nodeTopY = row => rowTopY(row) + 8;
  const connectorPath = (x1,y1,x2,y2) => {
   if (Math.abs(x1-x2) < 0.01) return `M ${x1} ${y1} L ${x2} ${y2}`;
