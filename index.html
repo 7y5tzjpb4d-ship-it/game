@@ -998,7 +998,7 @@ function infinityUpgradeMultiplierValue(id){
   // Wiki: 1 + (IP / 2)^1.5
   case 'unspentBonus': return 1+Math.pow(unspentIP/2,1.5);
   // Wiki: 1 + Infinities / 5
-  case '18Mult': case '27Mult': case '36Mult': case '45Mult': return 1+infinities/5;
+  case '18Mult': case '27Mult': case '36Mult': case '45Mult': { const base=1+infinities/5; return tsOwned(31)?Math.pow(base,4):base; }
   default:return 1;
  }
 }
@@ -1541,14 +1541,14 @@ function startingBoosts(){if(hasInfinityUpgrade('skipResetGalaxy'))return 4;if(s
 function startingGalaxies(){return state.infinityUpgrades.includes('skipResetGalaxy')?1:0;}
 function resetReplicantiOnInfinity(){
  if(!state.replicantiUnlocked)return;
+ const galaxiesBeforeInfinity=Math.max(0,Math.floor(Number(state.replicantiGalaxies)||0));
  if(hasAchievement(95)){
-  // Achievement 95 preserves the Replicanti amount and grants/preserves
-  // exactly one Replicanti Galaxy on Infinity, even if the run had none.
+  // Achievement 95 preserves the Replicanti amount and guarantees at least one Galaxy.
   state.replicanti=Math.max(1,Math.min(Number.MAX_VALUE,Number(state.replicanti)||1));
-  state.replicantiGalaxies=1;
+  state.replicantiGalaxies=Math.max(1,tsOwned(33)?Math.floor(galaxiesBeforeInfinity/2):1);
  }else{
   state.replicanti=1;
-  state.replicantiGalaxies=0;
+  state.replicantiGalaxies=tsOwned(33)?Math.floor(galaxiesBeforeInfinity/2):0;
  }
  state.replicantiTimer=0;
 }
@@ -1949,7 +1949,9 @@ function tsCurrentEffectLabel(id){
    value=base>0?(base+extra)/base:1;
    return `現在効果：Infinity Dimension ×${Number.isFinite(value)?value.toLocaleString('en-US',{maximumFractionDigits:3}):'—'}`;
   }
+  case 31: { const base=1+Math.max(0,Number(state.infinities)||0)/5; return `現在効果：Infinities由来のDimension倍率 ×${show(bn(base).power(4))}`; }
   case 32: return `現在効果：Infinity獲得 ×${Math.max(1,boosts).toLocaleString('en-US')}`;
+  case 33: return `現在効果：Infinity後に保持するReplicanti Galaxy ${Math.floor(repGalaxies/2)} 個`;
   case 41: return `現在効果：IP獲得 ×${show(bn(1.2).power(galaxies))}`;
   case 71: return `現在効果：他のAntimatter Dimension ×${show(cap(sacrifice.power(0.25),'1e210000'))}`;
   case 72: return `現在効果：4th Infinity Dimension ×${show(cap(sacrifice.power(0.04),'1e30000'))}`;
