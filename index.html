@@ -489,9 +489,20 @@ main{padding-bottom:155px!important}
   border-color:#596273 !important;
   color:#c5cbd5 !important;
 }
-.ts-ec-node {
+.ts-ec-node.purchased {
+  background:#176b3a !important;
+  border-color:#49d17d !important;
+  color:#effff4 !important;
+}
+.ts-ec-node.next-buyable {
+  background:#7a5b16 !important;
+  border-color:#f3c84b !important;
+  color:#fff8dc !important;
+}
+.ts-ec-node.blocked {
   background:#252a32 !important;
   border-color:#596273 !important;
+  color:#c5cbd5 !important;
 }
 </style>
 
@@ -1990,14 +2001,23 @@ function timeStudyView(){
   if(dr.type==='ec'){
    return `<div class="ts-tree-row ts-ec-inline-row" data-ec-row="${dr.nodes.map(n=>n.id).join('-')}">${Array.from({length:6},(_,i)=>{
     const ec=dr.nodes.find(n=>n.col===i);
-    return ec?`<div class="ts-cell"><div class="ts-ec-node" title="EC${ec.id}：前提Study ${ec.study}"><strong>EC${ec.id}</strong><span>Eternity Challenge</span></div></div>`:`<div class="ts-cell empty"></div>`;
+    if(!ec)return `<div class="ts-cell empty"></div>`;
+    const ecDone=Number(state.eternityChallengeCompletions?.[ec.id]||0)>0;
+    const ecNext=tsOwned(ec.study);
+    const ecClass=ecDone?'purchased':ecNext?'next-buyable':'blocked';
+    return `<div class="ts-cell"><div class="ts-ec-node ${ecClass}" title="EC${ec.id}：前提Study ${ec.study}"><strong>EC${ec.id}</strong><span>Eternity Challenge</span></div></div>`;
    }).join('')}</div>`;
   }
   const row=dr.studies;
   const wide=row.some(p=>p[0]>=221&&p[0]<=228);
   return `<div class="ts-tree-row ${wide?'ts-row-wide':''}" data-ts-row="${dr.sourceIndex}">${Array.from({length:wide?8:6},(_,i)=>{
    const ec=dr.ecNodes?.find(n=>n.col===i);
-   if(ec)return `<div class="ts-cell"><div class="ts-ec-node" title="EC${ec.id}：前提Study ${ec.study}"><strong>EC${ec.id}</strong><span>Eternity Challenge</span></div></div>`;
+   if(ec){
+    const ecDone=Number(state.eternityChallengeCompletions?.[ec.id]||0)>0;
+    const ecNext=tsOwned(ec.study);
+    const ecClass=ecDone?'purchased':ecNext?'next-buyable':'blocked';
+    return `<div class="ts-cell"><div class="ts-ec-node ${ecClass}" title="EC${ec.id}：前提Study ${ec.study}"><strong>EC${ec.id}</strong><span>Eternity Challenge</span></div></div>`;
+   }
    const pair=row.find(p=>p[1]===i+1);
    if(!pair)return `<div class="ts-cell empty"></div>`;
    const id=pair[0],study=tsById.get(id);if(!study)return `<div class="ts-cell empty"></div>`;
