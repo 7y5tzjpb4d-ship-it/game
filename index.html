@@ -1958,7 +1958,7 @@ function tsCurrentEffectLabel(id){
   case 73: return `現在効果：3rd Time Dimension ×${show(cap(sacrifice.power(0.005),'1e1300'))}`;
   case 82: return `現在効果：Infinity Dimension ×${show(cap(bn(1.0000109).power(boosts*boosts),'1e10000000'))}`;
   case 83: return `現在効果：Dimension Boost ×${show(cap(bn(1.0004).power(freeTicks),'1e30'))}`;
-  case 91: { const exponent=10*Math.min(30,eternitySeconds/60); return `現在効果：Antimatter Dimension ×${show(bn(10).power(exponent))}（10^(10×min(${(eternitySeconds/60).toFixed(2)}, 30) 分)）`; }
+  case 91: { const exponent=10*Math.min(30,eternitySeconds/60); return `×${show(bn(10).power(exponent))}`; }
   case 92: {
    const fastest=Math.max(2,Number(state.fastestEternity)||Number(state.fastestEternityTime)||Infinity);
    value=Number.isFinite(fastest)?Math.min(2**30,Math.pow(2,60/fastest)):1;
