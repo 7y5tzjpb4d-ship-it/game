@@ -465,20 +465,34 @@ main{padding-bottom:155px!important}
 
 </style>
 
-<style id="ts-connector-layer-fix">
-/* Time Study connectors must be behind every node; node fills must hide lines beneath them. */
-.ts-tree { position:relative !important; isolation:isolate; }
-.ts-connectors { position:absolute !important; inset:0 auto auto 0 !important; z-index:0 !important; pointer-events:none !important; overflow:visible !important; }
-.ts-tree-row { position:relative !important; z-index:1 !important; }
-.ts-cell { position:relative !important; z-index:2 !important; }
-.ts-study, .ts-ec-node, .ts-dilation-node {
-  position:relative !important; z-index:3 !important;
-  background-color:#211729 !important;
+<style id="ts-state-colors">
+/* Experimental Time Study state colors; no connector lines. */
+.ts-connectors { display:none !important; }
+.ts-study, .ts-dilation-node {
   opacity:1 !important;
+  background:#252a32 !important;
+  border-color:#596273 !important;
+  color:#e4e8ef !important;
 }
-.ts-study.purchased, .ts-dilation-node.purchased { background-color:#3a2448 !important; }
-.ts-study.available, .ts-dilation-node.available { background-color:#211729 !important; }
-.ts-ec-node { background-color:#211729 !important; }
+.ts-study.purchased, .ts-dilation-node.purchased {
+  background:#245b3b !important;
+  border-color:#4bd17b !important;
+  color:#effff4 !important;
+}
+.ts-study.next-buyable, .ts-dilation-node.next-buyable {
+  background:#7a5b16 !important;
+  border-color:#f3c84b !important;
+  color:#fff8dc !important;
+}
+.ts-study.blocked, .ts-dilation-node.blocked {
+  background:#252a32 !important;
+  border-color:#596273 !important;
+  color:#c5cbd5 !important;
+}
+.ts-ec-node {
+  background:#252a32 !important;
+  border-color:#596273 !important;
+}
 </style>
 
 </head>
@@ -1959,8 +1973,8 @@ function timeStudyView(){
  const dilationNodes=`<div class="ts-tree-row ts-dilation-row ts-dilation-unlock-row" data-dilation-row>${dilationDefs.slice(0,1).map(([id,label,cost,req],i)=>{
   const owned=dilationOwned(id),prev=i===0?null:dilationDefs[i-1][0];
   const ready=i===0?(state.timeStudyRespec!==true&&(tsOwned(231)||tsOwned(232))&&(tsOwned(233)||tsOwned(234))&&(state.eternityChallengeCompletions?.[11]||0)>=5&&(state.eternityChallengeCompletions?.[12]||0)>=5&&tsTotal()>=12900):dilationOwned(prev)&&tsTotal()>=cost;
-  return `<div class="ts-cell"><button type="button" class="ts-dilation-node ${owned?'purchased':ready?'available':'blocked'}" data-dilation-study="${id}" ${owned||!ready?'disabled':''} title="${req}"><strong>${id}</strong><span>${label}</span><small>${cost.toLocaleString('en-US')} TT</small></button></div>`;
- }).join('')}</div><div class="ts-tree-row ts-dilation-row ts-dilation-upgrades-row" data-dilation-upgrades>${dilationDefs.slice(1).map(([id,label,cost,req],i)=>{const owned=dilationOwned(id),prev=dilationDefs[i][0];const ready=dilationOwned(prev)&&tsTotal()>=cost;return `<div class="ts-cell"><button type="button" class="ts-dilation-node ${owned?'purchased':ready?'available':'blocked'}" data-dilation-study="${id}" ${owned||!ready?'disabled':''} title="${req}"><strong>${id}</strong><span>${label}</span><small>${cost.toLocaleString('en-US')} TT</small></button></div>`;}).join('')}</div>`;
+  return `<div class="ts-cell"><button type="button" class="ts-dilation-node ${owned?'purchased':ready?'next-buyable':'blocked'}" data-dilation-study="${id}" ${owned||!ready?'disabled':''} title="${req}"><strong>${id}</strong><span>${label}</span><small>${cost.toLocaleString('en-US')} TT</small></button></div>`;
+ }).join('')}</div><div class="ts-tree-row ts-dilation-row ts-dilation-upgrades-row" data-dilation-upgrades>${dilationDefs.slice(1).map(([id,label,cost,req],i)=>{const owned=dilationOwned(id),prev=dilationDefs[i][0];const ready=dilationOwned(prev)&&tsTotal()>=cost;return `<div class="ts-cell"><button type="button" class="ts-dilation-node ${owned?'purchased':ready?'next-buyable':'blocked'}" data-dilation-study="${id}" ${owned||!ready?'disabled':''} title="${req}"><strong>${id}</strong><span>${label}</span><small>${cost.toLocaleString('en-US')} TT</small></button></div>`;}).join('')}</div>`;
  const totalRows=displayRows.length+2;
  // EC11 and EC12 both feed the Time Dilation unlock row; keep the two routes
  // separate and terminate them at the top edge of the corresponding controls.
@@ -1971,7 +1985,7 @@ function timeStudyView(){
   ec11row>=0?`<path class="ts-link ts-ec-link" d="${connectorPath(41.6667,rowTopY(ec11row)+72,50,dilationY)}"/>`:'',
   ec12row>=0?`<path class="ts-link ts-ec-link" d="${connectorPath(58.3333,rowTopY(ec12row)+72,50,dilationY)}"/>`:''
  ].join('');
- const connectorSvg=`<svg class="ts-connectors" viewBox="0 0 100 ${totalRows*104}" preserveAspectRatio="none" aria-hidden="true">${links.join('')}${ecLinks.join('')}${dilationLinks}</svg>`;
+ const connectorSvg="";
  const nodes=displayRows.map((dr,di)=>{
   if(dr.type==='ec'){
    return `<div class="ts-tree-row ts-ec-inline-row" data-ec-row="${dr.nodes.map(n=>n.id).join('-')}">${Array.from({length:6},(_,i)=>{
@@ -1988,7 +2002,7 @@ function timeStudyView(){
    if(!pair)return `<div class="ts-cell empty"></div>`;
    const id=pair[0],study=tsById.get(id);if(!study)return `<div class="ts-cell empty"></div>`;
    const owned=tsOwned(id),can=tsCanBuy(study);
-   return `<div class="ts-cell"><button type="button" class="ts-study ${owned?'purchased':can?'available':'blocked'}" data-ts-study="${id}" ${owned||!can?'disabled':''} title="${study[3]}"><strong>${id}</strong><span>${study[3]}</span><small>${study[1]} TT</small></button></div>`;
+   return `<div class="ts-cell"><button type="button" class="ts-study ${owned?'purchased':can?'next-buyable':'blocked'}" data-ts-study="${id}" ${owned||!can?'disabled':''} title="${study[3]}"><strong>${id}</strong><span>${study[3]}</span><small>${study[1]} TT</small></button></div>`;
   }).join('')}</div>`;
  }).join('');
  const ecNodes='';
