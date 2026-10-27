@@ -628,7 +628,7 @@ function setEPBigNumber(value){const b=BigNumber.from(value).max(0);state.epBN=b
 function addEPBigNumber(value){return setEPBigNumber(getEPBigNumber().add(value));}
 const ETERNITY_IP_REQUIREMENT=BigNumber.from('1.8e308');
 function canEternity(){return getIPBigNumber().compare(ETERNITY_IP_REQUIREMENT)>0;}
-function eternityPointGain(){const ip=getIPBigNumber();if(ip.compare(ETERNITY_IP_REQUIREMENT)<=0)return BigNumber.from(0);const exponent=ip.log10()/308-0.7;return floorBigNumber(BigNumber.from(5).power(exponent));}
+function eternityPointGain(){const ip=getIPBigNumber();if(ip.compare(ETERNITY_IP_REQUIREMENT)<=0)return BigNumber.from(0);const exponent=ip.log10()/308-0.7;let gain=floorBigNumber(BigNumber.from(5).power(exponent));if(tsOwned(61))gain=gain.multiply(15);if(tsOwned(122))gain=gain.multiply(35);if(tsOwned(121)){const times=Array.isArray(state.lastTenEternities)?state.lastTenEternities:[];const vals=times.map(x=>Array.isArray(x)?Number(x[0]):Number(x)).filter(x=>Number.isFinite(x)&&x>0);const avg=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:Infinity;gain=gain.multiply(Number.isFinite(avg)?Math.min(50,Math.max(1,250/avg)):1);}if(tsOwned(123))gain=gain.multiply(Math.max(1,Math.sqrt(Math.max(0,Number(state.eternityTime)||0)*1.39)));return gain;}
 
 </script>
 <script>
@@ -651,7 +651,17 @@ function timeDimensionCost(tier){
   if(ep.compare(BigNumber.from('1e6000'))>=0) priceMult=Math.pow(priceMult,4);
   return timeDimensionBaseCosts[tier].multiply(BigNumber.from(priceMult).power(bought));
 }
-function timeDimensionMultiplier(tier){const d=state.timeDimensions[tier];return BigNumber.from(4).power(Math.max(0,Math.floor((Number(d?.bought)||0))));}
+function timeDimensionMultiplier(tier){
+ const d=state.timeDimensions[tier];let m=BigNumber.from(4).power(Math.max(0,Math.floor((Number(d?.bought)||0))));
+ if(tsOwned(11)&&tier===0)m=m.multiply(tickspeedMultiplierBigNumber().power(0.005));
+ if(tsOwned(73)&&tier===2)m=m.multiply(sacrificeMultiplierBigNumber().power(0.005));
+ if(tsOwned(93))m=m.multiply(BigNumber.from(Math.max(1,timeShardsFreeTickspeedInfo().count)).power(0.25));
+ if(tsOwned(103))m=m.multiply(BigNumber.from(Math.max(1,Number(state.replicantiGalaxies)||0)));
+ if(tsOwned(221))m=m.multiply(BigNumber.from(1.0025).power(Math.max(0,Number(state.boosts)||0)));
+ if(tsOwned(227)&&tier===3)m=m.multiply(BigNumber.from(Math.max(1,Math.pow(Math.max(0,sacrificeMultiplierBigNumber().log10()),10))));
+ if(tsOwned(151))m=m.multiply('1e4');
+ return m;
+}
 function canBuyTimeDimension(tier){return state.eternities>0&&tier>=0&&tier<8&&getEPBigNumber().compare(timeDimensionCost(tier))>=0;}
 function buyTimeDimension(tier){if(!canBuyTimeDimension(tier))return false;const cost=timeDimensionCost(tier);if(getEPBigNumber().compare(cost)<0)return false;setEPBigNumber(getEPBigNumber().subtract(cost));const d=state.timeDimensions[tier];d.bought=(Number(d.bought)||0)+1;d.amount=(Number(d.amount)||0)+1;d.multiplier=timeDimensionMultiplier(tier).toJSON();save();if(document.body.dataset.screen==='main'&&mainSubpage==='timeDimensions')switchScreen('main');return true;}
 function updateTimeDimensionProduction(dt){if(state.eternities<=0||!(dt>0))return;const td=state.timeDimensions;for(let i=7;i>=1;i--){const source=td[i];if(source&&source.amount>0){const prod=BigNumber.from(source.amount).multiply(timeDimensionMultiplier(i)).multiply(dt);td[i-1].amount=BigNumber.from(td[i-1].amount||0).add(prod).toNumber();}}if(td[0]&&td[0].amount>0){state.timeShardsBN=BigNumber.from(state.timeShardsBN||0).add(BigNumber.from(td[0].amount).multiply(timeDimensionMultiplier(0)).multiply(dt)).toJSON();}}
@@ -834,6 +844,10 @@ function dimensionProductionBigNumber(i){let mult=dimensionMultiplierBigNumber(i
 function infinityPowerDimensionMultiplierBigNumber(){return BigNumber.from(state.infinityPowerBN||0).max(1).power(7);}
 function dimensionMultiplierBigNumber(i){
  let m=BigNumber.from(challengeRuleActive(8)?1:dimensionBoostMult(i));
+ if(tsOwned(91))m=m.multiply(BigNumber.from(Math.max(1,Number(state.eternityTime)||0)+1).power(0.1));
+ if(tsOwned(101)&&state.replicantiUnlocked)m=m.multiply(BigNumber.from(Math.max(1,Number(state.replicanti)||1)));
+ if(tsOwned(193))m=m.multiply(BigNumber.from('1e13000').power(Math.max(0,Number(state.eternities)||0)/1e6));
+ if(tsOwned(161))m=m.multiply('1e616');
  // Infinity Power's x^7 bonus applies to every normal Dimension's production.
  m=m.multiply(infinityPowerDimensionMultiplierBigNumber());
  const tenBuy=(challengeRuleActive(7)?Math.min(2,1+0.2*state.boosts):(state.infinityUpgrades.includes('dimMult')?2.2:2))+(hasAchievement(58)?0.01:0);
@@ -850,6 +864,9 @@ function dimensionMultiplierBigNumber(i){
  if(i===3||i===4)m=m.multiply(infinityUpgradeMultiplierBigNumber('45Mult'));
  for(const id of ['totalAM','currentAM','infinities','achievements','slowestChallenge'])if(breakInfinityUpgradeBought(id))m=m.multiply(breakInfinityUpgradeEffectBigNumber(id));
  if(i===(state.activeChallenge===12?5:7))m=m.multiply(sacrificeMultiplierBigNumber());
+ if(tsOwned(71)&&i!== (state.activeChallenge===12?5:7))m=m.multiply(sacrificeMultiplierBigNumber().power(0.25));
+ if(tsOwned(214)&&i===7)m=m.multiply(sacrificeMultiplierBigNumber().power(7.6).min('1e44000')).multiply(sacrificeMultiplierBigNumber().power(1.05).min('1e120000')).min('1e164000');
+ if(tsOwned(234)&&i===0)m=m.multiply(sacrificeMultiplierBigNumber());
  if(hasAchievement(64)&&i<4)m=m.multiply(1.25);
  if(hasAchievement(68)&&i===0)m=m.multiply(1.5);
  if(hasAchievement(71)&&i===0)m=m.multiply(3);
@@ -921,7 +938,7 @@ function applyChallenge9CostStep(purchasedCost, excludeDimension=-1, purchasedTi
  if(!purchasedTickspeed&&sameExponent(tickspeedCostBigNumber()))state.challenge9TickspeedCostBumps=(state.challenge9TickspeedCostBumps||0)+1;
 }
 function totalGalaxyCount(){return Math.max(0,Number(state.galaxies)||0)+Math.max(0,Number(state.replicantiGalaxies)||0);}
-function galaxyStrength(){return (hasInfinityUpgrade('galaxyBoost')?2:1)*(breakInfinityUpgradeBought('galaxyEffect')?1.5:1)*(infinityChallengeCompleted(5)?1.1:1)*(hasAchievement(86)?1.01:1);}
+function galaxyStrength(){let strength=(hasInfinityUpgrade('galaxyBoost')?2:1)*(breakInfinityUpgradeBought('galaxyEffect')?1.5:1)*(infinityChallengeCompleted(5)?1.1:1)*(hasAchievement(86)?1.01:1);if(tsOwned(212))strength*=Math.min(1.1,Math.pow(Math.max(1,BigNumber.from(state.timeShardsBN||0).log10()/Math.log10(2)),0.005));if(tsOwned(232))strength*=Math.pow(1+Math.max(0,Number(state.galaxies)||0)/1000,0.2);return strength;}
 function tickspeedBase(){
  // Achievement rewards modify the starting tick interval once, independently
  // from the number of purchased/free Tickspeed upgrades.
@@ -960,8 +977,11 @@ function canAffordTickspeed(c=tickspeedCost()){return matterBigNumber().compare(
 function spendTickspeed(c){c=BigNumber.from(c);if(!canAffordTickspeed(c))return false;setMatterBigNumber(matterBigNumber().subtract(c));return true;}
 function dimensionBoostMult(i){
  const effectiveBoosts=state.boosts-(challengeRuleActive(11)?state.challenge11NoBonusBoosts:0);
- const boostPower=state.activeInfinityChallenge===7?10:(infinityChallengeCompleted(7)?4:(state.infinityUpgrades.includes('resetMult')?2.5:2));
- return Math.pow(state.activeInfinityChallenge===1&&challengeRuleActive(8)?1:boostPower, Math.max(effectiveBoosts-i,0));
+ const boostPower=tsOwned(81)?10:(state.activeInfinityChallenge===7?10:(infinityChallengeCompleted(7)?4:(state.infinityUpgrades.includes('resetMult')?2.5:2)));
+ let result=Math.pow(state.activeInfinityChallenge===1&&challengeRuleActive(8)?1:boostPower, Math.max(effectiveBoosts-i,0));
+ if(tsOwned(83))result*=Math.pow(1.0004,timeShardsFreeTickspeedInfo().count);
+ if(tsOwned(231))result*=Math.max(1,Math.pow(Math.max(1,Number(state.boosts)||0),0.3));
+ return result;
 }
 function infinityUpgradeMultiplierValue(id){
  const infinities=Math.max(0,state.infinities);
@@ -1123,7 +1143,7 @@ function checkInfinityCompletionAchievements(elapsed, challengeId=0){
  if(challengeId===3&&t<=10)unlockAchievement(68);
  
 }
-function infinityCountGainForRun(elapsed){return hasAchievement(87)&&Number(elapsed)>5?250:1;}
+function infinityCountGainForRun(elapsed){let gain=hasAchievement(87)&&Number(elapsed)>5?250:1;if(tsOwned(32))gain*=Math.max(1,Number(state.boosts)||1);return gain;}
 
 function startingAntimatter(){
  // Starting antimatter rewards must apply to Normal Challenge starts as well as
@@ -1140,10 +1160,10 @@ function sacrificeGainBigNumber(){const first=dimensionAmountBig(0);const total=
 function sacrificeGain(){return sacrificeGainBigNumber().toNumber();}
 function unlocked(i){if(challengeRuleActive(10)&&i>=6)return false;if(i>0&&dimensionAmountBig(i-1).compare(0)<=0)return false;return i<4||state.boosts>=i-3;}
 function productionRate(){return productionRateBigNumber().toNumber();}
-function boostRequirement(){const n=state.boosts+1;let base=20;if(challengeRuleActive(10))base+=20*Math.max(0,n-3);else if(n>5)base+=15*(n-5);return Math.max(1,base-(hasInfinityUpgrade('resetBoost')?9:0)-(infinityChallengeCompleted(5)?1:0));}
+function boostRequirement(){const n=state.boosts+1;let base=20;if(challengeRuleActive(10))base+=20*Math.max(0,n-3);else if(n>5)base+=15*(n-5);const tsReduction=(tsOwned(211)?5:0)+(tsOwned(222)?2:0);return Math.max(1,base-tsReduction-(hasInfinityUpgrade('resetBoost')?9:0)-(infinityChallengeCompleted(5)?1:0));}
 function boostRequirementTier(){const n=state.boosts+1;return challengeRuleActive(10)?Math.min(6,n+3):(n<=5?n+3:8);}
 function canBoost(){if(state.activeInfinityChallenge===1&&state.boosts>=2)return false;if(state.activeChallenge===8&&state.boosts>=5)return false;const tier=boostRequirementTier();return dimensionAmountBig(tier-1).compare(boostRequirement())>=0;}
-function galaxyRequirement(){const base=challengeRuleActive(10)?99+90*state.galaxies:80+60*state.galaxies;return Math.max(1,base-(hasInfinityUpgrade('resetBoost')?9:0)-(infinityChallengeCompleted(5)?1:0));}
+function galaxyRequirement(){let g=Math.max(0,Number(state.galaxies)||0);let effectiveG=g;if(tsOwned(223))effectiveG=Math.max(0,effectiveG-7);if(tsOwned(224))effectiveG=Math.max(0,effectiveG-Math.floor(Math.max(0,Number(state.boosts)||0)/200));const base=challengeRuleActive(10)?99+90*effectiveG:80+60*effectiveG;return Math.max(1,base-(hasInfinityUpgrade('resetBoost')?9:0)-(infinityChallengeCompleted(5)?1:0));}
 function canGalaxy(){const tier=challengeRuleActive(10)?5:7;return state.activeInfinityChallenge!==7&&!challengeRuleActive(8)&&dimensionAmountBig(tier).compare(galaxyRequirement())>=0;}
 
 </script>
@@ -1488,13 +1508,13 @@ function floorBigNumber(value){const b=BigNumber.from(value);if(b.mantissa<=0||b
 function ipGainBigNumber(includeAchievementRewards=true){
  const level=Math.max(0,Math.floor(Number(state.ipMultLevel)||0));
  const ipMult=BigNumber.fromLog10(level*Math.log10(2));
- if(!state.breakInfinityActive){let gain=ipMult;if(includeAchievementRewards&&hasAchievement(85))gain=gain.multiply(4);if(includeAchievementRewards&&hasAchievement(93))gain=gain.multiply(4);return gain;}
+ if(!state.breakInfinityActive){let gain=ipMult;if(tsOwned(41))gain=gain.multiply(BigNumber.from(1.2).power(Math.max(0,totalGalaxyCount())));if(tsOwned(51))gain=gain.multiply('1e15');if(tsOwned(142))gain=gain.multiply('1e25');if(tsOwned(141)){const t=state.infinityTime*10+1;const decay=Math.max(1,Math.exp(Math.max(-700,Math.min(700,Math.log(1e45)-Math.log(15)*Math.log(t)*Math.min(Math.pow(t,0.125),500)))));gain=gain.multiply(decay);}if(tsOwned(143)){const t=state.infinityTime*10+1;gain=gain.multiply(BigNumber.from(15).power(Math.log(t)*Math.min(Math.pow(t,0.125),500)));}if(includeAchievementRewards&&hasAchievement(85))gain=gain.multiply(4);if(includeAchievementRewards&&hasAchievement(93))gain=gain.multiply(4);return gain;}
  let amLog=Number(state.infinityPeakAMLog10);
  if(!Number.isFinite(amLog)||Math.abs(amLog)>1e7)amLog=matterBigNumber().log10();
  if(!Number.isFinite(amLog))return BigNumber.from(0);
  const exponent=amLog/308-0.75;
  if(exponent<0)return BigNumber.from(0);
- let gain=floorBigNumber(ipMult.multiply(BigNumber.fromLog10(exponent)));if(includeAchievementRewards&&hasAchievement(85))gain=gain.multiply(4);if(includeAchievementRewards&&hasAchievement(93))gain=gain.multiply(4);return gain;
+ let gain=floorBigNumber(ipMult.multiply(BigNumber.fromLog10(exponent)));if(tsOwned(41))gain=gain.multiply(BigNumber.from(1.2).power(Math.max(0,totalGalaxyCount())));if(tsOwned(51))gain=gain.multiply('1e15');if(tsOwned(142))gain=gain.multiply('1e25');if(tsOwned(141)){const t=state.infinityTime*10+1;gain=gain.multiply(Math.max(1,Math.exp(Math.max(-700,Math.min(700,Math.log(1e45)-Math.log(15)*Math.log(t)*Math.min(Math.pow(t,0.125),500))))));}if(tsOwned(143)){const t=state.infinityTime*10+1;gain=gain.multiply(BigNumber.from(15).power(Math.log(t)*Math.min(Math.pow(t,0.125),500)));}if(includeAchievementRewards&&hasAchievement(85))gain=gain.multiply(4);if(includeAchievementRewards&&hasAchievement(93))gain=gain.multiply(4);return gain;
 }
 // 既存UI/一部の互換処理向け。報酬の加算には必ずipGainBigNumber()を使う。
 function ipGainMultiplier(){return ipGainBigNumber().toNumber();}
@@ -1511,7 +1531,7 @@ function updateCrunchEfficiencyPeak(){if(!(state.infinityTime>0))return;const ra
 function resetCrunchEfficiencyPeak(){state.peakIPPerMinBN=BigNumber.from(0).toJSON();state.peakIPGainBN=BigNumber.from(0).toJSON();}
 function crunchEfficiencyMarkup(){const current=currentIPPerMinuteBigNumber(),peak=peakIPPerMinuteBigNumber(),gainAtPeak=peakIPGainBigNumber();return '<span class="crunch-efficiency-line">現在：'+fmtBig(current)+' IP/分</span><span class="crunch-efficiency-line">最高：'+fmtBig(gainAtPeak)+' IP（'+fmtBig(peak)+' IP/分）</span>'; }
 // Passive Generation: 1 base IP per (fastest Infinity time × 10). This uses the pre-Break base IP gain, not the current Break Infinity reward.
-function passiveIPRateBigNumber(){if(!hasInfinityUpgrade('passiveGen')||!(state.fastestInfinity>0))return BigNumber.from(0);const baseIPGain=BigNumber.fromLog10(Math.max(0,Math.max(0,Math.floor(Number(state.ipMultLevel)||0))*Math.log10(2)));return baseIPGain.divide(state.fastestInfinity*10);}
+function passiveIPRateBigNumber(){let rate=BigNumber.from(0);if(hasInfinityUpgrade('passiveGen')&&state.fastestInfinity>0){const baseIPGain=BigNumber.fromLog10(Math.max(0,Math.max(0,Math.floor(Number(state.ipMultLevel)||0))*Math.log10(2)));rate=rate.add(baseIPGain.divide(state.fastestInfinity*10));}if(tsOwned(181))rate=rate.add(ipGainBigNumber().multiply(0.01));return rate;}
 // Offline IP: while offline only, gain 50% of this Infinity run's dynamically updated best IP/min, converted to a per-second rate.
 function offlineIPRateBigNumber(){if(!state.ipOffline)return BigNumber.from(0);return bestIPPerMinuteBigNumber().multiply(0.5).divide(60);}
 function passiveIPRate(){return passiveIPRateBigNumber().toNumber();}
@@ -1716,18 +1736,19 @@ function timeShardsFreeTickspeedInfo(){
   let next=BigNumber.from(1);
   while(count<100000 && shards.compare(next)>=0){
     count++;
-    next=next.multiply(BigNumber.from('1.33'));
+    next=next.multiply(BigNumber.from(tsOwned(171)?'1.25':'1.33'));
   }
   return {count,next};
 }
 function timeDimensionView(){const ep=getEPBigNumber();const shards=BigNumber.from(state.timeShardsBN||0);const freeTS=timeShardsFreeTickspeedInfo();return `<div class="td-screen"><h2>Time Dimensions</h2><div class="td-summary">Time Shards：<strong>${fmtBig(shards)}</strong><br>Time ShardsによるTickspeedアップグレード：<strong>${fmt(freeTS.count)} 回</strong><br>次のTickspeedアップグレードまで：<strong>${fmtBig(freeTS.next)} Time Shards</strong></div><p>時間次元はEPで購入し、下位の時間次元とTime Shardsを生産します。</p><div class="td-list">${timeDimensionBaseCosts.map((base,i)=>{const d=state.timeDimensions[i]||{amount:0,bought:0};const cost=timeDimensionCost(i);return `<article class="td-row"><div class="td-tier">${i+1}</div><div class="td-info"><strong>${i+1}th Time Dimension</strong><span>所持数：${fmtBig(BigNumber.from(d.amount||0))} · 購入数：${fmt(d.bought||0)}</span><span>倍率：×${fmtBig(timeDimensionMultiplier(i))}</span></div><button type="button" class="td-buy" data-buy-td="${i}" ${canBuyTimeDimension(i)?'':'disabled'}><small>コスト：${fmtBig(cost)} EP</small>購入</button></article>`;}).join('')}</div></div>`;}
-function replicantiInfinityDimensionMultiplier(){if(!state.replicantiUnlocked)return BigNumber.from(1);const r=Math.max(1,Number(state.replicanti)||1);const log2=Math.log2(r);return BigNumber.from(Math.max(1,log2*log2));}
+function replicantiInfinityDimensionMultiplier(){if(!state.replicantiUnlocked)return BigNumber.from(1);const r=Math.max(1,Number(state.replicanti)||1);const log2=Math.log2(r);let m=BigNumber.from(Math.max(1,log2*log2));if(tsOwned(21))m=m.multiply(BigNumber.from(r).power(0.032));if(tsOwned(102))m=m.multiply(BigNumber.from(5).power(Math.max(0,Number(state.replicantiGalaxies)||0)));if(tsOwned(162))m=m.multiply('1e11');if(tsOwned(72))m=m.multiply(sacrificeMultiplierBigNumber().power(0.04).min('1e30000'));if(tsOwned(82))m=m.multiply(BigNumber.from(1.0000109).power(Math.pow(Math.max(0,Number(state.boosts)||0),2)).min('1e10000000'));if(tsOwned(92)){const fastest=Math.max(2,Number(state.fastestEternity)||Number(state.fastestEternityTime)||Infinity);if(Number.isFinite(fastest))m=m.multiply(Math.min(2**30,Math.pow(2,60/fastest)));}return m;}
 function infinityDimensionProductionMultiplier(){let mult=BigNumber.from(1);if(infinityChallengeCompleted(1))mult=mult.multiply(BigNumber.from(1.3).power(state.completedInfinityChallenges.length));if(infinityChallengeCompleted(6))mult=mult.multiply(tickspeedMultiplierBigNumber().max(1).power(0.0005));if(hasAchievement(75))mult=mult.multiply(achievementMultiplier());return mult.multiply(replicantiInfinityDimensionMultiplier());}
 function replicantiChanceCost(){return BigNumber.fromLog10(150+15*state.replicantiChanceUpgrades);}
 function replicantiIntervalCost(){return BigNumber.fromLog10(140+10*state.replicantiIntervalUpgrades);}
 function replicantiGalaxyCost(){
  const n=Math.max(0,Math.floor(Number(state.replicantiGalaxyUpgrades)||0));
  let logCost=170+25*n+5*n*(n-1)/2;
+ if(tsOwned(233))logCost-=Math.max(0,Math.log10(Math.max(1,Number(state.replicanti)||1)))*0.3;
  const distinctStart=100;
  if(n>=distinctStart){
   const distinct=n-distinctStart;
@@ -1741,8 +1762,8 @@ function replicantiGalaxyCost(){
  return BigNumber.fromLog10(logCost);
 }
 function unlockReplicanti(){if(state.replicantiUnlocked||!hasIPAtLeast('1e140'))return;spendIPBigNumber('1e140');state.replicantiUnlocked=true;state.replicanti=1;state.replicantiTimer=0;save();switchScreen('infinity');}
-function buyReplicantiUpgrade(type){if(!state.replicantiUnlocked)return;if(type==='chance'){if(state.replicantiChanceUpgrades>=99||!hasIPAtLeast(replicantiChanceCost()))return;spendIPBigNumber(replicantiChanceCost());state.replicantiChanceUpgrades++;state.replicantiChance= Math.min(100,1+state.replicantiChanceUpgrades);}else if(type==='interval'){if(state.replicantiInterval<=50||!hasIPAtLeast(replicantiIntervalCost()))return;spendIPBigNumber(replicantiIntervalCost());state.replicantiIntervalUpgrades++;state.replicantiInterval=Math.max(50,1000*Math.pow(.9,state.replicantiIntervalUpgrades));}else if(type==='galaxy'){if(!hasIPAtLeast(replicantiGalaxyCost()))return;spendIPBigNumber(replicantiGalaxyCost());state.replicantiGalaxyUpgrades++;}save();switchScreen('infinity');}
-function buyReplicantiGalaxy(){if(!state.replicantiUnlocked||state.replicanti<Number.MAX_VALUE||state.replicantiGalaxies>=state.replicantiGalaxyUpgrades)return;state.replicantiGalaxies++;state.replicanti=1;state.replicantiTimer=0;galaxyResetForReplicanti();save();switchScreen('infinity');}
+function buyReplicantiUpgrade(type){if(!state.replicantiUnlocked)return;if(type==='chance'){if(state.replicantiChanceUpgrades>=99||!hasIPAtLeast(replicantiChanceCost()))return;spendIPBigNumber(replicantiChanceCost());state.replicantiChanceUpgrades++;state.replicantiChance= Math.min(100,1+state.replicantiChanceUpgrades);}else if(type==='interval'){const intervalFloor=tsOwned(22)?1:50;if(state.replicantiInterval<=intervalFloor||!hasIPAtLeast(replicantiIntervalCost()))return;spendIPBigNumber(replicantiIntervalCost());state.replicantiIntervalUpgrades++;state.replicantiInterval=Math.max(intervalFloor,1000*Math.pow(.9,state.replicantiIntervalUpgrades));}else if(type==='galaxy'){if(!hasIPAtLeast(replicantiGalaxyCost()))return;spendIPBigNumber(replicantiGalaxyCost());state.replicantiGalaxyUpgrades++;}save();switchScreen('infinity');}
+function buyReplicantiGalaxy(){if(!state.replicantiUnlocked||state.replicanti<Number.MAX_VALUE||state.replicantiGalaxies>=Math.max(state.replicantiGalaxyUpgrades,hasAchievement(95)?1:0)+(tsOwned(225)?Math.floor(Math.max(0,Math.log10(Math.max(1,Number(state.replicanti)||1)))/1000):0)+(tsOwned(226)?Math.floor(Math.max(0,Number(state.replicantiGalaxyUpgrades)||0)/15):0))return;state.replicantiGalaxies++;state.replicanti=1;state.replicantiTimer=0;galaxyResetForReplicanti();save();switchScreen('infinity');}
 function galaxyResetForReplicanti(){
  // Keep the Replicanti Galaxy count, but mirror the normal Galaxy reset effects.
  autobuyerElapsed[10]=0;
@@ -1771,8 +1792,8 @@ function replicantiSecondsRemaining(){if(!state.replicantiUnlocked)return null;c
 function formatReplicantiTimeRemaining(){const seconds=replicantiSecondsRemaining();if(seconds===null)return '未解放';if(seconds===0)return '到達済み';if(!Number.isFinite(seconds))return '計算不可';if(seconds<60)return `${seconds.toFixed(1)} 秒`;const total=Math.ceil(seconds);const days=Math.floor(total/86400),hours=Math.floor(total%86400/3600),minutes=Math.floor(total%3600/60),secs=total%60;if(days>0)return `${days}日 ${hours}時間 ${minutes}分 ${secs}秒`;if(hours>0)return `${hours}時間 ${minutes}分 ${secs}秒`;if(minutes>0)return `${minutes}分 ${secs}秒`;return `${secs}秒`;}
 function updateReplicantiCountdownDisplay(){if(document.body.dataset.screen!=='infinity'||infinitySubpage!=='replicanti')return;const el=document.getElementById('replicanti-time-remaining');if(el)el.textContent=formatReplicantiTimeRemaining();}
 function sampleReplicantiGrowth(amount,probability){const n=Math.max(1,Math.floor(amount));const p=Math.max(0,Math.min(1,probability));if(p<=0)return 0;let gained=0;for(let i=0;i<n;i++)if(Math.random()<p)gained++;return gained;}
-function updateReplicanti(dt){if(!state.replicantiUnlocked||dt<=0)return;state.replicantiTimer+=dt*1000;const interval=Math.max(50,state.replicantiInterval);if(state.replicantiTimer<interval){checkReplicantiAchievement();return;}const ticks=Math.min(1000,Math.floor(state.replicantiTimer/interval));state.replicantiTimer-=ticks*interval;const p=Math.max(0,Math.min(1,state.replicantiChance/100));let r=Math.max(1,state.replicanti);if(r>=Number.MAX_VALUE){state.replicanti=Number.MAX_VALUE;state.replicantiTimer=0;checkReplicantiAchievement();return;}if(ticks>=100||(r*p)>=10){const logNext=Math.log(r)+ticks*Math.log1p(p);state.replicanti=logNext>=Math.log(Number.MAX_VALUE)?Number.MAX_VALUE:Math.max(1,Math.exp(logNext));if(state.replicanti>=Number.MAX_VALUE)state.replicantiTimer=0;}else{for(let k=0;k<ticks;k++){r=Math.max(1,state.replicanti);if(r>=Number.MAX_VALUE){state.replicanti=Number.MAX_VALUE;state.replicantiTimer=0;break;}if(r*(p)<10){const gained=sampleReplicantiGrowth(r,p);state.replicanti=Math.min(Number.MAX_VALUE,r+gained);}else{const logNext=Math.log(r)+Math.log1p(p);state.replicanti=logNext>=Math.log(Number.MAX_VALUE)?Number.MAX_VALUE:Math.exp(logNext);if(state.replicanti>=Number.MAX_VALUE)state.replicantiTimer=0;}}}checkReplicantiAchievement();}
-function replicantiView(){const unlocked=state.replicantiUnlocked;const r=Math.max(1,state.replicanti||1);const maxGal=Math.max(state.replicantiGalaxyUpgrades,hasAchievement(95)?1:0);if(!unlocked)return `<div class="replicanti-screen"><h2>Replicanti</h2><button type="button" class="replicanti-primary" data-rep-action="unlock" ${hasIPAtLeast('1e140')?'':'disabled'}>Replicantiを解放（1e140 IP）</button></div>`;return `<div class="replicanti-screen"><h2>Replicanti</h2><div class="replicanti-count"><small>所持Replicanti</small><strong>${r>=Number.MAX_VALUE?'1.80e308（上限）':fmt(r)}</strong><span>Infinity Dimension倍率：×${fmtBig(replicantiInfinityDimensionMultiplier())}</span></div><div class="replicanti-time-estimate">1.8e308到達まで：<strong id="replicanti-time-remaining">${formatReplicantiTimeRemaining()}</strong></div><div class="replicanti-upgrades"><button type="button" class="${state.replicantiChanceUpgrades<99&&hasIPAtLeast(replicantiChanceCost())?'available':''}" data-rep-action="chance" ${state.replicantiChanceUpgrades>=99||!hasIPAtLeast(replicantiChanceCost())?'disabled':''}><strong>増殖確率</strong><span>現在：${state.replicantiChance}%</span><small>+1% · コスト：${fmtBig(replicantiChanceCost())} IP</small></button><button type="button" class="${state.replicantiInterval>50&&hasIPAtLeast(replicantiIntervalCost())?'available':''}" data-rep-action="interval" ${state.replicantiInterval<=50||!hasIPAtLeast(replicantiIntervalCost())?'disabled':''}><strong>増殖間隔</strong><span>現在：${state.replicantiInterval.toFixed(1)} ms</span><small>×0.9 · コスト：${fmtBig(replicantiIntervalCost())} IP</small></button><button type="button" class="${hasIPAtLeast(replicantiGalaxyCost())?'available':''}" data-rep-action="galaxy" ${!hasIPAtLeast(replicantiGalaxyCost())?'disabled':''}><strong>最大Replicanti Galaxy</strong><span>現在：${state.replicantiGalaxies} / ${maxGal}</span><small>上限+1 · コスト：${fmtBig(replicantiGalaxyCost())} IP</small></button></div><div class="replicanti-galaxy"><strong>Replicanti Galaxy：${state.replicantiGalaxies}</strong><p>${r>=Number.MAX_VALUE?'Replicantiが上限に到達しました。Galaxyを購入できます。':'1.80e308に到達すると購入できます。'}</p><button type="button" class="replicanti-primary" data-rep-action="buyGalaxy" ${r>=Number.MAX_VALUE&&state.replicantiGalaxies<maxGal?'':'disabled'}>Replicanti Galaxyを獲得</button></div></div>`;}
+function updateReplicanti(dt){if(!state.replicantiUnlocked||dt<=0)return;state.replicantiTimer+=dt*1000;const interval=Math.max(tsOwned(22)?1:50,state.replicantiInterval/(tsOwned(62)?3:1)/(tsOwned(132)?1.5:1)*(tsOwned(133)?10:1)/(tsOwned(213)?20:1));if(state.replicantiTimer<interval){checkReplicantiAchievement();return;}const ticks=Math.min(1000,Math.floor(state.replicantiTimer/interval));state.replicantiTimer-=ticks*interval;const p=Math.max(0,Math.min(1,state.replicantiChance/100));let r=Math.max(1,state.replicanti);if(r>=Number.MAX_VALUE){state.replicanti=Number.MAX_VALUE;state.replicantiTimer=0;checkReplicantiAchievement();return;}if(ticks>=100||(r*p)>=10){const logNext=Math.log(r)+ticks*Math.log1p(p);state.replicanti=logNext>=Math.log(Number.MAX_VALUE)?Number.MAX_VALUE:Math.max(1,Math.exp(logNext));if(state.replicanti>=Number.MAX_VALUE)state.replicantiTimer=0;}else{for(let k=0;k<ticks;k++){r=Math.max(1,state.replicanti);if(r>=Number.MAX_VALUE){state.replicanti=Number.MAX_VALUE;state.replicantiTimer=0;break;}if(r*(p)<10){const gained=sampleReplicantiGrowth(r,p);state.replicanti=Math.min(Number.MAX_VALUE,r+gained);}else{const logNext=Math.log(r)+Math.log1p(p);state.replicanti=logNext>=Math.log(Number.MAX_VALUE)?Number.MAX_VALUE:Math.exp(logNext);if(state.replicanti>=Number.MAX_VALUE)state.replicantiTimer=0;}}}checkReplicantiAchievement();}
+function replicantiView(){const unlocked=state.replicantiUnlocked;const r=Math.max(1,state.replicanti||1);const maxGal=Math.max(state.replicantiGalaxyUpgrades,hasAchievement(95)?1:0)+(tsOwned(225)?Math.floor(Math.max(0,Math.log10(Math.max(1,Number(state.replicanti)||1)))/1000):0)+(tsOwned(226)?Math.floor(Math.max(0,Number(state.replicantiGalaxyUpgrades)||0)/15):0);if(!unlocked)return `<div class="replicanti-screen"><h2>Replicanti</h2><button type="button" class="replicanti-primary" data-rep-action="unlock" ${hasIPAtLeast('1e140')?'':'disabled'}>Replicantiを解放（1e140 IP）</button></div>`;return `<div class="replicanti-screen"><h2>Replicanti</h2><div class="replicanti-count"><small>所持Replicanti</small><strong>${r>=Number.MAX_VALUE?'1.80e308（上限）':fmt(r)}</strong><span>Infinity Dimension倍率：×${fmtBig(replicantiInfinityDimensionMultiplier())}</span></div><div class="replicanti-time-estimate">1.8e308到達まで：<strong id="replicanti-time-remaining">${formatReplicantiTimeRemaining()}</strong></div><div class="replicanti-upgrades"><button type="button" class="${state.replicantiChanceUpgrades<99&&hasIPAtLeast(replicantiChanceCost())?'available':''}" data-rep-action="chance" ${state.replicantiChanceUpgrades>=99||!hasIPAtLeast(replicantiChanceCost())?'disabled':''}><strong>増殖確率</strong><span>現在：${state.replicantiChance}%</span><small>+1% · コスト：${fmtBig(replicantiChanceCost())} IP</small></button><button type="button" class="${state.replicantiInterval>50&&hasIPAtLeast(replicantiIntervalCost())?'available':''}" data-rep-action="interval" ${state.replicantiInterval<=(tsOwned(22)?1:50)||!hasIPAtLeast(replicantiIntervalCost())?'disabled':''}><strong>増殖間隔</strong><span>現在：${state.replicantiInterval.toFixed(1)} ms</span><small>×0.9 · コスト：${fmtBig(replicantiIntervalCost())} IP</small></button><button type="button" class="${hasIPAtLeast(replicantiGalaxyCost())?'available':''}" data-rep-action="galaxy" ${!hasIPAtLeast(replicantiGalaxyCost())?'disabled':''}><strong>最大Replicanti Galaxy</strong><span>現在：${state.replicantiGalaxies} / ${maxGal}</span><small>上限+1 · コスト：${fmtBig(replicantiGalaxyCost())} IP</small></button></div><div class="replicanti-galaxy"><strong>Replicanti Galaxy：${state.replicantiGalaxies}</strong><p>${r>=Number.MAX_VALUE?'Replicantiが上限に到達しました。Galaxyを購入できます。':'1.80e308に到達すると購入できます。'}</p><button type="button" class="replicanti-primary" data-rep-action="buyGalaxy" ${r>=Number.MAX_VALUE&&state.replicantiGalaxies<maxGal?'':'disabled'}>Replicanti Galaxyを獲得</button></div></div>`;}
 function updateInfinityDimensionProduction(dt){ensureInfinityDimensionState();if(!(dt>0))return;for(let i=7;i>=1;i--){const source=infinityDimensionAmount(i);const produced=source.multiply(BigNumber.from(dt/10).multiply(infinityDimensionMultiplier(i)));const targetAmount=infinityDimensionAmount(i-1).add(produced).toJSON();/* infinityDimensionAmount()/infinityDimensionMultiplier() normalize the array by replacing it; compute the RHS first so we don't assign into a stale array object. */state.infinityDimensions[i-1].amount=targetAmount;}let producedPower=infinityDimensionAmount(0).multiply(BigNumber.from(dt).multiply(infinityDimensionMultiplier(0)));if(hasAchievement(94))producedPower=producedPower.multiply(2);state.infinityPowerBN=BigNumber.from(state.infinityPowerBN||0).add(producedPower).toJSON();}
 function breakInfinityView(){
  const active=Boolean(state.breakInfinityActive);
@@ -1797,8 +1818,7 @@ function infinityUpgradeView(){const unlocked=state.infinities>0;const cards=[0,
 function formatPlayTime(seconds){const total=Math.max(0,Math.floor((Number(seconds)||0)*10)/10);const d=Math.floor(total/86400),h=Math.floor(total%86400/3600),m=Math.floor(total%3600/60),s=total%60;return (d?d+'日 ':'')+h+'時間 '+m+'分 '+s.toFixed(1)+'秒';}
 
 // Time Studies: tree, Time Theorem purchases, path restrictions and respec.
-// The tree/cost/prerequisite data follows the supplied wiki references. Study effects
-// are intentionally kept separate from this UI implementation.
+// Time Study tree and effect data. Purchased effects are applied in the corresponding game calculations.
 const timeStudyData = [
  [11,1,[],'Tickspeedの効果が1st Time Dimensionにも及ぶ','base'],
  [21,3,[11],'Replicantiの計算式が変化','base'],[22,2,[11],'Replicantiの最短増殖速度が50ms→1msに短縮','base'],
