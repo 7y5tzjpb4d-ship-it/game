@@ -1818,10 +1818,9 @@ const tsById = new Map(timeStudyData.map(s=>[s[0],s]));
 function tsOwned(id){return Array.isArray(state.timeStudies)&&state.timeStudies.includes(Number(id));}
 function tsSpent(){return timeStudyData.reduce((sum,s)=>sum+(tsOwned(s[0])?s[1]:0),0);}
 function tsTotal(){return Math.max(0,Math.floor(Number(state.timeTheorems)||0));}
-function tsCanBuy(study){
- const [id,cost,req,,kind]=study;
- if(tsOwned(id)||tsTotal()<cost||(req.length&&!req.some(r=>tsOwned(r))))return false;
- if(req.length && !req.some(r=>tsOwned(r)))return false;
+function tsPrerequisitesMet(study){
+ const [id,,req,,kind]=study;
+ if(tsOwned(id)||(req.length&&!req.some(r=>tsOwned(r))))return false;
  if(kind==='ec5' && !(state.eternityChallengeCompletions?.[5]>0 || state.completedEternityChallenges?.includes?.(5)))return false;
  const dimensionRows=[[71,72,73],[81,82,83],[91,92,93],[101,102,103]];
  if(!tsOwned(201)){
@@ -1839,6 +1838,7 @@ function tsCanBuy(study){
  for(const pair of splitPairs){if(pair.includes(id)&&tsOwned(pair.find(x=>x!==id)))return false;}
  return true;
 }
+function tsCanBuy(study){return !tsOwned(study[0])&&tsTotal()>=study[1]&&tsPrerequisitesMet(study);}
 function tsFormatCost(n){return Number(n).toLocaleString('en-US');}
 function tsPurchase(id){
  const s=tsById.get(Number(id));if(!s||!tsCanBuy(s))return;
@@ -2001,8 +2001,8 @@ function timeStudyView(){
    const pair=row.find(p=>p[1]===i+1);
    if(!pair)return `<div class="ts-cell empty"></div>`;
    const id=pair[0],study=tsById.get(id);if(!study)return `<div class="ts-cell empty"></div>`;
-   const owned=tsOwned(id),can=tsCanBuy(study);
-   return `<div class="ts-cell"><button type="button" class="ts-study ${owned?'purchased':can?'next-buyable':'blocked'}" data-ts-study="${id}" ${owned||!can?'disabled':''} title="${study[3]}"><strong>${id}</strong><span>${study[3]}</span><small>${study[1]} TT</small></button></div>`;
+   const owned=tsOwned(id),can=tsCanBuy(study),next=tsPrerequisitesMet(study);
+   return `<div class="ts-cell"><button type="button" class="ts-study ${owned?'purchased':can?'available':next?'next-buyable':'blocked'}" data-ts-study="${id}" ${owned||!can?'disabled':''} title="${study[3]}"><strong>${id}</strong><span>${study[3]}</span><small>${study[1]} TT</small></button></div>`;
   }).join('')}</div>`;
  }).join('');
  const ecNodes='';
@@ -2250,3 +2250,11 @@ window.addEventListener('beforeunload',save);
 </script>
 </body>
 </html>
+
+<style>
+/* Time Study status colors: purchased, affordable now, next in the tree, locked */
+.ts-study.purchased{background:#286747!important;border-color:#72d6a0!important;color:#fff!important;opacity:1!important}
+.ts-study.available{background:#245a83!important;border-color:#72c9ff!important;color:#fff!important;opacity:1!important;cursor:pointer!important}
+.ts-study.next-buyable{background:#8a6a19!important;border-color:#f3d46a!important;color:#fff!important;opacity:1!important}
+.ts-study.blocked{background:#211c27!important;border-color:#594467!important;color:#a99eaf!important;opacity:.48!important}
+</style>
