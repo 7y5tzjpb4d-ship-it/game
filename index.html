@@ -147,6 +147,10 @@ body[data-screen="eternity"] #tabContent{display:block!important;visibility:visi
 .ts-tt-button:disabled{opacity:.45}
 @media(max-width:540px){.ts-tt-grid{grid-template-columns:1fr;gap:8px}.ts-tt-button{min-height:74px}.ts-tt-max{margin-bottom:10px}}
 
+
+/* Current effect readout for selected Time Studies */
+.ts-current-effect{display:block!important;margin-top:4px;font-size:clamp(8px,1.1vw,11px)!important;line-height:1.2;color:#d9f4ff!important;white-space:normal;overflow-wrap:anywhere}
+.ts-study{height:auto!important;min-height:78px}
 </style>
 <style>
 /* Inlined from css/src/02-screen-tabs-style.css */
@@ -1885,6 +1889,89 @@ function tsRespec(){
  save();switchScreen('eternity');
 }
 let timeStudyZoom=1;
+// 現在のTime Study効果。数式はAntimatter Dimensions Wikiおよび公式ソースの効果式に合わせる。
+function tsCurrentEffectLabel(id){
+ const bn=v=>BigNumber.from(v);
+ const show=v=>fmtBig(bn(v));
+ const cap=(v,max)=>bn(v).min(max);
+ const tickLog=Math.max(0,Number(tickspeedMultiplierBigNumber().log10())||0);
+ const rep=bn(state.replicantiUnlocked?Math.max(1,Number(state.replicanti)||1):1);
+ const repLog=Math.max(0,rep.log10());
+ const galaxies=Math.max(0,totalGalaxyCount());
+ const normalGalaxies=Math.max(0,Number(state.galaxies)||0);
+ const repGalaxies=Math.max(0,Number(state.replicantiGalaxies)||0);
+ const boosts=Math.max(0,Number(state.boosts)||0);
+ const freeTicks=Math.max(0,timeShardsFreeTickspeedInfo().count);
+ const sacrifice=sacrificeMultiplierBigNumber().max(1);
+ const sacrificeLog=Math.max(0,sacrifice.log10());
+ const shards=bn(state.timeShardsBN||0).max(0);
+ const eternitySeconds=Math.max(0,Number(state.eternityTime)||0);
+ const infinitySeconds=Math.max(0,Number(state.infinityTime)||0);
+ const eternities=Math.max(0,Number(state.eternities)||0);
+ const boughtRG=Math.max(0,Number(state.replicantiGalaxyUpgrades)||0);
+ let value;
+ switch(Number(id)){
+  case 11: {
+   const logA=Math.log10(0.95)-tickLog*0.005, logB=Math.log10(0.05)-tickLog*0.0003;
+   const m=Math.max(logA,logB), logDen=m+Math.log10(Math.pow(10,logA-m)+Math.pow(10,logB-m));
+   return `現在効果：×${show(cap(bn(10).power(Math.min(2500,-logDen)),'1e2500'))}`;
+  }
+  case 21: {
+   const log2=Math.log2(Math.max(1,rep.toNumber())), base=log2*log2, extra=Math.pow(Math.max(1,rep.toNumber()),0.032);
+   value=base>0?(base+extra)/base:1;
+   return `現在効果：Infinity Dimension ×${Number.isFinite(value)?value.toLocaleString('en-US',{maximumFractionDigits:3}):'—'}`;
+  }
+  case 32: return `現在効果：Infinity獲得 ×${Math.max(1,boosts).toLocaleString('en-US')}`;
+  case 41: return `現在効果：IP獲得 ×${show(bn(1.2).power(galaxies))}`;
+  case 71: return `現在効果：他のAntimatter Dimension ×${show(cap(sacrifice.power(0.25),'1e210000'))}`;
+  case 72: return `現在効果：4th Infinity Dimension ×${show(cap(sacrifice.power(0.04),'1e30000'))}`;
+  case 73: return `現在効果：3rd Time Dimension ×${show(cap(sacrifice.power(0.005),'1e1300'))}`;
+  case 82: return `現在効果：Infinity Dimension ×${show(cap(bn(1.0000109).power(boosts*boosts),'1e10000000'))}`;
+  case 83: return `現在効果：Dimension Boost ×${show(cap(bn(1.0004).power(freeTicks),'1e30'))}`;
+  case 92: {
+   const fastest=Math.max(2,Number(state.fastestEternity)||Number(state.fastestEternityTime)||Infinity);
+   value=Number.isFinite(fastest)?Math.min(2**30,Math.pow(2,60/fastest)):1;
+   return `現在効果：Infinity Dimension ×${value.toLocaleString('en-US',{maximumFractionDigits:3})}`;
+  }
+  case 93: return `現在効果：Time Dimension ×${show(bn(Math.max(0,freeTicks)).power(0.25))}`;
+  case 101: return `現在効果：Antimatter Dimension ×${show(rep.max(1))}`;
+  case 102: return `現在効果：Replicanti倍率 ×${show(bn(5).power(repGalaxies))}`;
+  case 103: return `現在効果：Time Dimension ×${repGalaxies.toLocaleString('en-US')}`;
+  case 121: {
+   const times=Array.isArray(state.lastTenEternities)?state.lastTenEternities:[];
+   const valid=times.map(x=>Array.isArray(x)?Number(x[0]):Number(x)).filter(x=>Number.isFinite(x)&&x>0);
+   const avg=valid.length?valid.reduce((a,b)=>a+b,0)/valid.length:Infinity;
+   value=Number.isFinite(avg)?Math.min(50,Math.max(1,250/avg)):1;
+   return `現在効果：EP獲得 ×${value.toLocaleString('en-US',{maximumFractionDigits:3})}`;
+  }
+  case 123: return `現在効果：EP獲得 ×${Math.max(1,Math.sqrt(eternitySeconds*1.39)).toLocaleString('en-US',{maximumFractionDigits:3})}`;
+  case 141: {
+   const t=infinitySeconds*10+1, exponent=Math.log(1e45)-Math.log(15)*Math.log(t)*Math.min(Math.pow(t,0.125),500);
+   value=Math.max(1,Math.exp(Math.max(-745,Math.min(700,exponent))));
+   return `現在効果：IP倍率 ×${Number.isFinite(value)?value.toLocaleString('en-US',{maximumFractionDigits:3}):'1'}`;
+  }
+  case 143: {
+   const t=infinitySeconds*10+1;
+   return `現在効果：IP倍率 ×${show(bn(15).power(Math.log(t)*Math.min(Math.pow(t,0.125),500)))}`;
+  }
+  case 193: return `現在効果：Antimatter Dimension ×${show(cap(bn('1e13000').power(eternities/1e6),'1e13000'))}`;
+  case 212: {
+   const log2=Math.max(0,shards.log10()/Math.log10(2));
+   value=Math.min(1.1,Math.pow(Math.max(1,log2),0.005));
+   return `現在効果：Galaxy効果 ×${value.toLocaleString('en-US',{maximumFractionDigits:5})}`;
+  }
+  case 214: return `現在効果：8th Antimatter Dimension ×${show(cap(cap(sacrifice.power(7.6),'1e44000').multiply(cap(sacrifice.power(1.05),'1e120000')),'1e164000'))}`;
+  case 221: return `現在効果：Time Dimension ×${show(bn(1.0025).power(boosts))}`;
+  case 225: return `現在効果：追加Replicanti Galaxy +${Math.floor(repLog/1000).toLocaleString('en-US')}`;
+  case 226: return `現在効果：追加Replicanti Galaxy +${Math.floor(boughtRG/15).toLocaleString('en-US')}`;
+  case 227: return `現在効果：4th Time Dimension ×${show(bn(Math.max(Math.pow(sacrificeLog,10),1)))}`;
+  case 231: return `現在効果：Dimension Boost効果 ×${Math.max(1,Math.pow(boosts,0.3)).toLocaleString('en-US',{maximumFractionDigits:3})}`;
+  case 232: return `現在効果：Galaxy効果 ×${Math.pow(1+normalGalaxies/1000,0.2).toLocaleString('en-US',{maximumFractionDigits:5})}`;
+  case 233: return `現在効果：Replicanti Galaxy Upgradeコスト補正 ×${show(rep.power(0.3))}`;
+  case 234: return `現在効果：1st Antimatter Dimension ×${show(sacrifice)}`;
+  default: return '';
+ }
+}
 function timeStudyView(){
  const rows=[
   [[11,3]],
@@ -2022,7 +2109,7 @@ function timeStudyView(){
    if(!pair)return `<div class="ts-cell empty"></div>`;
    const id=pair[0],study=tsById.get(id);if(!study)return `<div class="ts-cell empty"></div>`;
    const owned=tsOwned(id),can=tsCanBuy(study),next=tsPrerequisitesMet(study);
-   return `<div class="ts-cell"><button type="button" class="ts-study ${owned?'purchased':can?'available':next?'next-buyable':'blocked'}" data-ts-study="${id}" ${owned||!can?'disabled':''} title="${study[3]}"><strong>${id}</strong><span>${study[3]}</span><small>${study[1]} TT</small></button></div>`;
+   return `<div class="ts-cell"><button type="button" class="ts-study ${owned?'purchased':can?'available':next?'next-buyable':'blocked'}" data-ts-study="${id}" ${owned||!can?'disabled':''} title="${study[3]}"><strong>${id}</strong><span>${study[3]}</span><small>${study[1]} TT</small>${[11,21,32,41,71,72,73,82,83,92,93,101,102,103,121,123,141,143,193,212,214,221,225,226,227,231,232,233,234].includes(id)?`<small class="ts-current-effect">${tsCurrentEffectLabel(id)}</small>`:''}</button></div>`;
   }).join('')}</div>`;
  }).join('');
  const ecNodes='';
