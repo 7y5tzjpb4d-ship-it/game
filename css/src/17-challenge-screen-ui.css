@@ -1,9 +1,0 @@
-/* Extracted from the original index.html in cascade order. */
-.challenge-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.challenge-card{min-width:0;min-height:138px;display:flex;flex-direction:column;gap:7px;padding:11px;background:#222229;border:1px solid #41414b;border-radius:4px}
-.challenge-card .challenge-number{font-size:10px;letter-spacing:.08em;color:#9bbce8;font-weight:800}
-.challenge-card strong{font-size:13px;color:#f1f1f7}
-.challenge-card p{margin:0;color:#b8b8c6;font-size:11px;line-height:1.4;flex:1}
-.challenge-status{align-self:flex-start;padding:3px 6px;background:#34343d;color:#c4c4cf;font-size:10px;border-radius:3px}.challenge-card.completed{border-color:#4d9871;background:#1e3028}.challenge-card.active{border-color:#6f9ed5;box-shadow:0 0 0 1px #6f9ed533}.challenge-card button,.challenge-controls button{width:100%;font-size:11px;padding:7px 5px}.challenge-controls{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.challenge-controls button{width:auto;min-width:130px}.challenge-description{margin:10px 0;padding:12px;background:#20202a;border:1px solid #41414d;border-radius:4px;line-height:1.5;font-size:12px}.challenge-card p{min-height:48px}
-.challenge-note{margin-top:12px;padding:10px;border-left:3px solid #6587b3;background:#1d222b;color:#b8c5d8;font-size:11px;line-height:1.5}
-@media(max-width:540px){.challenge-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.challenge-card{min-height:135px;padding:8px;gap:6px}.challenge-card strong{font-size:12px}.challenge-card p{font-size:10px}.challenge-controls button{flex:1;min-width:0}}

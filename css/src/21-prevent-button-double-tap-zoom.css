@@ -1,4 +1,0 @@
-/* Extracted from the original index.html in cascade order. */
-/* Prevent iOS double-tap zoom when rapidly pressing game controls. */
-button, .buy, .mobile-bottom-actions { touch-action: manipulation; }
-html { -webkit-text-size-adjust: 100%; }

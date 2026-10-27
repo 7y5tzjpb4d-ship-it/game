@@ -1,4 +1,0 @@
-/* Extracted from the original index.html in cascade order. */
-.ts-ec-inline-row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;min-height:84px}
-.ts-ec-inline-row .ts-ec-node{min-height:58px}
-@media(max-width:540px){.ts-ec-inline-row{gap:4px;min-height:70px}.ts-ec-inline-row .ts-ec-node{min-height:48px}}
