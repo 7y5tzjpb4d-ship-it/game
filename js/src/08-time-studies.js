@@ -83,30 +83,32 @@ function timeStudyView(){
   [[221,1],[222,2],[223,3],[224,4],[225,5],[226,6],[227,7],[228,8]],
   [[231,1],[232,2],[233,3],[234,4]]
  ];
- // ECノードは本家Wiki記載の前提Studyの直下に置く。
+ // ECは本家ツリーの横位置に合わせ、該当Studyと同じ段に配置する。
+ // EC1-3は171の下、EC10は181の下、EC11-12は231-234の下に置く。
+ const ecInline = {
+  51: [{id:5, col:3, study:42}],
+  111: [{id:7, col:0, study:111}],
+  131: [{id:6, col:0, study:121},{id:8, col:4, study:123}],
+  151: [{id:9, col:0, study:151},{id:4, col:5, study:143}]
+ };
  const ecAfter = {
-  42: [{id:5, col:2, study:42}],
-  111: [{id:7, col:2, study:111}],
-  121: [{id:6, col:1, study:121}],
-  123: [{id:8, col:3, study:123}],
-  143: [{id:4, col:2, study:143}],
-  151: [{id:9, col:2, study:151}],
   171: [{id:1, col:1, study:171},{id:2, col:2, study:171},{id:3, col:3, study:171}],
   181: [{id:10, col:2, study:181}],
-  231: [{id:11, col:1, study:231}],
-  233: [{id:12, col:2, study:233}]
+  234: [{id:11, col:2, study:231},{id:12, col:3, study:233}]
  };
  const displayRows=[];
  for(let ri=0;ri<rows.length;ri++){
-  displayRows.push({type:'study', sourceIndex:ri, studies:rows[ri]});
-  const ids=rows[ri].map(p=>p[0]);
+  const studies=rows[ri];
+  const ids=studies.map(p=>p[0]);
+  const inline=ids.flatMap(id=>ecInline[id]||[]);
+  displayRows.push({type:'study', sourceIndex:ri, studies, ecNodes:inline});
   const ec=ids.flatMap(id=>ecAfter[id]||[]);
   if(ec.length)displayRows.push({type:'ec', nodes:ec});
  }
  const rowIndex=new Map();
  displayRows.forEach((dr,di)=>{
   if(dr.type!=='study')return;
-  dr.studies.forEach(pair=>rowIndex.set(pair[0],{row:di,col:pair[1]-1,cols:pair.some?.(p=>p[0]>=221&&p[0]<=228)?8:(dr.studies.some(p=>p[0]>=221&&p[0]<=228)?8:6)}));
+  dr.studies.forEach(pair=>rowIndex.set(pair[0],{row:di,col:pair[1]-1,cols:dr.studies.some(p=>p[0]>=221&&p[0]<=228)?8:6}));
  });
  const rowHeight=104;
  // SVG coordinates match the fixed row grid. Start/end at the visible button edges,
@@ -133,11 +135,12 @@ function timeStudyView(){
  }
  const ecLinks=[];
  displayRows.forEach((dr,di)=>{
-  if(dr.type!=='ec')return;
-  for(const ec of dr.nodes){
+  const ecNodes=dr.type==='ec'?dr.nodes:(dr.ecNodes||[]);
+  for(const ec of ecNodes){
    const source=rowIndex.get(ec.study);if(!source)continue;
    const x1=nodeCenterX(source),x2=(ec.col+0.5)*(100/6);
-   const y1=nodeBottomY(source.row),y2=rowTopY(di)+8;
+   const sameRow=source.row===di;
+   const y1=sameRow?rowTopY(di)+45:nodeBottomY(source.row),y2=sameRow?rowTopY(di)+45:rowTopY(di)+8;
    ecLinks.push(`<path class="ts-link ts-ec-link" d="${connectorPath(x1,y1,x2,y2)}"/>`);
   }
  });
@@ -162,8 +165,8 @@ function timeStudyView(){
  const ec12row=displayRows.findIndex(r=>r.type==='ec'&&r.nodes.some(n=>n.id===12));
  const dilationY=rowTopY(displayRows.length)+8;
  const dilationLinks=[
-  ec11row>=0?`<path class="ts-link ts-ec-link" d="${connectorPath(25,rowTopY(ec11row)+72,25,dilationY)}"/>`:'',
-  ec12row>=0?`<path class="ts-link ts-ec-link" d="${connectorPath(41.666,rowTopY(ec12row)+72,41.666,dilationY)}"/>`:''
+  ec11row>=0?`<path class="ts-link ts-ec-link" d="${connectorPath(41.6667,rowTopY(ec11row)+72,41.6667,dilationY)}"/>`:'',
+  ec12row>=0?`<path class="ts-link ts-ec-link" d="${connectorPath(58.3333,rowTopY(ec12row)+72,58.3333,dilationY)}"/>`:''
  ].join('');
  const connectorSvg=`<svg class="ts-connectors" viewBox="0 0 100 ${totalRows*104}" preserveAspectRatio="none" aria-hidden="true">${links.join('')}${ecLinks.join('')}${dilationLinks}</svg>`;
  const nodes=displayRows.map((dr,di)=>{
@@ -176,6 +179,8 @@ function timeStudyView(){
   const row=dr.studies;
   const wide=row.some(p=>p[0]>=221&&p[0]<=228);
   return `<div class="ts-tree-row ${wide?'ts-row-wide':''}" data-ts-row="${dr.sourceIndex}">${Array.from({length:wide?8:6},(_,i)=>{
+   const ec=dr.ecNodes?.find(n=>n.col===i);
+   if(ec)return `<div class="ts-cell"><div class="ts-ec-node" title="EC${ec.id}：前提Study ${ec.study}"><strong>EC${ec.id}</strong><span>Eternity Challenge</span></div></div>`;
    const pair=row.find(p=>p[1]===i+1);
    if(!pair)return `<div class="ts-cell empty"></div>`;
    const id=pair[0],study=tsById.get(id);if(!study)return `<div class="ts-cell empty"></div>`;
