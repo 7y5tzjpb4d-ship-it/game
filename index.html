@@ -2225,15 +2225,25 @@ function switchScreen(name){if(!document.body.classList.contains('crunch-ready')
 tabContent.querySelectorAll('[data-test-action]').forEach(el=>el.addEventListener('click',()=>{try{const action=el.dataset.testAction;if(action==='apply-common')testApplyCommon();else if(action==='apply-unlocks')testApplyUnlocks();else if(action==='clear-studies'){state.timeStudies=[];save();render();switchScreen('test');}else if(action==='unlock-replicanti'){state.replicantiUnlocked=true;save();render();switchScreen('test');}else if(action==='unlock-break-infinity'){state.breakInfinityUnlocked=true;state.breakInfinityActive=true;save();render();switchScreen('test');}else if(action==='apply-state'){const path=document.getElementById('testStatePath').value;const value=JSON.parse(document.getElementById('testStateValue').value);testSetStatePath(path,value);save();render();switchScreen('test');document.getElementById('testStateStatus').textContent=path+' に適用しました。現在値: '+JSON.stringify(path.split('.').reduce((o,k)=>o?.[k],state));}else if(action==='show-state'){const path=document.getElementById('testStatePath').value;document.getElementById('testStateStatus').textContent=path+' = '+JSON.stringify(path.split('.').reduce((o,k)=>o?.[k],state));}else if(action==='refresh'){render();switchScreen('test');}else if(action==='save'){save();document.getElementById('testStateStatus').textContent='セーブしました。';}}catch(err){const status=document.getElementById('testStateStatus');if(status)status.textContent='エラー: '+err.message;else alert('テスト設定エラー: '+err.message);}}));
 tabContent.querySelectorAll('[data-ts-buy-tt]').forEach(el=>el.addEventListener('click',()=>tsBuyTheorem(el.dataset.tsBuyTt)));
 tabContent.querySelectorAll('[data-ts-buy-tt-max]').forEach(el=>el.addEventListener('click',()=>{
- let changed=true,guard=0;
- while(changed&&guard++<1000){
-  changed=false;
-  const before=tsTotal();
-  for(const kind of ['am','ip','ep']){
-   tsBuyTheorem(kind);
-   if(tsTotal()>before){changed=true;break;}
+ // 各通貨の残高を使い切れるところまでまとめて購入し、最後に一度だけ保存・再描画する。
+ const purchases=state.timeTheoremPurchases||(state.timeTheoremPurchases={am:0,ip:0,ep:0});
+ let totalBought=0;
+ const maxBuyFrom=(kind,balance,costAtLevel,setBalance)=>{
+  let level=Math.max(0,Math.floor(Number(purchases[kind])||0));
+  let bought=0;
+  // BigNumberの指数スケールに関係なく、購入可能な段階を順に判定する。
+  while(bought<100000){
+   const cost=costAtLevel(level);
+   if(balance.compare(cost)<0)break;
+   balance=balance.subtract(cost);level++;bought++;
   }
- }
+  if(bought>0){purchases[kind]=level;setBalance(balance);totalBought+=bought;}
+ };
+ maxBuyFrom('am',matterBigNumber(),level=>BigNumber.fromLog10(20000*(level+1)),setMatterBigNumber);
+ maxBuyFrom('ip',getIPBigNumber(),level=>level===0?BigNumber.from(1):BigNumber.fromLog10(100*level),setIPBigNumber);
+ maxBuyFrom('ep',getEPBigNumber(),level=>BigNumber.from(2).power(level),setEPBigNumber);
+ if(totalBought>0)state.timeTheorems=tsTotal()+totalBought;
+ save();
  switchScreen('eternity');
 }));
 tabContent.querySelectorAll('[data-ts-buy-all]').forEach(el=>el.addEventListener('click',()=>{
