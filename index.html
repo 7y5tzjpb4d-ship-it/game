@@ -517,6 +517,55 @@ main{padding-bottom:155px!important}
 }
 </style>
 
+
+<style id="ep-upgrade-and-navigation-fix">
+/* Eternity upgrade states: purchased, purchasable, and not yet affordable. */
+.ep-upgrade-card{opacity:1!important;transition:background-color .12s,border-color .12s;box-sizing:border-box!important}
+.ep-upgrade-card.bought{background:#555b5d!important;border:2px solid #a5aaad!important;color:#fff!important;box-shadow:none!important}
+.ep-upgrade-card.affordable:not(.bought){background:#247a49!important;border:2px solid #77e6a1!important;color:#fff!important;box-shadow:inset 0 0 0 2px #77e6a155!important}
+.ep-upgrade-card.unaffordable:not(.bought){background:#7258c5!important;border:2px solid #4a1680!important;color:#fff!important;box-shadow:none!important}
+.ep-upgrade-card:disabled{opacity:1!important}
+/* Keep main navigation dimensions identical on every screen and subpage. */
+nav#screenTabs.screen-tabs{display:flex!important;box-sizing:border-box!important;align-items:stretch!important;flex-wrap:nowrap!important;gap:4px!important;min-height:52px!important;height:52px!important;padding:5px max(5px,env(safe-area-inset-left)) calc(5px + env(safe-area-inset-bottom))!important;overflow-x:auto!important;overflow-y:hidden!important}
+nav#screenTabs.screen-tabs>button{box-sizing:border-box!important;flex:0 0 76px!important;width:76px!important;min-width:76px!important;max-width:76px!important;height:42px!important;min-height:42px!important;max-height:42px!important;padding:8px 1px!important;margin:0!important;font-size:10px!important;line-height:1.2!important;white-space:nowrap!important;transform:none!important}
+body[data-screen="eternity"] nav#screenTabs.screen-tabs{position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:1001!important;width:100%!important}
+@media(max-width:540px){nav#screenTabs.screen-tabs{height:calc(52px + env(safe-area-inset-bottom))!important;padding-bottom:calc(5px + env(safe-area-inset-bottom))!important}}
+</style>
+<style id="screen-tabs-size-stability-fix">
+/* Keep the bottom screen-navigation tabs identical when opening Eternity subpages. */
+nav#screenTabs.screen-tabs,
+body[data-screen="eternity"] nav#screenTabs.screen-tabs {
+  display:flex !important;
+  position:fixed !important;
+  left:0 !important; right:0 !important; bottom:0 !important;
+  z-index:1001 !important;
+  width:100% !important; max-width:none !important;
+  box-sizing:border-box !important;
+  flex-flow:row nowrap !important;
+  align-items:stretch !important;
+  justify-content:flex-start !important;
+  gap:4px !important;
+  height:calc(58px + env(safe-area-inset-bottom)) !important;
+  min-height:calc(58px + env(safe-area-inset-bottom)) !important;
+  max-height:calc(58px + env(safe-area-inset-bottom)) !important;
+  padding:5px max(5px,env(safe-area-inset-left)) calc(5px + env(safe-area-inset-bottom)) !important;
+  margin:0 !important;
+  overflow-x:auto !important; overflow-y:hidden !important;
+  flex-shrink:0 !important;
+  transform:none !important;
+}
+nav#screenTabs.screen-tabs > button,
+body[data-screen="eternity"] nav#screenTabs.screen-tabs > button {
+  box-sizing:border-box !important;
+  display:flex !important; align-items:center !important; justify-content:center !important;
+  flex:0 0 76px !important;
+  width:76px !important; min-width:76px !important; max-width:76px !important;
+  height:42px !important; min-height:42px !important; max-height:42px !important;
+  padding:4px 1px !important; margin:0 !important;
+  font-size:10px !important; line-height:1.2 !important;
+  white-space:nowrap !important; transform:none !important;
+}
+</style>
 </head>
 <body><main>
 <div class="sticky-tools">
@@ -2227,7 +2276,7 @@ function eternityUpgradesView(){
   [6,'未使用Time Theoremsに応じてTime Dimensionsを強化','未使用Time Theoremsに応じてTime Dimensionsが強化されます。',`×${Math.max(1,tsTotal()).toLocaleString('en-US')}`],
   [7,'プレイ日数に応じてTime Dimensionsを強化','プレイ日数に応じてTime Dimensionsが強化されます。',`×${fmtBig(BigNumber.from(Math.max(1,state.playTime/86400)).power(1.5))}`]
  ];
- return `<div class="ep-subnav"><button data-ep-page="studies">Studies</button><button class="${eternitySubpage==='upgrades'?'active':''}" data-ep-page="upgrades">Upgrades</button><button data-ep-page="milestones">Milestones</button></div><section class="eternity-screen"><h2>Eternity Upgrades</h2><p>You have <strong>${fmtBig(getEPBigNumber())}</strong> Eternity Points.</p><div class="ep-upgrade-grid">${defs.map(([id,title,desc,effect])=>{const bought=id===1?eternityUpgradeLevel(1):state.eternityUpgrades.includes(id);const cost=eternityUpgradeCost(id);const affordable=getEPBigNumber().compare(cost)>=0;return `<button type="button" class="ep-upgrade-card ${bought?'bought':affordable?'affordable':''}" data-ep-upgrade="${id}" ${(!affordable||id!==1&&bought)?'disabled':''}><strong>${title}</strong><span>${desc}</span><b>現在：${effect}</b><small>${id===1?'購入回数：'+eternityUpgradeLevel(1)+' · ':''}Cost: ${fmtBig(cost)} EP</small></button>`;}).join('')}</div></section>`;
+ return `<div class="ep-subnav"><button data-ep-page="studies">Studies</button><button class="${eternitySubpage==='upgrades'?'active':''}" data-ep-page="upgrades">Upgrades</button><button data-ep-page="milestones">Milestones</button></div><section class="eternity-screen"><h2>Eternity Upgrades</h2><p>You have <strong>${fmtBig(getEPBigNumber())}</strong> Eternity Points.</p><div class="ep-upgrade-grid">${defs.map(([id,title,desc,effect])=>{const bought=id===1?eternityUpgradeLevel(1):state.eternityUpgrades.includes(id);const cost=eternityUpgradeCost(id);const affordable=getEPBigNumber().compare(cost)>=0;return `<button type="button" class="ep-upgrade-card ${bought?'bought':affordable?'affordable':'unaffordable'}" data-ep-upgrade="${id}" ${(!affordable||id!==1&&bought)?'disabled':''}><strong>${title}</strong><span>${desc}</span><b>現在：${effect}</b><small>${id===1?'購入回数：'+eternityUpgradeLevel(1)+' · ':''}Cost: ${fmtBig(cost)} EP</small></button>`;}).join('')}</div></section>`;
 }
 function eternityMilestonesView(){return `<div class="ep-subnav"><button data-ep-page="studies">Studies</button><button data-ep-page="upgrades">Upgrades</button><button class="active" data-ep-page="milestones">Milestones</button></div><section class="eternity-screen"><h2>Eternity Milestones</h2><p>Eternities: <strong>${Number(state.eternities).toLocaleString('en-US')}</strong></p><div class="ep-milestone-grid">${[[1,'1 Eternity','Eternityタブを解放'],[10,'10 Eternities','Eternity進行のマイルストーン'],[100,'100 Eternities','Eternityの進行マイルストーン'],[1000,'1,000 Eternities','Eternityの進行マイルストーン']].map(([n,t,d])=>`<div class="ep-milestone ${state.eternities>=n?'reached':''}"><strong>${t}</strong><span>${d}</span><small>${state.eternities>=n?'達成済み':'必要：'+n+' Eternities'}</small></div>`).join('')}</div></section>`;}
 function buyEternityUpgrade(id){const cost=eternityUpgradeCost(id);if(getEPBigNumber().compare(cost)<0)return;if(id!==1&&state.eternityUpgrades.includes(id))return;setEPBigNumber(getEPBigNumber().subtract(cost));state.eternityUpgrades.push(id);save();switchScreen('eternity');}
