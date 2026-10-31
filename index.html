@@ -2037,19 +2037,31 @@ function maxBuyInfinityDimension(i){
  if(i<0||i>7)return 0;
  const d=state.infinityDimensions[i];
  if(!d.unlocked)return 0;
- let bought=0;
- // ID Max All follows the visible order: buy the current tier repeatedly
- // until its next 10-pack is unaffordable, then move to the next tier.
- // Do not call save()/render for each pack; that caused the UI to stall.
- while(true){
-  const cost=infinityDimensionCost(i);
-  if(getIPBigNumber().compare(cost)<0)break;
-  if(!spendIPBigNumber(cost))break;
-  d.amount=BigNumber.from(d.amount).add(10).toJSON();
-  d.bought+=10;
-  bought+=10;
- }
- return bought;
+ const budget=getIPBigNumber();
+ const firstCost=infinityDimensionCost(i);
+ if(budget.compare(firstCost)<0)return 0;
+ const growth=Number(infinityDimensionDefs[i].growth);
+ const logGrowth=Math.log10(growth);
+ // ID prices rise geometrically per 10-pack. Estimate the affordable
+ // number of packs algebraically, then correct against the BigNumber sum.
+ const logBudget=budget.log10();
+ const logFirst=firstCost.log10();
+ const estimate=(logBudget-logFirst+Math.log10(growth-1))/logGrowth;
+ let packs=Math.max(0,Math.min(Math.floor(Number.MAX_SAFE_INTEGER/10),Math.floor(estimate)+1));
+ const affordable=n=>n>0&&infinityDimensionBulkCost(i,n).compare(budget)<=0;
+ // Floating-point log estimates can be off by one near an exact boundary.
+ let low=0,high=Math.max(1,packs);
+ while(affordable(high)&&high<Math.floor(Number.MAX_SAFE_INTEGER/10)){low=high;high=Math.min(Math.floor(Number.MAX_SAFE_INTEGER/10),high*2);if(high===low)break;}
+ while(low+1<high){const mid=Math.floor(low+(high-low)/2);if(affordable(mid))low=mid;else high=mid;}
+ if(affordable(high))low=high;
+ packs=low;
+ if(packs<=0)return 0;
+ const totalCost=infinityDimensionBulkCost(i,packs);
+ if(!spendIPBigNumber(totalCost))return 0;
+ const quantity=packs*10;
+ d.amount=BigNumber.from(d.amount).add(quantity).toJSON();
+ d.bought+=quantity;
+ return quantity;
 }
 function maxAllInfinityDimensions(){
  ensureInfinityDimensionState();
