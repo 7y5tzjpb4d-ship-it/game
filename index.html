@@ -2022,38 +2022,46 @@ function infinityDimensionAmount(i){ensureInfinityDimensionState();return BigNum
 function infinityDimensionCost(i){ensureInfinityDimensionState();const d=state.infinityDimensions[i],def=infinityDimensionDefs[i],batches=Math.floor(d.bought/10);return BigNumber.from(def.cost).multiply(BigNumber.from(def.growth).power(batches));}
 function infinityDimensionMultiplier(i){ensureInfinityDimensionState();return infinityDimensionProductionMultiplier().multiply(BigNumber.from(infinityDimensionDefs[i].step).power(Math.floor(state.infinityDimensions[i].bought/10)));}
 function canBuyInfinityDimension(i){ensureInfinityDimensionState();return state.infinityDimensions[i].unlocked&&hasIPAtLeast(infinityDimensionCost(i));}
+function infinityDimensionBulkCost(i,batches){
+ if(batches<=0)return BigNumber.from(0);
+ const def=infinityDimensionDefs[i],d=state.infinityDimensions[i];
+ const growth=Number(def.growth),logGrowth=Math.log10(growth);
+ const firstLog=BigNumber.from(def.cost).log10()+Math.floor(d.bought/10)*logGrowth;
+ // Sum of n geometric-series bundle costs, evaluated in log space to avoid
+ // iterating once per bundle (and to avoid Number overflow).
+ const correction=Math.log10(1-Math.pow(10,-batches*logGrowth))-Math.log10(growth-1);
+ return BigNumber.fromLog10(firstLog+batches*logGrowth+correction);
+}
 function maxBuyInfinityDimension(i){
  ensureInfinityDimensionState();
  if(i<0||i>7)return 0;
  const d=state.infinityDimensions[i];
  if(!d.unlocked)return 0;
- let bought=0,guard=0;
- // Buy one 10-dimension bundle at a time, using the live IP balance and
- // recalculating the next cost after every purchase (same path as manual buy).
- while(guard<100000){
-  const cost=infinityDimensionCost(i);
-  if(getIPBigNumber().compare(cost)<0)break;
-  if(!spendIPBigNumber(cost))break;
-  d.amount=BigNumber.from(d.amount).add(10).toJSON();
-  d.bought+=10;
-  bought+=10;
-  guard++;
+ const balance=getIPBigNumber();
+ const firstCost=infinityDimensionCost(i);
+ if(balance.compare(firstCost)<0)return 0;
+ const growth=Number(infinityDimensionDefs[i].growth);
+ const logGrowth=Math.log10(growth);
+ const estimate=Math.max(1,Math.floor((balance.log10()-firstCost.log10())/logGrowth)+2);
+ let low=0,high=Math.min(estimate,100000000);
+ while(low<high){
+  const mid=Math.ceil((low+high)/2);
+  if(infinityDimensionBulkCost(i,mid).compare(balance)<=0)low=mid;else high=mid-1;
  }
+ if(low<=0)return 0;
+ const totalCost=infinityDimensionBulkCost(i,low);
+ if(!spendIPBigNumber(totalCost))return 0;
+ const bought=low*10;
+ d.amount=BigNumber.from(d.amount).add(bought).toJSON();
+ d.bought+=bought;
  return bought;
 }
 function maxAllInfinityDimensions(){
  ensureInfinityDimensionState();
- const dims=state.infinityDimensions;
  let total=0;
- // Match the game's Max All order: buy one bundle from the highest
- // unlocked, never-purchased tier first, then repeatedly buy each tier
- // from 1 through 8 while its next bundle remains affordable.
- for(let i=7;i>=0;i--){
-  if(dims[i].unlocked&&dims[i].bought===0&&canBuyInfinityDimension(i)){
-   if(buyInfinityDimension(i,true))total+=10;
-   break;
-  }
- }
+ // Max All buys each unlocked Infinity Dimension in ascending tier order,
+ // using a bulk geometric-series purchase for each tier. This is equivalent
+ // to repeated 10-at-a-time purchases, without a long synchronous loop.
  for(let i=0;i<8;i++)total+=maxBuyInfinityDimension(i);
  save();
  return total;
