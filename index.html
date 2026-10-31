@@ -567,6 +567,84 @@ body[data-screen="eternity"] nav#screenTabs.screen-tabs > button {
   white-space:nowrap !important; transform:none !important;
 }
 </style>
+
+<style>
+/* Autobuyer screen layout: mobile-friendly grouping inspired by the supplied reference */
+body[data-screen="autobuyers"] #tabContent > h2 { margin: 0 0 10px; }
+body[data-screen="autobuyers"] #abToggleAll {
+  width: calc(50% - 5px); min-height: 48px; margin: 0 0 10px !important;
+  border: 1px solid var(--accent, #b67e33); border-radius: 10px;
+  background: #202026; color: var(--text, #eee); font-size: 14px; font-weight: 600;
+}
+body[data-screen="autobuyers"] .ab-grid {
+  display: grid; grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 9px; margin-top: 0;
+}
+body[data-screen="autobuyers"] .ab-card {
+  min-height: 100px; padding: 12px; border: 2px solid #55555d;
+  border-radius: 18px; background: #19191f; align-items: flex-start;
+}
+body[data-screen="autobuyers"] .ab-card strong { font-size: 14px; }
+body[data-screen="autobuyers"] .ab-card small { font-size: 11px; line-height: 1.4; white-space: normal; }
+body[data-screen="autobuyers"] .ab-card:nth-child(1),
+body[data-screen="autobuyers"] .ab-card:nth-child(2),
+body[data-screen="autobuyers"] .ab-card:nth-child(3),
+body[data-screen="autobuyers"] .ab-card:nth-child(4),
+body[data-screen="autobuyers"] .ab-card:nth-child(5),
+body[data-screen="autobuyers"] .ab-card:nth-child(6),
+body[data-screen="autobuyers"] .ab-card:nth-child(7),
+body[data-screen="autobuyers"] .ab-card:nth-child(8) {
+  min-height: 86px; border-radius: 10px;
+}
+body[data-screen="autobuyers"] .ab-card:nth-child(-n+8) { order: 4; }
+body[data-screen="autobuyers"] .ab-card:nth-child(9) { order: 3; grid-column: 1 / -1; min-height: 76px; }
+body[data-screen="autobuyers"] .ab-card:nth-child(10),
+body[data-screen="autobuyers"] .ab-card:nth-child(11) { order: 2; }
+body[data-screen="autobuyers"] .ab-card:nth-child(12) { order: 1; }
+body[data-screen="autobuyers"] .ab-card:nth-child(n+13) { order: 5; }
+body[data-screen="autobuyers"] .ab-card:nth-child(10),
+body[data-screen="autobuyers"] .ab-card:nth-child(11) { min-height: 180px; }
+body[data-screen="autobuyers"] .ab-card:nth-child(12) { grid-column: 1 / -1; min-height: 150px; }
+body[data-screen="autobuyers"] .ab-card button:not(.ab-mode-button) {
+  border-color: #b67e33;
+}
+body[data-screen="autobuyers"] .ab-card .ab-mode-button {
+  background: #24242b; border-color: #b67e33; text-align: center;
+}
+body[data-screen="autobuyers"] .ab-toggle { font-size: 12px; }
+body[data-screen="autobuyers"] .ab-toggle input { width: 19px; height: 19px; }
+@media(max-width:540px) {
+  body[data-screen="autobuyers"] #tabContent { padding: 10px !important; }
+  body[data-screen="autobuyers"] .ab-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+  body[data-screen="autobuyers"] .ab-card {
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 9px; min-width: 0; min-height: 150px; gap: 8px;
+  }
+  body[data-screen="autobuyers"] .ab-card > div {
+    display: block; width: 100%; min-width: 0;
+  }
+  body[data-screen="autobuyers"] .ab-card strong { white-space: normal; font-size: 13px; }
+  body[data-screen="autobuyers"] .ab-card small { white-space: normal; font-size: 10px; margin-top: 4px; }
+  body[data-screen="autobuyers"] .ab-card label[style] {
+    display: flex !important; flex-wrap: wrap; white-space: normal;
+    margin: 7px 0 0 !important; font-size: 10px !important;
+  }
+  body[data-screen="autobuyers"] .ab-card label[style] input {
+    width: 100% !important; max-width: 100% !important; box-sizing: border-box;
+  }
+  body[data-screen="autobuyers"] .ab-card:nth-child(9),
+  body[data-screen="autobuyers"] .ab-card:nth-child(12) { grid-column: 1 / -1; }
+  body[data-screen="autobuyers"] .ab-card:nth-child(1),
+  body[data-screen="autobuyers"] .ab-card:nth-child(2),
+  body[data-screen="autobuyers"] .ab-card:nth-child(3),
+  body[data-screen="autobuyers"] .ab-card:nth-child(4),
+  body[data-screen="autobuyers"] .ab-card:nth-child(5),
+  body[data-screen="autobuyers"] .ab-card:nth-child(6),
+  body[data-screen="autobuyers"] .ab-card:nth-child(7),
+  body[data-screen="autobuyers"] .ab-card:nth-child(8) { min-height: 125px; }
+}
+</style>
+
 </head>
 <body><main>
 <div class="sticky-tools">
