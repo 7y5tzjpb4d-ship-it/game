@@ -873,7 +873,26 @@ function timeDimensionMultiplier(tier){
  return m;
 }
 function canBuyTimeDimension(tier){return state.eternities>0&&tier>=0&&tier<8&&getEPBigNumber().compare(timeDimensionCost(tier))>=0;}
-function maxBuyTimeDimension(tier){if(tier<0||tier>7||state.eternities<=0)return 0;const d=state.timeDimensions[tier];let remaining=getEPBigNumber(),bought=0,cost=timeDimensionCost(tier),guard=0;while(remaining.compare(cost)>=0&&guard<100000){remaining=remaining.subtract(cost);bought++;d.bought=(Number(d.bought)||0)+1;cost=timeDimensionCost(tier);guard++;}if(!bought)return 0;d.amount=BigNumber.from(d.amount||0).add(bought).toNumber();d.multiplier=timeDimensionMultiplier(tier).toJSON();setEPBigNumber(remaining);save();return bought;}
+function maxBuyTimeDimension(tier){
+ if(tier<0||tier>7||state.eternities<=0)return 0;
+ const d=state.timeDimensions[tier];
+ let remaining=getEPBigNumber(),bought=0,guard=0;
+ // TDの価格倍率は現在のEP残高でも変化する。購入前のEPを固定して
+ // コストを計算すると、購入途中で価格スケーリング境界を跨いだ際に
+ // 購入数と実際の残EPがずれるため、1回ごとに残高を反映して再計算する。
+ while(guard<100000){
+  const cost=timeDimensionCost(tier);
+  if(remaining.compare(cost)<0)break;
+  remaining=remaining.subtract(cost);
+  setEPBigNumber(remaining);
+  d.bought=(Number(d.bought)||0)+1;
+  bought++;guard++;
+ }
+ if(!bought)return 0;
+ d.amount=BigNumber.from(d.amount||0).add(bought).toNumber();
+ d.multiplier=timeDimensionMultiplier(tier).toJSON();
+ save();return bought;
+}
 function maxAllTimeDimensions(){
  if(state.eternities<=0)return 0;
  const initialEP=getEPBigNumber();
@@ -908,18 +927,24 @@ function maxAllTimeDimensions(){
 function maxBuyTimeDimensionWithBudget(tier,budget){
  if(tier<0||tier>7||state.eternities<=0)return 0;
  const d=state.timeDimensions[tier];
- let remaining=getEPBigNumber().min(budget),bought=0,cost=timeDimensionCost(tier),guard=0;
- while(remaining.compare(cost)>=0&&guard<100000){
+ const startingEP=getEPBigNumber();
+ const spendingLimit=startingEP.min(BigNumber.from(budget));
+ const targetEP=startingEP.subtract(spendingLimit);
+ let remaining=startingEP,bought=0,guard=0;
+ // そのTierに割り当てた予算を超えない範囲で、EP残高を毎回更新して購入。
+ // timeDimensionCost()がEP依存の価格スケーリングを正しく参照できるようにする。
+ while(guard<100000){
+  const cost=timeDimensionCost(tier);
+  if(remaining.subtract(cost).compare(targetEP)<0)break;
   remaining=remaining.subtract(cost);
-  bought++;
+  setEPBigNumber(remaining);
   d.bought=(Number(d.bought)||0)+1;
-  cost=timeDimensionCost(tier);
-  guard++;
+  bought++;guard++;
  }
  if(!bought)return 0;
  d.amount=BigNumber.from(d.amount||0).add(bought).toNumber();
  d.multiplier=timeDimensionMultiplier(tier).toJSON();
- setEPBigNumber(getEPBigNumber().subtract(budget.min(getEPBigNumber()).subtract(remaining)));
+ save();
  return bought;
 }
 function buyTimeDimension(tier){if(!canBuyTimeDimension(tier))return false;const cost=timeDimensionCost(tier);if(getEPBigNumber().compare(cost)<0)return false;setEPBigNumber(getEPBigNumber().subtract(cost));const d=state.timeDimensions[tier];d.bought=(Number(d.bought)||0)+1;d.amount=(Number(d.amount)||0)+1;d.multiplier=timeDimensionMultiplier(tier).toJSON();save();if(document.body.dataset.screen==='main'&&mainSubpage==='timeDimensions')switchScreen('main');return true;}
