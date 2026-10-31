@@ -2037,33 +2037,27 @@ function maxBuyInfinityDimension(i){
  if(i<0||i>7)return 0;
  const d=state.infinityDimensions[i];
  if(!d.unlocked)return 0;
- const balance=getIPBigNumber();
- const firstCost=infinityDimensionCost(i);
- if(balance.compare(firstCost)<0)return 0;
- const growth=Number(infinityDimensionDefs[i].growth);
- const logGrowth=Math.log10(growth);
- const estimate=Math.max(1,Math.floor((balance.log10()-firstCost.log10())/logGrowth)+2);
- let low=0,high=Math.min(estimate,100000000);
- while(low<high){
-  const mid=Math.ceil((low+high)/2);
-  if(infinityDimensionBulkCost(i,mid).compare(balance)<=0)low=mid;else high=mid-1;
+ let bought=0;
+ // ID Max All follows the visible order: buy the current tier repeatedly
+ // until its next 10-pack is unaffordable, then move to the next tier.
+ // Do not call save()/render for each pack; that caused the UI to stall.
+ while(true){
+  const cost=infinityDimensionCost(i);
+  if(getIPBigNumber().compare(cost)<0)break;
+  if(!spendIPBigNumber(cost))break;
+  d.amount=BigNumber.from(d.amount).add(10).toJSON();
+  d.bought+=10;
+  bought+=10;
  }
- if(low<=0)return 0;
- const totalCost=infinityDimensionBulkCost(i,low);
- if(!spendIPBigNumber(totalCost))return 0;
- const bought=low*10;
- d.amount=BigNumber.from(d.amount).add(bought).toJSON();
- d.bought+=bought;
  return bought;
 }
 function maxAllInfinityDimensions(){
  ensureInfinityDimensionState();
  let total=0;
- // Max All buys each unlocked Infinity Dimension in ascending tier order,
- // using a bulk geometric-series purchase for each tier. This is equivalent
- // to repeated 10-at-a-time purchases, without a long synchronous loop.
+ // Process from the first (topmost) ID to the eighth (bottommost),
+ // exhausting each tier before moving down, matching the displayed order.
  for(let i=0;i<8;i++)total+=maxBuyInfinityDimension(i);
- save();
+ if(total>0)save();
  return total;
 }
 function buyInfinityDimension(i,suppressNavigation=false){ensureInfinityDimensionState();if(i<0||i>7||!canBuyInfinityDimension(i))return false;const cost=infinityDimensionCost(i);if(!spendIPBigNumber(cost))return false;const d=state.infinityDimensions[i];d.amount=BigNumber.from(d.amount).add(10).toJSON();d.bought+=10;save();if(!suppressNavigation&&document.body.dataset.screen==='main'&&mainSubpage==='infinityDimensions')switchScreen('main');return true;}
