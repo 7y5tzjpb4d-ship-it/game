@@ -2075,6 +2075,19 @@ function maxAllInfinityDimensions(){
 function buyInfinityDimension(i,suppressNavigation=false){ensureInfinityDimensionState();if(i<0||i>7||!canBuyInfinityDimension(i))return false;const cost=infinityDimensionCost(i);if(!spendIPBigNumber(cost))return false;const d=state.infinityDimensions[i];d.amount=BigNumber.from(d.amount).add(10).toJSON();d.bought+=10;save();if(!suppressNavigation&&document.body.dataset.screen==='main'&&mainSubpage==='infinityDimensions')switchScreen('main');return true;}
 function fmtIDCost(n){const b=BigNumber.from(n);if(b.mantissa===0)return '0.00';if(b.exponent<3&&b.exponent>=-2)return b.toNumber().toFixed(2);return `${b.mantissa.toFixed(2)}e${b.exponent}`;}
 function infinityDimensionView(){ensureInfinityDimensionState();const power=BigNumber.from(state.infinityPowerBN||0);return `<div class="id-screen"><h2>Infinity Dimensions</h2><p>Infinity Power：<strong>${fmtBig(power)}</strong>　通常次元への倍率：<strong>×${fmtBig(power.max(1).power(7))}</strong></p><p class="id-explain">Infinity DimensionはIPで10個ずつ購入します。第1次元はInfinity Powerを生産し、第2〜第8次元は1つ下の段階を生産します。</p><div class="dimension-maxall-wrap"><button type="button" class="dimension-maxall id-maxall" data-maxall-id>Max all</button></div><div class="id-dimension-list">${infinityDimensionDefs.map((def,i)=>{const d=state.infinityDimensions[i],amount=infinityDimensionAmount(i),cost=infinityDimensionCost(i),unlocked=d.unlocked;return `<article class="id-dimension ${unlocked?'':'id-locked'}"><div class="id-tier">${i+1}</div><div class="id-details"><strong>Infinity Dimension ${i+1}</strong><span>所持数：${fmtBig(amount)}（購入 ${fmt(d.bought)}）</span><span>×${fmtBig(infinityDimensionMultiplier(i))}</span><span>${unlocked?``:`解放条件：反物質 1e${def.unlock}`}</span></div><button type="button" class="buy id-buy" data-buy-id="${i}" ${canBuyInfinityDimension(i)?'':'disabled'}>${unlocked?`<small>コスト：${fmtIDCost(cost)} IP</small>`:'ロック中'}</button></article>`;}).join('')}</div></div>`;}
+function updateInfinityDimensionScreen(){
+ const root=tabContent.querySelector('.id-dimension-list');if(!root)return;
+ ensureInfinityDimensionState();
+ root.querySelectorAll('.id-dimension').forEach((article,i)=>{
+  const d=state.infinityDimensions[i],amount=article.querySelector('.id-details span:nth-of-type(1)'),mult=article.querySelector('.id-details span:nth-of-type(2)'),buy=article.querySelector('[data-buy-id]');
+  if(amount)amount.textContent=`所持数：${fmtBig(infinityDimensionAmount(i))}（購入 ${fmt(d.bought)}）`;
+  if(mult)mult.textContent=`×${fmtBig(infinityDimensionMultiplier(i))}`;
+  if(buy){buy.disabled=!canBuyInfinityDimension(i);const small=buy.querySelector('small');if(small)small.textContent=`コスト：${fmtIDCost(infinityDimensionCost(i))} IP`;}
+ });
+ const power=tabContent.querySelector('.id-screen>p strong');if(power)power.textContent=fmtBig(BigNumber.from(state.infinityPowerBN||0));
+ const powerMult=tabContent.querySelector('.id-screen>p strong:nth-of-type(2)');if(powerMult)powerMult.textContent=`×${fmtBig(BigNumber.from(state.infinityPowerBN||0).max(1).power(7))}`;
+}
+
 
 function timeShardsFreeTickspeedInfo(){
   const shards=BigNumber.from(state.timeShardsBN||0).max(0);
@@ -2830,7 +2843,7 @@ function tick(now){
  if(challengeRuleActive(11)&&BigNumber.from(state.challenge11Matter).compare(matterBigNumber())>0){state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=1;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};autobuyerElapsed[9]=0;challenge11MatterBoosted=true;}
  updateCrunchEfficiencyPeak();runAutobuyers(dt,{skipBoost:challenge11MatterBoosted});checkAchievements();notifyNewAchievements();
  render();updateReplicantiCountdownDisplay();// Infinity Dimension画面は約30fpsで再描画し、数値更新のカクつきを軽減する。
- if(document.body.dataset.screen==='main'&&(mainSubpage==='infinityDimensions'||mainSubpage==='timeDimensions')&&now-lastInfinityDimensionRender>=33){lastInfinityDimensionRender=now;switchScreen('main');}if(document.body.dataset.screen==='infinity'&&infinitySubpage==='replicanti'&&now-lastReplicantiRender>=500){lastReplicantiRender=now;switchScreen('infinity');}if((state.activeChallenge||state.activeInfinityChallenge)&&document.body.dataset.screen==='challenges'&&now-lastRender>500){switchScreen('challenges');}lastRender=now;
+ if(document.body.dataset.screen==='main'&&mainSubpage==='infinityDimensions'&&now-lastInfinityDimensionRender>=100){lastInfinityDimensionRender=now;updateInfinityDimensionScreen();}else if(document.body.dataset.screen==='main'&&mainSubpage==='timeDimensions'&&now-lastInfinityDimensionRender>=100){lastInfinityDimensionRender=now;switchScreen('main');}if(document.body.dataset.screen==='infinity'&&infinitySubpage==='replicanti'&&now-lastReplicantiRender>=500){lastReplicantiRender=now;switchScreen('infinity');}if((state.activeChallenge||state.activeInfinityChallenge)&&document.body.dataset.screen==='challenges'&&now-lastRender>500){switchScreen('challenges');}lastRender=now;
  if(now-lastSave>5000){save();lastSave=now;}
  requestAnimationFrame(tick);
 }
