@@ -2014,7 +2014,7 @@ function notifyNewContentUnlocks(){
  observedICUnlocks=icNow;observedIDUnlocks=idNow;
 }
 
-function infinityDimensionUnlocked(i){const def=infinityDimensionDefs[i];if(!def||Number(state.totalAntimatterLog10||0)<def.unlock)return false;if(i===0&&!hasIPAtLeast('1e8'))return false;return true;}
+function infinityDimensionUnlocked(i){const def=infinityDimensionDefs[i];if(!def||Number(state.totalAntimatterLog10||0)<def.unlock)return false;return true;}
 function ensureInfinityDimensionState(){
  if(!Array.isArray(state.infinityDimensions))state.infinityDimensions=[];
  state.infinityDimensions=Array.from({length:8},(_,i)=>{const d=state.infinityDimensions[i]||{};const amount=BigNumber.from(d.amount||0).max(0);let bought=Math.max(0,Math.floor(Number(d.bought)||0));/* Migrate legacy saves where bought counted 10-unit purchases rather than individual dimensions. */if(bought>0&&bought<10&&amount.compare(10)>=0)bought*=10;/* ID unlocks are permanent: never relock a dimension that was already unlocked. */return {amount:amount.toJSON(),bought,unlocked:Boolean(d.unlocked)||infinityDimensionUnlocked(i)};});
