@@ -1138,7 +1138,7 @@ function matterDisplayBig(){return matterBigNumber();}
 function productionRateBigNumber(){let r=dimensionProductionBigNumber(0);if(state.activeChallenge===12)r=r.add(dimensionProductionBigNumber(1));return r;}
 function dimensionAmountBig(i){const saved=state.amountBN?.[i];if(saved&&Number.isFinite(Number(saved.mantissa))&&Number.isFinite(Number(saved.exponent)))return BigNumber.from(saved).max(0);const b=BigNumber.from(Math.max(0,state.amount[i]||0));state.amountBN[i]=b.toJSON();return b;}
 function setDimensionAmountBig(i,value){const b=BigNumber.from(value).max(0);state.amountBN[i]=b.toJSON();state.amount[i]=b.toNumber();return b;}
-function dimensionProductionBigNumber(i){let mult=dimensionMultiplierBigNumber(i);if(challengeRuleActive(2))mult=mult.multiply(Math.max(0,Math.min(1,state.challenge2Recovery)));if(challengeRuleActive(3)&&i===0)mult=mult.multiply(0.01*state.challenge3TimeMult);if(state.activeInfinityChallenge===4&&i!==state.icLastBoughtDimension)mult=mult.power(0.25);if(state.activeInfinityChallenge===8)mult=mult.multiply(Math.max(0,state.ic8ProductionMultiplier));return dimensionAmountBig(i).power(dimensionAmountPower(i)).multiply(mult);}
+function dimensionProductionBigNumber(i){let mult=dimensionMultiplierBigNumber(i);if(state.activeInfinityChallenge===4&&i!==state.icLastBoughtDimension)mult=mult.power(0.25);mult=mult.multiply(tickspeedMultiplierBigNumber());if(challengeRuleActive(2))mult=mult.multiply(Math.max(0,Math.min(1,state.challenge2Recovery)));if(challengeRuleActive(3)&&i===0)mult=mult.multiply(0.01*state.challenge3TimeMult);if(state.activeInfinityChallenge===8)mult=mult.multiply(Math.max(0,state.ic8ProductionMultiplier));return dimensionAmountBig(i).power(dimensionAmountPower(i)).multiply(mult);}
 function infinityPowerDimensionMultiplierBigNumber(){return BigNumber.from(state.infinityPowerBN||0).max(1).power(7);}
 function dimensionMultiplierBigNumber(i){
  let m=BigNumber.from(challengeRuleActive(8)?1:dimensionBoostMult(i));
@@ -1151,7 +1151,7 @@ function dimensionMultiplierBigNumber(i){
  const tenBuy=(challengeRuleActive(7)?Math.min(2,1+0.2*state.boosts):(state.infinityUpgrades.includes('dimMult')?2.2:2))+(hasAchievement(58)?0.01:0);
  m=m.multiply(BigNumber.from(tenBuy).power(Math.floor(state.bought[i]/10)));
  if(state.activeInfinityChallenge===3||infinityChallengeCompleted(3))m=m.multiply(BigNumber.from(1.05+Math.max(0,Number(state.galaxies)||0)/200).power(state.tickspeed));
- if(infinityChallengeCompleted(8)&&i>=1&&i<=6)m=m.multiply(dimensionMultiplierBigNumber(0).divide(tickspeedMultiplierBigNumber()).multiply(dimensionMultiplierBigNumber(7).divide(tickspeedMultiplierBigNumber())).power(0.02));
+ if(infinityChallengeCompleted(8)&&i>=1&&i<=6)m=m.multiply(dimensionMultiplierBigNumber(0).multiply(dimensionMultiplierBigNumber(7)).power(0.02));
  if(state.activeInfinityChallenge===6&&state.amount[1]>0)m=m.divide(BigNumber.from(Math.max(1,state.icMatter)));
  for(const f of [(i===0&&state.achievements[15])?1.1:1,(i===7&&state.achievements[10])?1.1:1,(i===0&&state.achievements[16])?1.05:1,(i<7&&state.achievements[19])?1.02:1,state.achievements[26]?1+(i+1)*0.01:1,state.achievements[31]?1.1:1])m=m.multiply(f);
  m=m.multiply(infinityUpgradeMultiplierBigNumber('timeMult')).multiply(infinityUpgradeMultiplierBigNumber('timeMult2'));
@@ -1176,9 +1176,10 @@ function dimensionMultiplierBigNumber(i){
  if(hasAchievement(56)&&state.infinityTime<180)m=m.multiply(Math.max(6/(state.infinityTime/60+3),1));
  if(hasAchievement(65)&&(state.activeChallenge||state.activeInfinityChallenge)&&state.infinityTime<180)m=m.multiply(Math.max(4/(state.infinityTime/60+1),1));
  if(hasAchievement(74)&&(state.activeChallenge||state.activeInfinityChallenge))m=m.multiply(1.4);
- const finalMultiplier=m.multiply(tickspeedMultiplierBigNumber()).multiply(achievementMultiplier());
- // IC4's reward raises the complete Antimatter Dimension multiplier, including
- // tickspeed, achievements, and other applicable bonuses, to the 1.05 power.
+ // Achievement power is part of the Dimension multiplier. Tickspeed is kept
+ // separate: it changes production speed, not the displayed Dimension multiplier.
+ const finalMultiplier=m.multiply(achievementMultiplier());
+ // IC4 raises the Dimension multiplier itself; Tickspeed is not included.
  return infinityChallengeCompleted(4)?finalMultiplier.power(1.05):finalMultiplier;
 }
 function tickspeedMultiplierBigNumber(){if(state.activeInfinityChallenge===3)return BigNumber.from(1);const base=tickspeedBase();const freeTimeShardTickspeedCount=timeShardsFreeTickspeedInfo().count;let mult=BigNumber.from(base).power(Math.min(Math.max(0,Number(state.tickspeed)||0)+freeTimeShardTickspeedCount,1e9));mult=mult.multiply(BigNumber.from(tickspeedAchievementRewardMultiplier()));if(hasAchievement(83)){const galaxies=Math.max(0,Number(state.galaxies)||0);mult=mult.multiply(BigNumber.from(Math.pow(0.95,-galaxies)));}return mult;}
@@ -1302,7 +1303,7 @@ function infinityUpgradeMultiplier(id){return hasInfinityUpgrade(id)?infinityUpg
 // Keep the legacy entry point in sync with the authoritative BigNumber calculation.
 // Convert only at the legacy boundary; all core calculations remain BigNumber-based.
 function dimensionMult(i){return dimensionMultiplierBigNumber(i).toNumber();}
-// Dimension multiplier display and production share dimensionMultiplierBigNumber().
+// Dimension display uses dimensionMultiplierBigNumber(); production adds Tickspeed separately.
 function achievementMultiplier(){
  // Each achievement gives x1.03; the x1.25 row bonus is awarded only for
  // each fully completed row of eight achievements, not every eight total.
