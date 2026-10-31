@@ -2022,20 +2022,38 @@ function infinityDimensionAmount(i){ensureInfinityDimensionState();return BigNum
 function infinityDimensionCost(i){ensureInfinityDimensionState();const d=state.infinityDimensions[i],def=infinityDimensionDefs[i],batches=Math.floor(d.bought/10);return BigNumber.from(def.cost).multiply(BigNumber.from(def.growth).power(batches));}
 function infinityDimensionMultiplier(i){ensureInfinityDimensionState();return infinityDimensionProductionMultiplier().multiply(BigNumber.from(infinityDimensionDefs[i].step).power(Math.floor(state.infinityDimensions[i].bought/10)));}
 function canBuyInfinityDimension(i){ensureInfinityDimensionState();return state.infinityDimensions[i].unlocked&&hasIPAtLeast(infinityDimensionCost(i));}
-function maxBuyInfinityDimension(i){ensureInfinityDimensionState();if(i<0||i>7)return 0;const d=state.infinityDimensions[i];if(!d.unlocked)return 0;let remaining=getIPBigNumber(),bought=0,total=BigNumber.from(0),cost=infinityDimensionCost(i),guard=0;while(remaining.compare(cost)>=0&&guard<100000){remaining=remaining.subtract(cost);total=total.add(cost);bought+=10;d.bought+=10;cost=infinityDimensionCost(i);guard++;}if(!bought)return 0;d.amount=BigNumber.from(d.amount).add(bought).toJSON();setIPBigNumber(remaining);save();return bought;}
+function maxBuyInfinityDimension(i){
+ ensureInfinityDimensionState();
+ if(i<0||i>7)return 0;
+ const d=state.infinityDimensions[i];
+ if(!d.unlocked)return 0;
+ let bought=0,guard=0;
+ // Buy one 10-dimension bundle at a time, using the live IP balance and
+ // recalculating the next cost after every purchase (same path as manual buy).
+ while(guard<100000){
+  const cost=infinityDimensionCost(i);
+  if(getIPBigNumber().compare(cost)<0)break;
+  if(!spendIPBigNumber(cost))break;
+  d.amount=BigNumber.from(d.amount).add(10).toJSON();
+  d.bought+=10;
+  bought+=10;
+  guard++;
+ }
+ return bought;
+}
 function maxAllInfinityDimensions(){
  ensureInfinityDimensionState();
  const dims=state.infinityDimensions;
- // The original game first attempts one purchase in the highest unlocked tier
- // which has never been purchased, then max-buys from the lowest tier upward.
+ let total=0;
+ // Match the game's Max All order: buy one bundle from the highest
+ // unlocked, never-purchased tier first, then repeatedly buy each tier
+ // from 1 through 8 while its next bundle remains affordable.
  for(let i=7;i>=0;i--){
-  const d=dims[i];
-  if(d.unlocked&&d.bought===0&&canBuyInfinityDimension(i)){
-   buyInfinityDimension(i, true);
+  if(dims[i].unlocked&&dims[i].bought===0&&canBuyInfinityDimension(i)){
+   if(buyInfinityDimension(i,true))total+=10;
    break;
   }
  }
- let total=0;
  for(let i=0;i<8;i++)total+=maxBuyInfinityDimension(i);
  save();
  return total;
