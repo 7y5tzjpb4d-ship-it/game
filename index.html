@@ -677,6 +677,43 @@ body[data-screen="autobuyers"] .ab-dimension-grid .ab-card .ab-toggle { align-se
 }
 </style>
 
+<style>
+/* Normal Dimension autobuyers are grouped into one framed panel. */
+.ab-grid > .ab-dimension-group {
+  grid-column: 1 / -1 !important; display:block !important; min-width:0;
+  padding:12px !important; border:2px solid #66666d !important;
+  border-radius:20px !important; background:#19191f !important;
+}
+.ab-dimension-group-title {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:8px; margin:0 0 10px;
+}
+.ab-dimension-group-title strong {font-size:15px}
+.ab-dimension-group-title small {color:var(--muted);font-size:10px}
+.ab-dimension-grid {
+  display:grid !important; grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:7px !important;
+}
+.ab-dimension-grid > .ab-card {
+  display:flex !important; flex-direction:column !important; align-items:stretch !important;
+  justify-content:space-between !important; min-width:0; min-height:105px;
+  padding:8px !important; border:1px solid #393941 !important;
+  border-radius:10px !important; background:#1c1c22 !important;
+}
+.ab-dimension-grid > .ab-card > div {
+  display:flex; flex-wrap:wrap; align-items:center; gap:4px;
+}
+.ab-dimension-grid > .ab-card strong {font-size:12px}
+.ab-dimension-grid > .ab-card small {width:100%;white-space:normal}
+.ab-dimension-grid > .ab-card .ab-toggle {align-self:flex-start;margin-top:5px}
+@media(max-width:540px) {
+  .ab-grid > .ab-dimension-group {padding:9px !important}
+  .ab-dimension-grid {grid-template-columns:repeat(4,minmax(0,1fr)) !important;gap:6px !important}
+  .ab-dimension-grid > .ab-card {min-height:105px;padding:6px !important}
+  .ab-dimension-grid > .ab-card strong {font-size:11px}
+  .ab-dimension-grid > .ab-card .ab-mode-button {font-size:10px;padding:5px 2px}
+}
+</style>
 </head>
 <body><main>
 <div class="sticky-tools">
