@@ -1299,30 +1299,10 @@ function infinityUpgradeMultiplierValue(id){
  }
 }
 function infinityUpgradeMultiplier(id){return hasInfinityUpgrade(id)?infinityUpgradeMultiplierValue(id):1;}
-function dimensionMult(i){
- const infinityPowerMultiplier=infinityPowerDimensionMultiplierBigNumber().toNumber();
- const tenBuyMultiplier=(state.activeChallenge===7?Math.min(2,1+0.2*state.boosts):(state.infinityUpgrades.includes('dimMult')?2.2:2))+(hasAchievement(58)?0.01:0);
- let mult=infinityPowerMultiplier*(challengeRuleActive(8)?1:dimensionBoostMult(i))*Math.pow(tenBuyMultiplier,Math.floor(state.bought[i]/10))*(i===0&&state.achievements[15]?1.1:1)*(i===7&&state.achievements[10]?1.1:1)*(i===0&&state.achievements[16]?1.05:1)*(i<7&&state.achievements[19]?1.02:1)*(state.achievements[26]?1+(i+1)*0.01:1)*(state.achievements[31]?1.1:1);
- mult*=infinityUpgradeMultiplier('timeMult')*infinityUpgradeMultiplier('timeMult2');
- if(state.breakInfinityUnlocked){for(const id of ['totalAM','currentAM','infinities','achievements','slowestChallenge'])if(breakInfinityUpgradeBought(id))mult*=breakInfinityUpgradeEffect(id);}
- // 未使用IPボーナスは第1次元にのみ適用する。
- if(i===0)mult*=infinityUpgradeMultiplier('unspentBonus');
- if(i===0||i===7)mult*=infinityUpgradeMultiplier('18Mult');
- if(i===1||i===6)mult*=infinityUpgradeMultiplier('27Mult');
- if(i===2||i===5)mult*=infinityUpgradeMultiplier('36Mult');
- if(i===3||i===4)mult*=infinityUpgradeMultiplier('45Mult');
- if(hasAchievement(64)&&i<4)mult*=1.25;
- if(hasAchievement(68)&&i===0)mult*=1.5;
- if(hasAchievement(71)&&i===0)mult*=3;
- if(hasAchievement(72))mult*=1.1;
- if(hasAchievement(73))mult*=Math.pow(10,Math.min(300,matterLog()*0.00002))+1;if(hasAchievement(84))mult*=Math.pow(10,Math.min(300,matterLog()*0.00002))+1;
- if(hasAchievement(76))mult*=Math.max(1,Math.pow(Math.max(1,state.playTime/86400/2),0.05));
- if(hasAchievement(56)&&state.infinityTime<180)mult*=Math.max(6/(state.infinityTime/60+3),1);
- if(hasAchievement(65)&&(state.activeChallenge||state.activeInfinityChallenge)&&state.infinityTime<180)mult*=Math.max(4/(state.infinityTime/60+1),1);
- if(hasAchievement(74)&&(state.activeChallenge||state.activeInfinityChallenge))mult*=1.4;
- return mult;
-}
-// Dimension欄の表示にはdimensionMult()のみを使用。Tickspeedは生産計算にのみ適用する。
+// Keep the legacy entry point in sync with the authoritative BigNumber calculation.
+// Convert only at the legacy boundary; all core calculations remain BigNumber-based.
+function dimensionMult(i){return dimensionMultiplierBigNumber(i).toNumber();}
+// Dimension multiplier display and production share dimensionMultiplierBigNumber().
 function achievementMultiplier(){
  // Each achievement gives x1.03; the x1.25 row bonus is awarded only for
  // each fully completed row of eight achievements, not every eight total.
@@ -1335,7 +1315,7 @@ function achievementMultiplier(){
  }
  return Math.pow(1.03,count)*Math.pow(1.25,completedRows);
 }
-function productionMult(i){let m=dimensionMult(i)*(i===7?state.sacrificeMult:1)*tickspeedMult()*achievementMultiplier();if(challengeRuleActive(2))m*=Math.max(0,Math.min(1,state.challenge2Recovery));if(challengeRuleActive(3)&&i===0)m*=0.01*state.challenge3TimeMult;if(state.activeChallenge===12&&(i===1||i===3||i===5))m=Math.pow(Math.max(1,m),i===1?1.7:(i===3?1.4:1.3));return m;}
+function productionMult(i){let m=dimensionMultiplierBigNumber(i).toNumber();if(challengeRuleActive(2))m*=Math.max(0,Math.min(1,state.challenge2Recovery));if(challengeRuleActive(3)&&i===0)m*=0.01*state.challenge3TimeMult;if(state.activeChallenge===12&&(i===1||i===3||i===5))m=Math.pow(Math.max(1,m),i===1?1.7:(i===3?1.4:1.3));return m;}
 function dimensionAmountPower(i){return state.activeChallenge===12&&i===1?1.6:state.activeChallenge===12&&i===3?1.4:state.activeChallenge===12&&i===5?1.2:1;}
 function dimensionOutput(i){return dimensionProductionBigNumber(i).toNumber();}
 const achievementIds=[11,12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,31,32,33,34,35,36,37,38,41,42,43,44,45,46,47,48,51,52,53,54,55,56,57,58,61,62,63,64,65,66,67,68,71,72,73,74,75,76,77,78,81,82,83,84,85,86,87,88,91,92,93,94,95,96,97,98];
@@ -1461,7 +1441,7 @@ function productionRate(){return productionRateBigNumber().toNumber();}
 function boostRequirement(){const n=state.boosts+1;let base=20;if(challengeRuleActive(10))base+=20*Math.max(0,n-3);else if(n>5)base+=15*(n-5);const tsReduction=(tsOwned(211)?5:0)+(tsOwned(222)?2:0);return Math.max(1,base-tsReduction-(hasInfinityUpgrade('resetBoost')?9:0)-(infinityChallengeCompleted(5)?1:0));}
 function boostRequirementTier(){const n=state.boosts+1;return challengeRuleActive(10)?Math.min(6,n+3):(n<=5?n+3:8);}
 function canBoost(){if(state.activeInfinityChallenge===1&&state.boosts>=2)return false;if(state.activeChallenge===8&&state.boosts>=5)return false;const tier=boostRequirementTier();return dimensionAmountBig(tier-1).compare(boostRequirement())>=0;}
-function galaxyRequirement(){let g=Math.max(0,Number(state.galaxies)||0);let effectiveG=g;if(tsOwned(223))effectiveG=Math.max(0,effectiveG-7);if(tsOwned(224))effectiveG=Math.max(0,effectiveG-Math.floor(Math.max(0,Number(state.boosts)||0)/200));const base=challengeRuleActive(10)?99+90*effectiveG:80+(tsOwned(42)?52:60)*effectiveG;return Math.max(1,base-(hasInfinityUpgrade('resetBoost')?9:0)-(infinityChallengeCompleted(5)?1:0));}
+function galaxyRequirement(){let g=Math.max(0,Number(state.galaxies)||0);let effectiveG=g;if(tsOwned(223))effectiveG=Math.max(0,effectiveG-7);if(tsOwned(224))effectiveG=Math.max(0,effectiveG-Math.floor(Math.max(0,Number(state.boosts)||0)/200));let base;if(challengeRuleActive(10)){base=99+90*effectiveG;}else{const linear=80+(tsOwned(42)?52:60)*effectiveG;/* Distant Galaxies: after 100 normal Galaxies, the requirement increment rises by 2 for each additional Galaxy. */const distant=Math.max(0,effectiveG-100);base=linear+distant*(distant+1);}return Math.max(1,base-(hasInfinityUpgrade('resetBoost')?9:0)-(infinityChallengeCompleted(5)?1:0));}
 function canGalaxy(){const tier=challengeRuleActive(10)?5:7;return state.activeInfinityChallenge!==7&&!challengeRuleActive(8)&&dimensionAmountBig(tier).compare(galaxyRequirement())>=0;}
 
 </script>
@@ -1489,7 +1469,7 @@ function render(){
  setText($('statPlayTime'),formatPlayTime(state.playTime));
  setText($('statInfinityTime'),formatPlayTime(state.infinityTime));
  setText($('statFastestInfinity'),state.fastestInfinity>0?formatPlayTime(state.fastestInfinity):'未記録');
- document.querySelectorAll('[data-passive-ip-minute]').forEach(el=>{el.textContent='1分あたりの獲得量：'+(state.fastestInfinity>0?fmtBig(passiveIPRateBigNumber().multiply(60))+' IP':'最速Infinity記録後に表示');});document.querySelectorAll('[data-bi-generation-time]').forEach(el=>{el.textContent='生産時間：'+(state.fastestInfinity>0?Number(state.fastestInfinity*5).toFixed(1)+'秒':'未記録');});document.querySelectorAll('[data-ip-offline-minute]').forEach(el=>{el.textContent='オフライン時：'+fmtBig(bestIPPerMinuteBigNumber().multiply(0.5))+' IP/分（最高IP/分の50%）';});
+ document.querySelectorAll('[data-passive-ip-minute]').forEach(el=>{el.textContent='1分あたりの獲得量：'+(state.fastestInfinity>0?fmtBig(passiveIPRateBigNumber().multiply(60))+' IP':'最速Infinity記録後に表示');});document.querySelectorAll('[data-bi-generation-time]').forEach(el=>{el.textContent='生産時間：'+(state.fastestInfinity>0?Math.max(0.1,state.fastestInfinity*2).toFixed(1)+'秒':'未記録');});document.querySelectorAll('[data-ip-offline-minute]').forEach(el=>{el.textContent='オフライン時：'+fmtBig(bestIPPerMinuteBigNumber().multiply(0.5))+' IP/分（最高IP/分の50%）';});
  setText($('matter'),matterDisplayBig().toDisplayString(2));if(state.activeChallenge===11||state.activeInfinityChallenge===6){const el=$('matter');if(el)el.title='Matter: '+fmtMatter(state.activeInfinityChallenge===6?state.icMatter:state.challenge11Matter);}
  const nc11MatterPanel=$('challenge11MatterPanel');if(nc11MatterPanel)nc11MatterPanel.style.display=(state.activeChallenge===11||state.activeInfinityChallenge===6)?'block':'none';setText($('challenge11MatterLabel'),state.activeInfinityChallenge===6?'インフィニティチャレンジ6':'チャレンジ11');setText($('challenge11MatterDisplay'),fmtMatter(state.activeInfinityChallenge===6?state.icMatter:state.challenge11Matter));
  const eternityTab=document.querySelector('.screen-tabs button[data-screen="eternity"]');if(eternityTab)eternityTab.style.display=state.eternities>0?'':'none';
@@ -1914,7 +1894,7 @@ async function applyOfflineProgress(seconds){
   if(challengeRuleActive(3))state.challenge3TimeMult=Math.min(INFINITY,state.challenge3TimeMult*Math.pow(1.00038,10*dt));
   if(challengeRuleActive(11)&&state.amount[1]>0)state.challenge11Matter=Math.min(INFINITY,Math.max(1,state.challenge11Matter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,10*dt));if(state.activeInfinityChallenge===6)state.icMatter=Math.min(INFINITY,Math.max(1,state.icMatter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,200*dt));if(state.activeInfinityChallenge===8)state.ic8ProductionMultiplier*=Math.pow(0.8446303389034288,1000*dt);if(state.activeInfinityChallenge===2&&state.amount[7]>0){state.ic2SacrificeTimer+=dt;if(state.ic2SacrificeTimer>=0.4){state.ic2SacrificeTimer%=0.4;sacrifice(true);}}
   const passiveOfflineGain=passiveIPRateBigNumber().multiply(dt);addIPBigNumber(passiveOfflineGain);state.totalIPGained=(state.totalIPGained||0)+passiveOfflineGain.toNumber();const offlineIPGain=offlineIPRateBigNumber().multiply(dt);addIPBigNumber(offlineIPGain);state.totalIPGained=(state.totalIPGained||0)+offlineIPGain.toNumber();
- if(state.breakInfinityActive&&breakInfinityUpgradeBought('fastestInfinity')&&state.fastestInfinity>0)state.infinities+=dt/(state.fastestInfinity*5);
+ if(state.breakInfinityActive&&breakInfinityUpgradeBought('fastestInfinity')&&state.fastestInfinity>0){/* 本家: 最速Infinity時間の2倍ごとに1 Infinity。生成上限は100msに1回（毎秒10回）。 */const interval=Math.max(0.1,state.fastestInfinity*2);state.infinities+=dt/interval;}
  {const biIPGain=ipGenerationRateBigNumber().multiply(dt);if(biIPGain.compare(0)>0){addIPBigNumber(biIPGain);state.totalIPGained=(state.totalIPGained||0)+biIPGain.toNumber();}}
   if(state.activeChallenge===12){
    for(let i=7;i>=2;i--){const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-2);const v=cur.add(prod);setDimensionAmountBig(i-2,v);}
@@ -2196,7 +2176,7 @@ function breakInfinityView(){
  const oneTime=breakInfinityUpgradeData().map(([id,name,desc,cost])=>{
   const bought=breakInfinityUpgradeBought(id),can=active&&!bought&&hasIPAtLeast(cost);
   const showMultiplier=['totalAM','currentAM','infinities','slowestChallenge','achievements'].includes(id);
-  return `<button type="button" class="infinity-upgrade-btn ${bought?'purchased':''}" data-bi-upgrade="${id}" ${can?'':'disabled'}><strong>${name}</strong><span>${desc}</span>${id==='fastestInfinity'?`<span class="bi-generation-time" data-bi-generation-time>${state.fastestInfinity>0?Number(state.fastestInfinity*5).toFixed(1)+'秒':'未記録'}</span>`:''}${showMultiplier?`<span data-bi-current-multiplier="${id}">現在の倍率：×${fmtFixedBig(breakInfinityUpgradeEffectBigNumber(id),2)}</span>`:''}<small>${bought?'購入済み':`コスト：${fmt(cost)} IP`}</small></button>`;
+  return `<button type="button" class="infinity-upgrade-btn ${bought?'purchased':''}" data-bi-upgrade="${id}" ${can?'':'disabled'}><strong>${name}</strong><span>${desc}</span>${id==='fastestInfinity'?`<span class="bi-generation-time" data-bi-generation-time>${state.fastestInfinity>0?Math.max(0.1,state.fastestInfinity*2).toFixed(1)+'秒':'未記録'}</span>`:''}${showMultiplier?`<span data-bi-current-multiplier="${id}">現在の倍率：×${fmtFixedBig(breakInfinityUpgradeEffectBigNumber(id),2)}</span>`:''}<small>${bought?'購入済み':`コスト：${fmt(cost)} IP`}</small></button>`;
  }).join('');
  const repeatables=breakInfinityRepeatableData().map(([id,name,desc,baseCost,mult])=>{
   const index=id==='tickspeedCost'?0:id==='dimensionCost'?1:2;
@@ -2857,7 +2837,7 @@ function tick(now){
  if(challengeRuleActive(11)&&state.amount[1]>0)state.challenge11Matter=Math.min(INFINITY,Math.max(1,state.challenge11Matter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,10*dt));if(state.activeInfinityChallenge===6)state.icMatter=Math.min(INFINITY,Math.max(1,state.icMatter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,200*dt));if(state.activeInfinityChallenge===8)state.ic8ProductionMultiplier*=Math.pow(0.8446303389034288,1000*dt);if(state.activeInfinityChallenge===2&&state.amount[7]>0){state.ic2SacrificeTimer+=dt;if(state.ic2SacrificeTimer>=0.4){state.ic2SacrificeTimer%=0.4;sacrifice(true);}}
  if(state.activeChallenge===12){for(let i=7;i>=2;i--){const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-2);const v=cur.add(prod);setDimensionAmountBig(i-2,v);}}else{for(let i=7;i>=1;i--){if(challengeRuleActive(10)&&i>=6)continue;const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-1);const v=cur.add(prod);setDimensionAmountBig(i-1,v);}}
  const passiveGain=passiveIPRateBigNumber().multiply(dt);addIPBigNumber(passiveGain);state.totalIPGained=(state.totalIPGained||0)+passiveGain.toNumber();
- if(state.breakInfinityActive&&breakInfinityUpgradeBought('fastestInfinity')&&state.fastestInfinity>0)state.infinities+=dt/(state.fastestInfinity*5);
+ if(state.breakInfinityActive&&breakInfinityUpgradeBought('fastestInfinity')&&state.fastestInfinity>0){/* 本家: 最速Infinity時間の2倍ごとに1 Infinity。生成上限は100msに1回（毎秒10回）。 */const interval=Math.max(0.1,state.fastestInfinity*2);state.infinities+=dt/interval;}
  {const biIPGain=ipGenerationRateBigNumber().multiply(dt);if(biIPGain.compare(0)>0){addIPBigNumber(biIPGain);state.totalIPGained=(state.totalIPGained||0)+biIPGain.toNumber();}}
  const matterBeforeLog=matterLog();addMatterProduction(productionRateBigNumber(),dt);if(matterLog()>=matterBeforeLog)state.totalAntimatterLog10=Math.max(state.totalAntimatterLog10,matterLog());// Challenge targets are completed by Big Crunch, not automatically on reaching the threshold.
  let challenge11MatterBoosted=false;
