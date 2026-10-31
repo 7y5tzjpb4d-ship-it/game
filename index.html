@@ -2035,7 +2035,7 @@ function infinityDimensionBulkCost(i,batches){
 function maxBuyInfinityDimension(i){
  ensureInfinityDimensionState();
  if(i<0||i>7)return 0;
- const d=state.infinityDimensions[i];
+ let d=state.infinityDimensions[i];
  if(!d.unlocked)return 0;
  const budget=getIPBigNumber();
  const firstCost=infinityDimensionCost(i);
@@ -2059,6 +2059,10 @@ function maxBuyInfinityDimension(i){
  const totalCost=infinityDimensionBulkCost(i,packs);
  if(!spendIPBigNumber(totalCost))return 0;
  const quantity=packs*10;
+ // infinityDimensionCost()/ensureInfinityDimensionState() rebuilds the
+ // state.infinityDimensions array. Reacquire the live entry after all helper
+ // calls; the earlier object reference may now be detached from game state.
+ d=state.infinityDimensions[i];
  d.amount=BigNumber.from(d.amount).add(quantity).toJSON();
  d.bought+=quantity;
  return quantity;
