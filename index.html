@@ -2051,14 +2051,17 @@ function showContentUnlockToast(title,name,desc){
 function notifyNewContentUnlocks(){
  // EM7以降はICの解禁を内部処理で即時クリアし、解禁通知は一切表示しない。
  const hasMilestone7=Number(state.eternities)>=7;
+ // EM25以降はInfinity Dimensionを条件到達時に自動解禁し、解禁通知も表示しない。
+ const hasMilestone25=Number(state.eternities)>=25;
  if(hasMilestone7)autoCompleteUnlockedInfinityChallenges();
+ if(hasMilestone25)ensureInfinityDimensionState();
  const icNow=infinityChallengeData.map(c=>infinityChallengeUnlocked(c.id));
  const idNow=infinityDimensionDefs.map((d,i)=>infinityDimensionUnlocked(i));
  // 初回はロード済みデータを基準値にし、セーブ読込直後に通知が大量発生するのを防ぐ。
  if(observedICUnlocks===null||observedIDUnlocks===null){observedICUnlocks=icNow;observedIDUnlocks=idNow;return;}
- // EM7取得後はICの新規解禁を通知対象にせず、監視済み状態だけ更新する。
+ // EM7取得後はIC、EM25取得後はIDの新規解禁を通知対象にせず、監視済み状態だけ更新する。
  if(!hasMilestone7)icNow.forEach((unlocked,i)=>{if(unlocked&&!observedICUnlocks[i]){const c=infinityChallengeData[i];showContentUnlockToast('Infinity Challenge Unlocked!',`IC${c.id}: ${c.name}`,`解禁条件 ${c.unlock} Antimatter を達成しました。Challenge画面から挑戦できます。`);}});
- idNow.forEach((unlocked,i)=>{if(unlocked&&!observedIDUnlocks[i]){showContentUnlockToast('Infinity Dimension Unlocked!',`Infinity Dimension ${i+1}`,`解禁条件 1e${infinityDimensionDefs[i].unlock} Antimatter を達成しました。Infinity Dimension画面で確認できます。`);}});
+ if(!hasMilestone25)idNow.forEach((unlocked,i)=>{if(unlocked&&!observedIDUnlocks[i]){showContentUnlockToast('Infinity Dimension Unlocked!',`Infinity Dimension ${i+1}`,`解禁条件 1e${infinityDimensionDefs[i].unlock} Antimatter を達成しました。Infinity Dimension画面で確認できます。`);}});
  observedICUnlocks=icNow;observedIDUnlocks=idNow;
 }
 
