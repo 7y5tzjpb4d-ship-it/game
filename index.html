@@ -730,21 +730,22 @@ body[data-screen="autobuyers"] .ab-dimension-grid .ab-card .ab-toggle { align-se
 </style>
 
 <style id="infinity-dimension-autobuyer-layout">
-/* Infinity Dimension Autobuyers: compact 4-by-2 layout, like the original game. */
-body[data-screen="autobuyers"] .id-autobuyer-group {grid-column:1 / -1;min-width:0;border:1px solid var(--border,#555);border-radius:14px;padding:12px;margin:10px 0;display:flex;flex-direction:column;gap:10px;}
-body[data-screen="autobuyers"] .id-autobuyer-options {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
-body[data-screen="autobuyers"] .id-autobuyer-option {min-width:0;min-height:86px;box-sizing:border-box;border:1px solid var(--border,#555);border-radius:10px;padding:8px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:6px;}
-body[data-screen="autobuyers"] .id-autobuyer-option > strong {font-size:13px;font-weight:600;}
-body[data-screen="autobuyers"] .id-autobuyer-option .ab-toggle {font-size:11px;}
-body[data-screen="autobuyers"] .id-autobuyer-option small {color:var(--muted);font-size:10px;line-height:1.25;}
+/* Infinity Dimension Autobuyers: fixed 4-by-2 grid with content constrained inside each card. */
+body[data-screen="autobuyers"] .id-autobuyer-group {grid-column:1 / -1;min-width:0;max-width:100%;box-sizing:border-box;border:1px solid var(--border,#555);border-radius:14px;padding:12px;margin:10px 0;display:flex;flex-direction:column;gap:10px;overflow:hidden;}
+body[data-screen="autobuyers"] .id-autobuyer-options {display:grid;width:100%;min-width:0;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
+body[data-screen="autobuyers"] .id-autobuyer-options > .replicanti-autobuyer-option {min-width:0;max-width:100%;min-height:86px;box-sizing:border-box;border:1px solid var(--border,#555);border-radius:10px;padding:8px;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto 1fr;align-items:center;justify-content:initial;gap:6px;overflow:hidden;}
+body[data-screen="autobuyers"] .id-autobuyer-options > .replicanti-autobuyer-option > strong {min-width:0;font-size:13px;font-weight:600;overflow-wrap:anywhere;}
+body[data-screen="autobuyers"] .id-autobuyer-options > .replicanti-autobuyer-option .ab-toggle {min-width:0;font-size:11px;gap:3px;white-space:nowrap;}
+body[data-screen="autobuyers"] .id-autobuyer-options > .replicanti-autobuyer-option .ab-toggle input {flex:0 0 auto;}
+body[data-screen="autobuyers"] .id-autobuyer-options > .replicanti-autobuyer-option small {grid-column:1 / -1;min-width:0;color:var(--muted);font-size:10px;line-height:1.25;overflow-wrap:anywhere;word-break:normal;}
 @media(max-width:540px) {
  body[data-screen="autobuyers"] .id-autobuyer-group {padding:9px;gap:8px;}
  body[data-screen="autobuyers"] .id-autobuyer-options {grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;}
- body[data-screen="autobuyers"] .id-autobuyer-option {min-height:82px;padding:6px 4px;gap:5px;}
- body[data-screen="autobuyers"] .id-autobuyer-option > strong {font-size:11px;}
- body[data-screen="autobuyers"] .id-autobuyer-option .ab-toggle {font-size:10px;gap:2px;}
- body[data-screen="autobuyers"] .id-autobuyer-option .ab-toggle input {width:16px;height:16px;}
- body[data-screen="autobuyers"] .id-autobuyer-option small {font-size:9px;}
+ body[data-screen="autobuyers"] .id-autobuyer-options > .replicanti-autobuyer-option {min-height:82px;padding:6px 4px;gap:5px;}
+ body[data-screen="autobuyers"] .id-autobuyer-options > .replicanti-autobuyer-option > strong {font-size:10px;}
+ body[data-screen="autobuyers"] .id-autobuyer-options > .replicanti-autobuyer-option .ab-toggle {font-size:9px;gap:2px;}
+ body[data-screen="autobuyers"] .id-autobuyer-options > .replicanti-autobuyer-option .ab-toggle input {width:15px;height:15px;}
+ body[data-screen="autobuyers"] .id-autobuyer-options > .replicanti-autobuyer-option small {font-size:9px;}
 }
 </style>
 </head>
