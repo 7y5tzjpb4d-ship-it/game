@@ -2188,6 +2188,9 @@ function unlockReplicanti(){if(state.replicantiUnlocked||!hasIPAtLeast('1e140'))
 function buyReplicantiUpgrade(type){if(!state.replicantiUnlocked)return;if(type==='chance'){if(state.replicantiChanceUpgrades>=99||!hasIPAtLeast(replicantiChanceCost()))return;spendIPBigNumber(replicantiChanceCost());state.replicantiChanceUpgrades++;state.replicantiChance= Math.min(100,1+state.replicantiChanceUpgrades);}else if(type==='interval'){const intervalFloor=tsOwned(22)?1:50;if(state.replicantiInterval<=intervalFloor||!hasIPAtLeast(replicantiIntervalCost()))return;spendIPBigNumber(replicantiIntervalCost());state.replicantiIntervalUpgrades++;state.replicantiInterval=Math.max(intervalFloor,1000*Math.pow(.9,state.replicantiIntervalUpgrades));}else if(type==='galaxy'){if(!hasIPAtLeast(replicantiGalaxyCost()))return;spendIPBigNumber(replicantiGalaxyCost());state.replicantiGalaxyUpgrades++;}save();switchScreen('infinity');}
 function buyReplicantiGalaxy(silent=false){if(!state.replicantiUnlocked||replicantiLog10()<Math.log10(Number.MAX_VALUE)||state.replicantiGalaxies>=Math.max(state.replicantiGalaxyUpgrades,hasAchievement(95)?1:0)+(tsOwned(225)?Math.floor(Math.max(0,replicantiLog10())/1000):0)+(tsOwned(226)?Math.floor(Math.max(0,Number(state.replicantiGalaxyUpgrades)||0)/15):0))return;state.replicantiGalaxies++;state.replicanti=1;state.replicantiLog10Value=0;state.replicantiTimer=0;galaxyResetForReplicanti();if(!silent){save();switchScreen('infinity');}return true;}
 function galaxyResetForReplicanti(){
+ // EM40: Replicanti Galaxy purchases no longer reset Antimatter, Dimensions,
+ // Tickspeed, Sacrifice, or Dimension Boost. Keep the entire current run state.
+ if(Math.max(0,Math.floor(Number(state.eternities)||0))>=40)return;
  // Keep the Replicanti Galaxy count, but mirror the normal Galaxy reset effects.
  autobuyerElapsed[10]=0;
  resetDimensionAutobuyerTicksAfterPrestige();
