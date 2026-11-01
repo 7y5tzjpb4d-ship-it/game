@@ -1912,6 +1912,9 @@ function eternityReset(){
  if(nextEternities>=4){state.infinityUpgrades=keptInfinityUpgrades;state.ipOffline=true;} // EM4: retain all Infinity Upgrades and grant Offline IP as purchased.
  if(nextEternities>=8){state.breakInfinityUpgrades=keptBreakUpgrades;state.breakInfinityRepeatables=keptBreakRepeatables;} // EM8: retain both one-time and repeatable Break Infinity Upgrades.
  if(nextEternities>=10){state.replicantiUnlocked=true;state.replicanti=1;state.replicantiLog10Value=0;}
+ // Re-apply the retained Infinity Upgrade starting bonuses after Eternity has restored the upgrades.
+ // In particular, 'skipResetGalaxy' grants 4 Dimension Boosts and 1 Galaxy immediately.
+ state.boosts=startingBoosts();state.galaxies=startingGalaxies();
  state.infinityTime=0;state.infinityStartTimestamp=Date.now();state.bestIPPerMinBN=BigNumber.from(0).toJSON();state.maxAllUsedThisInfinity=false;state.lastTenIPPerMinBN=[];resetCrunchEfficiencyPeak();resetChallengeTimers();autobuyerElapsed.fill(0);observedAchievements=state.achievements.slice();mainSubpage='timeDimensions';infinitySubpage='upgrades';buildRows();render();save();switchScreen('main');return true;
 }
 const OFFLINE_PROGRESS_DEFAULT_TICKS=100000;
