@@ -1865,6 +1865,7 @@ function eternityReset(){
  const keptAutobuyers=nextEternities>=2?JSON.parse(JSON.stringify(state.autobuyers)):null;
  const keptInfinityUpgrades=nextEternities>=4?[...state.infinityUpgrades]:[];
  const keptBreakUpgrades=nextEternities>=8?[...state.breakInfinityUpgrades]:[];
+ const keptBreakRepeatables=nextEternities>=8?Array.from({length:3},(_,i)=>Math.max(0,Math.floor(Number(state.breakInfinityRepeatables?.[i])||0))):[0,0,0];
  if(tsOwned(191))state.bankedInfinities=Math.max(0,Math.floor(Number(state.bankedInfinities)||0))+Math.floor(Math.max(0,Number(state.infinities)||0)*0.05);
  // Store the best EP/min from this completed Eternity; the record persists across Eternity resets.
  recordBestEPPerMinute(gain,state.eternityTime);
@@ -1884,7 +1885,7 @@ function eternityReset(){
  state.autobuyers.lastCrunchIPGainBN=BigNumber.from(1).toJSON();
  if(nextEternities>=2){state.completedChallenges=Array.from({length:12},(_,i)=>i+1);state.breakInfinityUnlocked=true;state.breakInfinityActive=true;}
  if(nextEternities>=4){state.infinityUpgrades=keptInfinityUpgrades;state.ipOffline=true;} // EM4: retain all Infinity Upgrades and grant Offline IP as purchased.
- if(nextEternities>=8)state.breakInfinityUpgrades=keptBreakUpgrades;
+ if(nextEternities>=8){state.breakInfinityUpgrades=keptBreakUpgrades;state.breakInfinityRepeatables=keptBreakRepeatables;} // EM8: retain both one-time and repeatable Break Infinity Upgrades.
  if(nextEternities>=10){state.replicantiUnlocked=true;state.replicanti=1;state.replicantiLog10Value=0;}
  state.infinityTime=0;state.infinityStartTimestamp=Date.now();state.bestIPPerMinBN=BigNumber.from(0).toJSON();state.maxAllUsedThisInfinity=false;state.lastTenIPPerMinBN=[];resetCrunchEfficiencyPeak();resetChallengeTimers();autobuyerElapsed.fill(0);observedAchievements=state.achievements.slice();mainSubpage='timeDimensions';infinitySubpage='upgrades';buildRows();render();save();switchScreen('main');return true;
 }
