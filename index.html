@@ -875,9 +875,15 @@ function timeDimensionCost(tier){
   if(ep.compare(BigNumber.from('1e6000'))>=0) priceMult=Math.pow(priceMult,4);
   return timeDimensionBaseCosts[tier].multiply(BigNumber.from(priceMult).power(bought));
 }
+function timeStudy11Multiplier(){
+ // Official TS11: 1 / (0.95 / T^0.005 + 0.05 / T^0.0003), with T capped at 1e2500.
+ const T=tickspeedMultiplierBigNumber().max(1).min(BigNumber.from('1e2500'));
+ const denominator=BigNumber.from(0.95).divide(T.power(0.005)).add(BigNumber.from(0.05).divide(T.power(0.0003)));
+ return BigNumber.from(1).divide(denominator);
+}
 function timeDimensionMultiplier(tier){
  const d=state.timeDimensions[tier];let m=BigNumber.from(4).power(Math.max(0,Math.floor((Number(d?.bought)||0))));
- if(tsOwned(11)&&tier===0)m=m.multiply(tickspeedMultiplierBigNumber().power(0.005));
+ if(tsOwned(11)&&tier===0)m=m.multiply(timeStudy11Multiplier());
  if(tsOwned(73)&&tier===2)m=m.multiply(sacrificeMultiplierBigNumber().power(0.005));
  if(tsOwned(93))m=m.multiply(BigNumber.from(Math.max(1,timeShardsFreeTickspeedInfo().count)).power(0.25));
  if(tsOwned(103))m=m.multiply(BigNumber.from(Math.max(1,Number(state.replicantiGalaxies)||0)));
@@ -2246,7 +2252,7 @@ function formatPlayTime(seconds){const total=Math.max(0,Math.floor((Number(secon
 // Time Studies: tree, Time Theorem purchases, path restrictions and respec.
 // Time Study tree and effect data. Purchased effects are applied in the corresponding game calculations.
 const timeStudyData = [
- [11,1,[],'Tickspeedの効果が1st Time Dimensionにも及ぶ','base'],
+ [11,1,[],'Tickspeedの効果が弱められて1st Time Dimensionにも及ぶ（上限1e2500）','base'],
  [21,3,[11],'Replicantiの計算式が変化','base'],[22,2,[11],'Replicantiの最短増殖速度が50ms→1msに短縮','base'],
  [31,3,[21],'Infinityに到達した回数を参照するアップグレードの効果が向上','base'],[32,2,[22],'Dimension Boostの回数に応じてInfinity到達回数が割増される','base'],[33,2,[22],'Big Crunchの際Replicanti Galaxyの半分を引き継ぐ','base'],
  [41,4,[31],'所持しているGalaxy1つごとにInfinity Pointの獲得量1.2倍','base'],[42,6,[32],'Galaxy購入に必要な第8次元の数が減少','base'],
