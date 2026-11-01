@@ -2936,3 +2936,51 @@ window.addEventListener('beforeunload',save);
 </style>
 
 <style id="ep-featured-layout-fix">.ep-upgrade-featured{display:flex!important;justify-content:center!important;margin:14px 0 0!important}.ep-upgrade-featured>.ep-upgrade-card{width:min(100%,300px)!important;min-height:115px!important;flex:0 1 300px!important}.ep-upgrade-grid{margin-top:14px!important}</style>
+<style id="replicanti-autobuyer-full-width-layout">
+/* Replicanti Autobuyers use a full-width row, with three cards side by side like ID Autobuyers. */
+body[data-screen="autobuyers"] .replicanti-autobuyer-group {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+body[data-screen="autobuyers"] .replicanti-autobuyer-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+body[data-screen="autobuyers"] .replicanti-autobuyer-option {
+  min-width: 0;
+  min-height: 105px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+body[data-screen="autobuyers"] .replicanti-autobuyer-option small {
+  flex-basis: auto;
+  width: 100%;
+  overflow-wrap: anywhere;
+}
+body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
+  align-self: flex-start;
+  margin-top: auto;
+}
+@media (max-width: 520px) {
+  body[data-screen="autobuyers"] .replicanti-autobuyer-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  body[data-screen="autobuyers"] .replicanti-autobuyer-option {
+    padding: 8px 6px;
+    min-height: 100px;
+  }
+  body[data-screen="autobuyers"] .replicanti-autobuyer-option > strong { font-size: 12px; }
+  body[data-screen="autobuyers"] .replicanti-autobuyer-option small { font-size: 10px; }
+}
+</style>
