@@ -2008,7 +2008,7 @@ function notifyNewContentUnlocks(){
  const idNow=infinityDimensionDefs.map((d,i)=>infinityDimensionUnlocked(i));
  // 初回はロード済みデータを基準値にし、セーブ読込直後に通知が大量発生するのを防ぐ。
  if(observedICUnlocks===null||observedIDUnlocks===null){observedICUnlocks=icNow;observedIDUnlocks=idNow;return;}
- icNow.forEach((unlocked,i)=>{if(unlocked&&!observedICUnlocks[i]){const c=infinityChallengeData[i];showContentUnlockToast('Infinity Challenge Unlocked!',`IC${c.id}: ${c.name}`,`解禁条件 ${c.unlock} Antimatter を達成しました。Challenge画面から挑戦できます。`);}});
+ if(Number(state.eternities)<7)icNow.forEach((unlocked,i)=>{if(unlocked&&!observedICUnlocks[i]){const c=infinityChallengeData[i];showContentUnlockToast('Infinity Challenge Unlocked!',`IC${c.id}: ${c.name}`,`解禁条件 ${c.unlock} Antimatter を達成しました。Challenge画面から挑戦できます。`);}});
  idNow.forEach((unlocked,i)=>{if(unlocked&&!observedIDUnlocks[i]){showContentUnlockToast('Infinity Dimension Unlocked!',`Infinity Dimension ${i+1}`,`解禁条件 1e${infinityDimensionDefs[i].unlock} Antimatter を達成しました。Infinity Dimension画面で確認できます。`);}});
  observedICUnlocks=icNow;observedIDUnlocks=idNow;
 }
