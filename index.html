@@ -1295,10 +1295,12 @@ function spendTickspeed(c){c=BigNumber.from(c);if(!canAffordTickspeed(c))return 
 function dimensionBoostMult(i){
  const effectiveBoosts=state.boosts-(challengeRuleActive(11)?state.challenge11NoBonusBoosts:0);
  const boostPower=tsOwned(81)?10:(state.activeInfinityChallenge===7?10:(infinityChallengeCompleted(7)?4:(state.infinityUpgrades.includes('resetMult')?2.5:2)));
- let result=Math.pow(state.activeInfinityChallenge===1&&challengeRuleActive(8)?1:boostPower, Math.max(effectiveBoosts-i,0));
- if(tsOwned(83))result*=Math.min(1e30,Math.pow(1.0004,timeShardsFreeTickspeedInfo().count));
- if(tsOwned(231))result*=Math.max(1,Math.pow(Math.max(1,Number(state.boosts)||0),0.3));
- return result;
+ // Match the official order: TS83 and TS231 modify DimBoost.power before
+ // that power is raised to the per-dimension boost exponent.
+ let perBoostPower=state.activeInfinityChallenge===1&&challengeRuleActive(8)?1:boostPower;
+ if(tsOwned(83))perBoostPower*=Math.min(1e30,Math.pow(1.0004,timeShardsFreeTickspeedInfo().count));
+ if(tsOwned(231))perBoostPower*=Math.max(1,Math.pow(Math.max(1,Number(state.boosts)||0),0.3));
+ return Math.pow(perBoostPower,Math.max(effectiveBoosts-i,0));
 }
 function infinityUpgradeMultiplierValue(id){
  const infinities=Math.max(0,state.infinities);
