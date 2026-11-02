@@ -1833,6 +1833,8 @@ function ipGenerationRateBigNumber(){const level=Math.max(0,Math.min(10,Math.flo
 function updateCrunchEfficiencyPeak(){if(!(state.infinityTime>0))return;const rate=currentIPPerMinuteBigNumber();if(state.breakInfinityActive&&atInfinity()&&rate.compare(peakIPPerMinuteBigNumber())>0){state.peakIPPerMinBN=rate.toJSON();state.peakIPGainBN=ipGainBigNumber().toJSON();}}
 function resetCrunchEfficiencyPeak(){state.peakIPPerMinBN=BigNumber.from(0).toJSON();state.peakIPGainBN=BigNumber.from(0).toJSON();}
 function crunchEfficiencyMarkup(){const current=currentIPPerMinuteBigNumber(),peak=peakIPPerMinuteBigNumber(),gainAtPeak=peakIPGainBigNumber();return '<span class="crunch-efficiency-line">現在：'+fmtBig(current)+' IP/分</span><span class="crunch-efficiency-line">最高：'+fmtBig(gainAtPeak)+' IP（'+fmtBig(peak)+' IP/分）</span>'; }
+function updateEternityEfficiencyPeak(){if(!(state.eternityRunTime>0))return;const rate=currentEPPerMinuteBigNumber();if(rate.compare(peakEPPerMinuteBigNumber())>0){state.peakEPPerMinBN=rate.toJSON();state.peakEPGainBN=eternityPointGain().toJSON();}}
+function resetEternityEfficiencyPeak(){state.peakEPPerMinBN=BigNumber.from(0).toJSON();state.peakEPGainBN=BigNumber.from(0).toJSON();}
 function currentEPPerMinuteBigNumber(){const elapsed=Math.max(0,Number(state.eternityRunTime)||0);if(elapsed<=0)return BigNumber.from(0);return eternityPointGain().multiply(60).divide(Math.max(0.033,elapsed));}
 function peakEPPerMinuteBigNumber(){return BigNumber.from(state.peakEPPerMinBN||{mantissa:0,exponent:0});}
 function peakEPGainBigNumber(){return BigNumber.from(state.peakEPGainBN||{mantissa:0,exponent:0});}
@@ -1875,9 +1877,9 @@ function eternityReset(){
  const keptOfflineIP=nextEternities>=4&&Boolean(state.ipOffline);
  const keptBreakUpgrades=nextEternities>=8?[...state.breakInfinityUpgrades]:[];
  const keptBreakRepeatables=nextEternities>=8?[8,7,10]:[0,0,0];
- const completedEternitySeconds=Math.max(0,Number(state.eternityRunTime)||0);state.peakEternitiesPerHour=Math.max(Number(state.peakEternitiesPerHour)||0,3600/Math.max(0.033,completedEternitySeconds));const epRate=gain.multiply(60).divide(Math.max(0.033,completedEternitySeconds));state.peakEPPerMinBN=epRate.toJSON();state.peakEPGainBN=gain.toJSON();
+ const completedEternitySeconds=Math.max(0,Number(state.eternityRunTime)||0);state.peakEternitiesPerHour=Math.max(Number(state.peakEternitiesPerHour)||0,3600/Math.max(0.033,completedEternitySeconds));
  if(tsOwned(191))state.bankedInfinities=Math.max(0,Math.floor(Number(state.bankedInfinities)||0))+Math.floor(Math.max(0,Number(state.infinities)||0)*0.05);
- addEPBigNumber(gain);state.eternities=nextEternities;state.eternityRunTime=0;/* The Eternity button displays the efficiency of the most recently completed Eternity. */state.peakInfinitiesPerHour=0;state.eternityAutobuyer=nextEternities>=100?keptEternityAutobuyer:false;state.infinities=Math.max(0,Math.floor(Number(state.bankedInfinities)||0));state.eternityTime=0;state.lastCrunchIPGainBN=BigNumber.from(1).toJSON();unlockAchievement(96);
+ addEPBigNumber(gain);state.eternities=nextEternities;state.eternityRunTime=0;resetEternityEfficiencyPeak();/* The Eternity button displays the efficiency of the most recently completed Eternity. */state.peakInfinitiesPerHour=0;state.eternityAutobuyer=nextEternities>=100?keptEternityAutobuyer:false;state.infinities=Math.max(0,Math.floor(Number(state.bankedInfinities)||0));state.eternityTime=0;state.lastCrunchIPGainBN=BigNumber.from(1).toJSON();unlockAchievement(96);
  // Reset the pre-Eternity layer while retaining permanent achievements, challenge records and lifetime statistics.
  state.replicantiUnlocked=false;state.replicanti=1;state.replicantiLog10Value=0;state.replicantiChance=1;state.replicantiChanceUpgrades=0;state.replicantiInterval=1000;state.replicantiIntervalUpgrades=0;state.replicantiGalaxyUpgrades=0;state.replicantiGalaxies=0;state.replicantiTimer=0;
  state.infinityDimensions=Array(8).fill(null).map(()=>({amount:{mantissa:0,exponent:0},bought:0,unlocked:false}));state.infinityPowerBN={mantissa:0,exponent:0};
@@ -1951,6 +1953,7 @@ function simulateGameStep(dt){
   state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};autobuyerElapsed[9]=0;
  }
  updateCrunchEfficiencyPeak();
+ updateEternityEfficiencyPeak();
  checkAchievements();notifyNewAchievements();
 }
 
