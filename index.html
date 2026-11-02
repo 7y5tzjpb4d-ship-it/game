@@ -1875,7 +1875,7 @@ function eternityReset(){
  const keptBreakRepeatables=nextEternities>=8?[8,7,10]:[0,0,0];
  const completedEternitySeconds=Math.max(0,Number(state.eternityRunTime)||0);if(completedEternitySeconds>0){state.peakEternitiesPerHour=Math.max(Number(state.peakEternitiesPerHour)||0,3600/completedEternitySeconds);const epRate=gain.multiply(60).divide(Math.max(0.033,completedEternitySeconds));if(epRate.compare(peakEPPerMinuteBigNumber())>0){state.peakEPPerMinBN=epRate.toJSON();state.peakEPGainBN=gain.toJSON();}}
  if(tsOwned(191))state.bankedInfinities=Math.max(0,Math.floor(Number(state.bankedInfinities)||0))+Math.floor(Math.max(0,Number(state.infinities)||0)*0.05);
- addEPBigNumber(gain);state.eternities=nextEternities;state.eternityRunTime=0;state.peakEPPerMinBN=BigNumber.from(0).toJSON();state.peakEPGainBN=BigNumber.from(0).toJSON();state.peakInfinitiesPerHour=0;state.eternityAutobuyer=nextEternities>=100?keptEternityAutobuyer:false;state.infinities=Math.max(0,Math.floor(Number(state.bankedInfinities)||0));state.eternityTime=0;state.lastCrunchIPGainBN=BigNumber.from(1).toJSON();unlockAchievement(96);
+ addEPBigNumber(gain);state.eternities=nextEternities;state.eternityRunTime=0;/* EM6 uses the best completed Eternity EP/min across runs; retain this record across Eternity resets. */state.peakInfinitiesPerHour=0;state.eternityAutobuyer=nextEternities>=100?keptEternityAutobuyer:false;state.infinities=Math.max(0,Math.floor(Number(state.bankedInfinities)||0));state.eternityTime=0;state.lastCrunchIPGainBN=BigNumber.from(1).toJSON();unlockAchievement(96);
  // Reset the pre-Eternity layer while retaining permanent achievements, challenge records and lifetime statistics.
  state.replicantiUnlocked=false;state.replicanti=1;state.replicantiLog10Value=0;state.replicantiChance=1;state.replicantiChanceUpgrades=0;state.replicantiInterval=1000;state.replicantiIntervalUpgrades=0;state.replicantiGalaxyUpgrades=0;state.replicantiGalaxies=0;state.replicantiTimer=0;
  state.infinityDimensions=Array(8).fill(null).map(()=>({amount:{mantissa:0,exponent:0},bought:0,unlocked:false}));state.infinityPowerBN={mantissa:0,exponent:0};
@@ -1894,67 +1894,114 @@ function eternityReset(){
  if(nextEternities>=10){state.replicantiUnlocked=true;state.replicanti=1;state.replicantiLog10Value=0;}
  state.eternityStartInfinities=Math.max(0,Number(state.infinities)||0);state.infinityTime=0;state.infinityStartTimestamp=Date.now();state.bestIPPerMinBN=BigNumber.from(0).toJSON();state.maxAllUsedThisInfinity=false;state.lastTenIPPerMinBN=[];resetCrunchEfficiencyPeak();resetChallengeTimers();autobuyerElapsed.fill(0);observedAchievements=state.achievements.slice();mainSubpage='timeDimensions';infinitySubpage='upgrades';buildRows();render();save();switchScreen('main');return true;
 }
-const OFFLINE_PROGRESS_DEFAULT_TICKS=100000;
-// Use 100,000 ticks for offline progress simulation.
+const OFFLINE_PROGRESS_DEFAULT_TICKS=1000;
 let offlineProgressSkipRequested=false;
+let offlineProgressActive=false;
 function offlineProgressOverlay(){
  let el=document.getElementById('offlineProgressOverlay');
- if(!el){el=document.createElement('div');el.id='offlineProgressOverlay';el.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(10,10,15,.92);display:flex;align-items:center;justify-content:center;padding:20px;color:#f4f4f7;font-family:inherit';el.innerHTML='<div style="width:min(420px,100%);background:#202027;border:1px solid #555560;border-radius:10px;padding:20px"><h2 style="margin:0 0 12px;font-size:18px">オフライン進行を計算中</h2><p id="offlineProgressStatus" style="margin:0 0 12px;font-size:13px">準備中…</p><div style="height:10px;background:#3a3a44;border-radius:5px;overflow:hidden"><div id="offlineProgressBar" style="height:100%;width:0%;background:#6da7ff"></div></div><p id="offlineProgressEta" style="margin:10px 0 0;font-size:12px;color:#c7c7d0">経過時間を計測中…</p><button type="button" id="offlineProgressSkip" style="display:block;width:100%;margin-top:16px;padding:10px;border:1px solid #777;border-radius:6px;background:#34343e;color:#fff;font:inherit;cursor:pointer">スキップ（ここまでの進行を適用）</button></div>';document.body.appendChild(el);el.querySelector('#offlineProgressSkip').addEventListener('click',()=>{offlineProgressSkipRequested=true;const b=document.getElementById('offlineProgressSkip');if(b){b.disabled=true;b.textContent='計算を終了しています…';}});}
+ if(!el){el=document.createElement('div');el.id='offlineProgressOverlay';el.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(10,10,15,.92);display:flex;align-items:center;justify-content:center;padding:20px;color:#f4f4f7;font-family:inherit';el.innerHTML='<div style="width:min(420px,100%);background:#202027;border:1px solid #555560;border-radius:10px;padding:20px"><h2 style="margin:0 0 12px;font-size:18px">オフライン進行を計算中</h2><p id="offlineProgressStatus" style="margin:0 0 12px;font-size:13px">準備中…</p><div style="height:10px;background:#3a3a44;border-radius:5px;overflow:hidden"><div id="offlineProgressBar" style="height:100%;width:0%;background:#6da7ff"></div></div><p id="offlineProgressEta" style="margin:10px 0 0;font-size:12px;color:#c7c7d0">経過時間を計測中…</p><button type="button" id="offlineProgressSkip" style="display:block;width:100%;margin-top:16px;padding:10px;border:1px solid #777;border-radius:6px;background:#34343e;color:#fff;font:inherit;cursor:pointer">スキップ（残りを10 Tickで計算）</button></div>';document.body.appendChild(el);el.querySelector('#offlineProgressSkip').addEventListener('click',()=>{offlineProgressSkipRequested=true;const b=document.getElementById('offlineProgressSkip');if(b){b.disabled=true;b.textContent='残り時間を短縮計算しています…';}});}
  return el;
 }
-async function applyOfflineProgress(seconds){
- // チャレンジ中も、通常プレイと同じチャレンジ固有ルールを適用してオフライン進行する。
- const offlineSeconds=Math.min(86400,Math.max(0,seconds));
- if(Number(state.eternities)>=100&&offlineSeconds>0){const rate=Math.max(0,Number(state.peakEternitiesPerHour)||0);const accumulated=Math.max(0,Number(state.eternityOfflineRemainder)||0)+rate*(offlineSeconds/3600)*0.5;const whole=Math.floor(accumulated);state.eternities=Math.max(0,Math.floor(Number(state.eternities)||0))+whole;state.eternityOfflineRemainder=accumulated-whole;}
- if(Number(state.eternities)>=1000&&offlineSeconds>0){const rate=Math.max(0,Number(state.peakInfinitiesPerHour)||0);state.infinities+=rate*(offlineSeconds/3600)*0.5;}
- if(offlineSeconds>21600)unlockAchievement(35);
- if(offlineSeconds<=0)return;
- const overlay=offlineProgressOverlay(),startedAt=performance.now();
- offlineProgressSkipRequested=false;
- const offlineTicks=OFFLINE_PROGRESS_DEFAULT_TICKS;
- const dt=offlineSeconds/offlineTicks;
- for(let tickIndex=0;tickIndex<offlineTicks;tickIndex++) {
-  if(offlineProgressSkipRequested)break;
-  
-  state.playTime=Math.max(0,Number(state.playTime)||0)+dt;state.eternityRunTime=Math.max(0,Number(state.eternityRunTime)||0)+dt;
-  updateInfinityDimensionProduction(dt);
-  updateReplicanti(dt);
-  if(state.infinities>0)state.infinityTime=Math.max(0,Number(state.infinityTime)||0)+dt;
-  if(challengeRuleActive(2))state.challenge2Recovery=Math.min(1,state.challenge2Recovery+dt/180);
- if(productionRateBigNumber().compare(matterBigNumber())>0)state.exceedProductionTime+=dt;else state.exceedProductionTime=0;
-  if(challengeRuleActive(3))state.challenge3TimeMult=Math.min(INFINITY,state.challenge3TimeMult*Math.pow(1.00038,10*dt));
-  if(challengeRuleActive(11)&&state.amount[1]>0)state.challenge11Matter=Math.min(INFINITY,Math.max(1,state.challenge11Matter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,10*dt));if(state.activeInfinityChallenge===6)state.icMatter=Math.min(INFINITY,Math.max(1,state.icMatter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,200*dt));if(state.activeInfinityChallenge===8)state.ic8ProductionMultiplier*=Math.pow(0.8446303389034288,1000*dt);if(state.activeInfinityChallenge===2&&state.amount[7]>0){state.ic2SacrificeTimer+=dt;if(state.ic2SacrificeTimer>=0.4){state.ic2SacrificeTimer%=0.4;sacrifice(true);}}
-  const passiveOfflineGain=passiveIPRateBigNumber().multiply(dt);addIPBigNumber(passiveOfflineGain);state.totalIPGained=(state.totalIPGained||0)+passiveOfflineGain.toNumber();const offlineIPGain=offlineIPRateBigNumber().multiply(dt);addIPBigNumber(offlineIPGain);state.totalIPGained=(state.totalIPGained||0)+offlineIPGain.toNumber();
- if(state.breakInfinityActive&&breakInfinityUpgradeBought('fastestInfinity')&&state.fastestInfinity>0){/* 本家: 最速Infinity時間の2倍ごとに1 Infinity。生成上限は100msに1回（毎秒10回）。 */const interval=Math.max(0.1,state.fastestInfinity*2);state.infinities+=dt/interval;}
- {const biIPGain=ipGenerationRateBigNumber().multiply(dt);if(biIPGain.compare(0)>0){addIPBigNumber(biIPGain);state.totalIPGained=(state.totalIPGained||0)+biIPGain.toNumber();}}
-  if(state.activeChallenge===12){
-   for(let i=7;i>=2;i--){const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-2);const v=cur.add(prod);setDimensionAmountBig(i-2,v);}
-  }else{
-   for(let i=7;i>=1;i--){if(challengeRuleActive(10)&&i>=6)continue;const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-1);const v=cur.add(prod);setDimensionAmountBig(i-1,v);}
-  }
-  const rateBN=productionRateBigNumber();
-  addMatterProduction(rateBN,dt);
-  // Challenge completion is handled by the player's Big Crunch action or the Big Crunch autobuyer.
-  let challenge11MatterBoosted=false;
-  if(challengeRuleActive(11)&&BigNumber.from(state.challenge11Matter).compare(matterBigNumber())>0){
-   state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=1;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};autobuyerElapsed[9]=0;challenge11MatterBoosted=true;
-  }
-  updateCrunchEfficiencyPeak();runAutobuyers(dt,{skipBoost:challenge11MatterBoosted});
-  // 進捗表示を細かく更新し、描画のたびにブラウザへ制御を返して滑らかに表示する。
-  // 100,000 tick の計算では約1,000回（0.1%刻み）進捗を描画する。
-  const offlineRenderInterval=Math.max(1,Math.floor(offlineTicks/1000));
-  if((tickIndex+1)%offlineRenderInterval===0||tickIndex===offlineTicks-1){
-   const progress=(tickIndex+1)/offlineTicks,elapsed=(performance.now()-startedAt)/1000,eta=progress>0?elapsed*(1-progress)/progress:0;
-   const status=document.getElementById('offlineProgressStatus'),bar=document.getElementById('offlineProgressBar'),etaEl=document.getElementById('offlineProgressEta');
-   if(status)status.textContent=`${(progress*100).toFixed(1)}%（${(tickIndex+1).toLocaleString()} / ${offlineTicks.toLocaleString()} ticks）`;
-   if(bar)bar.style.width=`${(progress*100).toFixed(2)}%`;
-   if(etaEl)etaEl.textContent=`経過 ${formatPlayTime(elapsed)} ／ 残り約 ${formatPlayTime(eta)}`;
-   await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
-  }
+
+// Both online and offline progression use this exact state-advancement sequence.
+// Rendering, wall-clock scheduling and saving are deliberately kept outside it.
+function simulateGameStep(dt){
+ if(!(dt>0))return;
+ state.playTime=Math.max(0,Number(state.playTime)||0)+dt;
+ state.eternityRunTime=Math.max(0,Number(state.eternityRunTime)||0)+dt;
+ if(Number(state.eternities)>=7)applyEternityMilestoneICAutoComplete();
+ if(Number(state.eternities)>=25)ensureInfinityDimensionState();
+ if(state.eternities>0)state.eternityTime=Math.max(0,Number(state.eternityTime)||0)+dt;
+ if(state.eternities>0&&state.eternityTime>0){
+  const gained=Math.max(0,(Number(state.infinities)||0)-(Number(state.eternityStartInfinities)||0));
+  state.peakInfinitiesPerHour=Math.max(Number(state.peakInfinitiesPerHour)||0,gained/(state.eternityTime/3600));
  }
+ // The official loop runs autobuyers before resource production and before
+ // production multipliers are refreshed. Keep this order for online/offline.
+ runAutobuyers(dt);
+ updateInfinityDimensionProduction(dt);
+ updateTimeDimensionProduction(dt);
+ updateReplicanti(dt);
+ if(state.infinities>0)state.infinityTime+=dt;
+ if(challengeRuleActive(2))state.challenge2Recovery=Math.min(1,state.challenge2Recovery+dt/180);
+ if(productionRateBigNumber().compare(matterBigNumber())>0)state.exceedProductionTime+=dt;else state.exceedProductionTime=0;
+ if(challengeRuleActive(3))state.challenge3TimeMult=Math.min(INFINITY,state.challenge3TimeMult*Math.pow(1.00038,10*dt));
+ if(challengeRuleActive(11)&&state.amount[1]>0)state.challenge11Matter=Math.min(INFINITY,Math.max(1,state.challenge11Matter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,10*dt));
+ if(state.activeInfinityChallenge===6)state.icMatter=Math.min(INFINITY,Math.max(1,state.icMatter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,200*dt));
+ if(state.activeInfinityChallenge===8)state.ic8ProductionMultiplier*=Math.pow(0.8446303389034288,1000*dt);
+ if(state.activeInfinityChallenge===2&&state.amount[7]>0){state.ic2SacrificeTimer+=dt;if(state.ic2SacrificeTimer>=0.4){state.ic2SacrificeTimer%=0.4;sacrifice(true);}}
+ if(state.activeChallenge===12){
+  for(let i=7;i>=2;i--){const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-2);setDimensionAmountBig(i-2,cur.add(prod));}
+ }else{
+  for(let i=7;i>=1;i--){if(challengeRuleActive(10)&&i>=6)continue;const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-1);setDimensionAmountBig(i-1,cur.add(prod));}
+ }
+ const passiveGain=passiveIPRateBigNumber().multiply(dt);
+ addIPBigNumber(passiveGain);state.totalIPGained=(state.totalIPGained||0)+passiveGain.toNumber();
+ if(state.breakInfinityActive&&breakInfinityUpgradeBought('fastestInfinity')&&state.fastestInfinity>0){const interval=Math.max(0.1,state.fastestInfinity*2);state.infinities+=dt/interval;}
+ const generatedIP=ipGenerationRateBigNumber().multiply(dt);
+ if(generatedIP.compare(0)>0){addIPBigNumber(generatedIP);state.totalIPGained=(state.totalIPGained||0)+generatedIP.toNumber();}
+ const matterBeforeLog=matterLog();
+ addMatterProduction(productionRateBigNumber(),dt);
+ if(matterLog()>=matterBeforeLog)state.totalAntimatterLog10=Math.max(state.totalAntimatterLog10,matterLog());
+ if(challengeRuleActive(11)&&BigNumber.from(state.challenge11Matter).compare(matterBigNumber())>0){
+  state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=1;setMatterBigNumber(startingAntimatter());
+  state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;
+  state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};autobuyerElapsed[9]=0;
+ }
+ updateCrunchEfficiencyPeak();
  checkAchievements();notifyNewAchievements();
- overlay.remove();
 }
+
+async function applyOfflineProgress(seconds){
+ if(offlineProgressActive)return;
+ const offlineSeconds=Math.min(86400,Math.max(0,Number(seconds)||0));
+ if(offlineSeconds<=0)return;
+ offlineProgressActive=true;
+ let overlay=null;
+ try{
+  // EM6: 25% of the best completed Eternity EP/min, unless prestige autobuyers
+  // are active (matching the official offline-EP eligibility rule).
+  if(Number(state.eternities)>=6&&!state.autobuyers.crunch&&!state.eternityAutobuyer){
+   const offlineEP=peakEPPerMinuteBigNumber().multiply(offlineSeconds/60/4);
+   if(offlineEP.compare(0)>0)addEPBigNumber(offlineEP);
+  }
+  if(offlineSeconds>21600)unlockAchievement(35);
+  overlay=offlineProgressOverlay();
+  const startedAt=performance.now();
+  offlineProgressSkipRequested=false;
+  // Match the official tick limiter: no more than the configured 100,000 ticks,
+  // and no tick shorter than approximately 33ms.
+  const offlineTicks=Math.max(1,Math.min(OFFLINE_PROGRESS_DEFAULT_TICKS,Math.floor(offlineSeconds*1000/33)));
+  let remainingSeconds=offlineSeconds;
+  let ticksRemaining=offlineTicks;
+  let completedTicks=0;
+  const progressInterval=Math.max(1,Math.floor(offlineTicks/200));
+  while(ticksRemaining>0){
+   if(offlineProgressSkipRequested&&ticksRemaining>10)ticksRemaining=10;
+   const dt=remainingSeconds/ticksRemaining;
+   // Offline-only IP upgrade is added in addition to the shared normal game tick.
+   const offlineIPGain=offlineIPRateBigNumber().multiply(dt);
+   if(offlineIPGain.compare(0)>0){addIPBigNumber(offlineIPGain);state.totalIPGained=(state.totalIPGained||0)+offlineIPGain.toNumber();}
+   simulateGameStep(dt);
+   remainingSeconds=Math.max(0,remainingSeconds-dt);
+   ticksRemaining--;
+   completedTicks++;
+   if(completedTicks%progressInterval===0||ticksRemaining===0){
+    const progress=completedTicks/(completedTicks+ticksRemaining),elapsed=(performance.now()-startedAt)/1000,eta=progress>0?elapsed*(1-progress)/progress:0;
+    const status=document.getElementById('offlineProgressStatus'),bar=document.getElementById('offlineProgressBar'),etaEl=document.getElementById('offlineProgressEta');
+    if(status)status.textContent=`${(progress*100).toFixed(1)}%（${completedTicks.toLocaleString()} ticks）`;
+    if(bar)bar.style.width=`${(progress*100).toFixed(2)}%`;
+    if(etaEl)etaEl.textContent=`経過 ${formatPlayTime(elapsed)} ／ 残り約 ${formatPlayTime(eta)}`;
+    await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
+   }
+  }
+  checkAchievements();notifyNewAchievements();
+ }finally{
+  if(overlay)overlay.remove();
+  offlineProgressActive=false;
+ }
+}
+
 function save(){try{localStorage.setItem('antimatterFirstSteps',JSON.stringify((({bigNumber,...persisted})=>({...persisted,last:Date.now()}))(state)));}catch(e){}}
 function load(){
  try{const s=JSON.parse(localStorage.getItem('antimatterFirstSteps'));if(s&&Array.isArray(s.amount)&&s.amount.length===8){
@@ -1965,7 +2012,7 @@ function load(){
   state.sacrificeMult=Math.max(1,Number(s.sacrificeMult)||1);state.sacrificeMultBN=s.sacrificeMultBN&&Number.isFinite(Number(s.sacrificeMultBN.exponent))?BigNumber.from(s.sacrificeMultBN).max(1).toJSON():BigNumber.from(state.sacrificeMult).toJSON();state.sacrificedFirst=Math.max(0,Number(s.sacrificedFirst)||0);state.sacrificedFirstBN=s.sacrificedFirstBN&&Number.isFinite(Number(s.sacrificedFirstBN.exponent))?BigNumber.from(s.sacrificedFirstBN).max(0).toJSON():BigNumber.from(state.sacrificedFirst).toJSON();state.playTime=Math.max(0,Number(s.playTime)||0);state.infinityTime=Math.max(0,Number(s.infinityTime)||0);state.infinityStartTimestamp=Number.isFinite(Number(s.infinityStartTimestamp))&&Number(s.infinityStartTimestamp)>0?Number(s.infinityStartTimestamp):Date.now()-state.infinityTime*1000;state.eternities=Math.max(0,Math.floor(Number(s.eternities)||0));state.eternityAutobuyer=Boolean(s.eternityAutobuyer);state.eternityAutobuyerTargetBN=s.eternityAutobuyerTargetBN&&Number.isFinite(Number(s.eternityAutobuyerTargetBN.mantissa))&&Number.isFinite(Number(s.eternityAutobuyerTargetBN.exponent))?BigNumber.from(s.eternityAutobuyerTargetBN).max(1).toJSON():BigNumber.from(1).toJSON();state.peakEternitiesPerHour=Math.max(0,Number(s.peakEternitiesPerHour)||0);state.peakEPPerMinBN=s.peakEPPerMinBN&&Number.isFinite(Number(s.peakEPPerMinBN.mantissa))&&Number.isFinite(Number(s.peakEPPerMinBN.exponent))?BigNumber.from(s.peakEPPerMinBN).max(0).toJSON():BigNumber.from(0).toJSON();state.peakEPGainBN=s.peakEPGainBN&&Number.isFinite(Number(s.peakEPGainBN.mantissa))&&Number.isFinite(Number(s.peakEPGainBN.exponent))?BigNumber.from(s.peakEPGainBN).max(0).toJSON():BigNumber.from(0).toJSON();state.eternityOfflineRemainder=Math.max(0,Math.min(0.999999999,Number(s.eternityOfflineRemainder)||0));state.eternityRunTime=Math.max(0,Number(s.eternityRunTime)||0);state.peakInfinitiesPerHour=Math.max(0,Number(s.peakInfinitiesPerHour)||0);state.eternityStartInfinities=Math.max(0,Number(s.eternityStartInfinities)||0);state.timeTheorems=Math.max(0,Math.floor(Number(s.timeTheorems)||0));state.timeTheoremPurchases={am:Math.max(0,Math.floor(Number(s.timeTheoremPurchases?.am)||0)),ip:Math.max(0,Math.floor(Number(s.timeTheoremPurchases?.ip)||0)),ep:Math.max(0,Math.floor(Number(s.timeTheoremPurchases?.ep)||0))};state.eternityUpgrades=Array.isArray(s.eternityUpgrades)?s.eternityUpgrades.filter(x=>Number.isInteger(Number(x))&&Number(x)>=1&&Number(x)<=7):[];state.timeStudies=Array.isArray(s.timeStudies)?Array.from(new Set(s.timeStudies.map(Number).filter(id=>Number.isInteger(id)&&timeStudyData.some(st=>st[0]===id)))):[];state.timeStudyRespec=Boolean(s.timeStudyRespec);state.timeStudyDimensionPath=['antimatter','infinity','time'].includes(s.timeStudyDimensionPath)?s.timeStudyDimensionPath:'antimatter';state.timeStudyPacePath=['active','idle','passive'].includes(s.timeStudyPacePath)?s.timeStudyPacePath:'active';state.timeDilationStudies=Array.isArray(s.timeDilationStudies)?Array.from(new Set(s.timeDilationStudies.map(Number).filter(id=>Number.isInteger(id)))):[];state.eternityChallengeCompletions=s.eternityChallengeCompletions&&typeof s.eternityChallengeCompletions==='object'?s.eternityChallengeCompletions:{};state.completedEternityChallenges=Array.isArray(s.completedEternityChallenges)?s.completedEternityChallenges:[];setEPBigNumber(s.epBN&&Number.isFinite(Number(s.epBN.mantissa))&&Number.isFinite(Number(s.epBN.exponent))?BigNumber.from(s.epBN):BigNumber.from(s.ep||0));state.timeDimensions=Array.isArray(s.timeDimensions)?Array.from({length:8},(_,i)=>{const d=s.timeDimensions[i]||{};return {amount:Math.max(0,Number(d.amount)||0),bought:Math.max(0,Math.floor(Number(d.bought)||0)),multiplier:timeDimensionMultiplier(i).toJSON()};}):Array(8).fill(null).map(()=>({amount:0,bought:0,multiplier:1}));state.timeShardsBN=BigNumber.from(s.timeShardsBN||0).max(0).toJSON();state.fastestInfinity=Math.max(0,Number(s.fastestInfinity)||0);state.peakIPPerMinBN=s.peakIPPerMinBN&&Number.isFinite(Number(s.peakIPPerMinBN.mantissa))&&Number.isFinite(Number(s.peakIPPerMinBN.exponent))?BigNumber.from(s.peakIPPerMinBN).max(0).toJSON():BigNumber.from(0).toJSON();state.peakIPGainBN=s.peakIPGainBN&&Number.isFinite(Number(s.peakIPGainBN.mantissa))&&Number.isFinite(Number(s.peakIPGainBN.exponent))?BigNumber.from(s.peakIPGainBN).max(0).toJSON():BigNumber.from(0).toJSON();state.lastCrunchIPGainBN=s.lastCrunchIPGainBN&&Number.isFinite(Number(s.lastCrunchIPGainBN.mantissa))&&Number.isFinite(Number(s.lastCrunchIPGainBN.exponent))?BigNumber.from(s.lastCrunchIPGainBN).max(0).toJSON():BigNumber.from(0).toJSON();state.bestIPPerMinBN=s.bestIPPerMinBN&&Number.isFinite(Number(s.bestIPPerMinBN.mantissa))&&Number.isFinite(Number(s.bestIPPerMinBN.exponent))?BigNumber.from(s.bestIPPerMinBN).max(0).toJSON():BigNumber.from(0).toJSON();if(Number(s.offlineIPRecordVersion)!==2)state.bestIPPerMinBN=BigNumber.from(0).toJSON();state.offlineIPRecordVersion=2;state.maxAllUsedThisInfinity=Boolean(s.maxAllUsedThisInfinity);state.lastTenIPPerMinBN=Array.isArray(s.lastTenIPPerMinBN)?s.lastTenIPPerMinBN.filter(v=>v&&Number.isFinite(Number(v.mantissa))&&Number.isFinite(Number(v.exponent))).slice(-10).map(v=>BigNumber.from(v).max(0).toJSON()):[];state.ip=Math.max(0,Number(s.ip)||0);state.totalIPGained=Math.max(state.ip,Number(s.totalIPGained)||0);state.infinities=Math.max(0,Math.floor(Number(s.infinities)||0));state.infinityUpgrades=Array.isArray(s.infinityUpgrades)?Array.from(new Set(s.infinityUpgrades.filter(id=>infinityUpgradeDataSafe().includes(id)))):[];state.ipMultLevel=Math.max(0,Math.floor(Number(s.ipMultLevel)||0));state.ipOffline=Boolean(s.ipOffline);state.activeChallenge=Math.max(0,Math.min(12,Math.floor(Number(s.activeChallenge)||0)));state.activeInfinityChallenge=Math.max(0,Math.min(8,Math.floor(Number(s.activeInfinityChallenge)||0)));state.completedInfinityChallenges=Array.isArray(s.completedInfinityChallenges)?Array.from(new Set(s.completedInfinityChallenges.map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=8))):[];state.infinityChallengeTimes=s.infinityChallengeTimes&&typeof s.infinityChallengeTimes==='object'?s.infinityChallengeTimes:{};state.ic2SacrificeTimer=Math.max(0,Number(s.ic2SacrificeTimer)||0);state.ic5CostSteps=Array.isArray(s.ic5CostSteps)?Array.from({length:8},(_,i)=>Math.max(0,Math.floor(Number(s.ic5CostSteps[i])||0))):Array(8).fill(0);state.ic8ProductionMultiplier=Math.max(0,Math.min(1,Number(s.ic8ProductionMultiplier??1)));state.icLastBoughtDimension=Math.max(-1,Math.min(7,Math.floor(Number(s.icLastBoughtDimension??-1))));state.icMatter=state.activeInfinityChallenge===6?Math.max(1,Number(s.icMatter)||1):Math.max(10,Number(s.icMatter)||10);state.completedChallenges=Array.isArray(s.completedChallenges)?Array.from(new Set(s.completedChallenges.map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=12))):[];state.challengeTimes=s.challengeTimes&&typeof s.challengeTimes==='object'?s.challengeTimes:{};state.challenge9CostSteps=Array.isArray(s.challenge9CostSteps)?Array.from({length:8},(_,i)=>Math.max(0,Math.floor(Number(s.challenge9CostSteps[i])||0))):Array(8).fill(0);state.challenge9TickspeedCostBumps=Math.max(0,Math.floor(Number(s.challenge9TickspeedCostBumps)||0));state.challenge2Recovery=Math.max(0,Math.min(1,Number(s.challenge2Recovery??1)));state.challenge3TimeMult=Math.max(1,Number(s.challenge3TimeMult)||1);state.challenge11Matter=state.activeChallenge===11?Math.max(1,Number(s.challenge11Matter)||1):Math.max(0,Number(s.challenge11Matter)||0);state.challenge11NoBonusBoosts=Math.max(0,Math.floor(Number(s.challenge11NoBonusBoosts)||0));state.achievements=Array.from({length:achievementIds.length},(_,i)=>Boolean(s.achievements?.[i]));state.eighthDimensionBoughtThisInfinity=Boolean(s.eighthDimensionBoughtThisInfinity);{const savedIPBN=s.ipBN&&Number.isFinite(Number(s.ipBN.mantissa))&&Number.isFinite(Number(s.ipBN.exponent))?BigNumber.from(s.ipBN).max(0):BigNumber.from(s.ip||0).max(0);setIPBigNumber(savedIPBN);}state.totalIPGained=Math.max(getIPBigNumber().toNumber(),Number(state.totalIPGained)||0);setMatterBigNumber(matterBigNumber().max(10));state.matterLog10=Math.max(1,Number(state.matterLog10)||0);state.totalAntimatterLog10=Math.max(1,Number(state.totalAntimatterLog10)||0);state.exceedProductionTime=Math.max(0,Number(s.exceedProductionTime)||0);state.sacrificedThisInfinity=Boolean(s.sacrificedThisInfinity);
   const savedAt=Number(s.last);const elapsed=Math.min(86400,Math.max(0,(Date.now()-(Number.isFinite(savedAt)&&savedAt>0?savedAt:Date.now()))/1000));
   // オフライン中も通常進行と同じ順序で各次元を生産させる。
-  applyOfflineProgress(elapsed);
+  applyOfflineProgress(elapsed).then(()=>{last=performance.now();render();save();});
  }}catch(e){}
 }
 $('boostBtn').onclick=boost;
@@ -2896,19 +2943,9 @@ function runAutobuyers(dt, options={}){
 }
 
 function tick(now){
- const dt=Math.min(.25,(now-last)/1000);last=now;state.playTime+=dt;state.eternityRunTime=Math.max(0,Number(state.eternityRunTime)||0)+dt;if(Number(state.eternities)>=7)applyEternityMilestoneICAutoComplete();if(Number(state.eternities)>=25)ensureInfinityDimensionState();if(state.eternities>0)state.eternityTime=Math.max(0,Number(state.eternityTime)||0)+dt;if(state.eternities>0&&state.eternityTime>0)state.peakInfinitiesPerHour=Math.max(Number(state.peakInfinitiesPerHour)||0,Math.max(0,(Number(state.infinities)||0)-(Number(state.eternityStartInfinities)||0))/(state.eternityTime/3600));updateInfinityDimensionProduction(dt);updateTimeDimensionProduction(dt);updateReplicanti(dt);if(state.infinities>0)state.infinityTime+=dt;
- if(challengeRuleActive(2))state.challenge2Recovery=Math.min(1,state.challenge2Recovery+dt/180);
- if(productionRateBigNumber().compare(matterBigNumber())>0)state.exceedProductionTime+=dt;else state.exceedProductionTime=0;
- if(challengeRuleActive(3))state.challenge3TimeMult=Math.min(INFINITY,state.challenge3TimeMult*Math.pow(1.00038,10*dt));
- if(challengeRuleActive(11)&&state.amount[1]>0)state.challenge11Matter=Math.min(INFINITY,Math.max(1,state.challenge11Matter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,10*dt));if(state.activeInfinityChallenge===6)state.icMatter=Math.min(INFINITY,Math.max(1,state.icMatter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,200*dt));if(state.activeInfinityChallenge===8)state.ic8ProductionMultiplier*=Math.pow(0.8446303389034288,1000*dt);if(state.activeInfinityChallenge===2&&state.amount[7]>0){state.ic2SacrificeTimer+=dt;if(state.ic2SacrificeTimer>=0.4){state.ic2SacrificeTimer%=0.4;sacrifice(true);}}
- if(state.activeChallenge===12){for(let i=7;i>=2;i--){const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-2);const v=cur.add(prod);setDimensionAmountBig(i-2,v);}}else{for(let i=7;i>=1;i--){if(challengeRuleActive(10)&&i>=6)continue;const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-1);const v=cur.add(prod);setDimensionAmountBig(i-1,v);}}
- const passiveGain=passiveIPRateBigNumber().multiply(dt);addIPBigNumber(passiveGain);state.totalIPGained=(state.totalIPGained||0)+passiveGain.toNumber();
- if(state.breakInfinityActive&&breakInfinityUpgradeBought('fastestInfinity')&&state.fastestInfinity>0){/* 本家: 最速Infinity時間の2倍ごとに1 Infinity。生成上限は100msに1回（毎秒10回）。 */const interval=Math.max(0.1,state.fastestInfinity*2);state.infinities+=dt/interval;}
- {const biIPGain=ipGenerationRateBigNumber().multiply(dt);if(biIPGain.compare(0)>0){addIPBigNumber(biIPGain);state.totalIPGained=(state.totalIPGained||0)+biIPGain.toNumber();}}
- const matterBeforeLog=matterLog();addMatterProduction(productionRateBigNumber(),dt);if(matterLog()>=matterBeforeLog)state.totalAntimatterLog10=Math.max(state.totalAntimatterLog10,matterLog());// Challenge targets are completed by Big Crunch, not automatically on reaching the threshold.
- let challenge11MatterBoosted=false;
- if(challengeRuleActive(11)&&BigNumber.from(state.challenge11Matter).compare(matterBigNumber())>0){state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=1;setMatterBigNumber(startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};autobuyerElapsed[9]=0;challenge11MatterBoosted=true;}
- updateCrunchEfficiencyPeak();runAutobuyers(dt,{skipBoost:challenge11MatterBoosted});checkAchievements();notifyNewAchievements();
+ if(offlineProgressActive){requestAnimationFrame(tick);return;}
+ const dt=Math.min(.25,(now-last)/1000);last=now;
+ simulateGameStep(dt);
  render();updateReplicantiCountdownDisplay();// Infinity Dimension画面は約30fpsで再描画し、数値更新のカクつきを軽減する。
  if(document.body.dataset.screen==='main'&&mainSubpage==='infinityDimensions'&&now-lastInfinityDimensionRender>=100){lastInfinityDimensionRender=now;updateInfinityDimensionScreen();}else if(document.body.dataset.screen==='main'&&mainSubpage==='timeDimensions'&&now-lastInfinityDimensionRender>=100){lastInfinityDimensionRender=now;switchScreen('main');}if(document.body.dataset.screen==='infinity'&&infinitySubpage==='replicanti'&&now-lastReplicantiRender>=500){lastReplicantiRender=now;switchScreen('infinity');}if((state.activeChallenge||state.activeInfinityChallenge)&&document.body.dataset.screen==='challenges'&&now-lastRender>500){switchScreen('challenges');}lastRender=now;
  if(now-lastSave>5000){save();lastSave=now;}
@@ -2916,18 +2953,18 @@ function tick(now){
 }
 requestAnimationFrame(tick);
 let hiddenAt=null;
-document.addEventListener('visibilitychange',()=>{
+document.addEventListener('visibilitychange',async()=>{
  if(document.hidden){hiddenAt=Date.now();save();}
  else if(hiddenAt!==null){
   const elapsed=Math.min(86400,Math.max(0,(Date.now()-hiddenAt)/1000));
   hiddenAt=null;
-  applyOfflineProgress(elapsed);
+  await applyOfflineProgress(elapsed);
   last=performance.now();
   render();save();
  }
 });
 window.addEventListener('pagehide',()=>{hiddenAt=Date.now();save();});
-window.addEventListener('pageshow',()=>{if(document.visibilityState==='visible'&&hiddenAt!==null){const elapsed=Math.min(86400,Math.max(0,(Date.now()-hiddenAt)/1000));hiddenAt=null;applyOfflineProgress(elapsed);last=performance.now();render();save();}});
+window.addEventListener('pageshow',async()=>{if(document.visibilityState==='visible'&&hiddenAt!==null){const elapsed=Math.min(86400,Math.max(0,(Date.now()-hiddenAt)/1000));hiddenAt=null;await applyOfflineProgress(elapsed);last=performance.now();render();save();}});
 window.addEventListener('beforeunload',save);
 
 </script>
