@@ -1157,7 +1157,6 @@ function matterDisplayBig(){return matterBigNumber();}
 function productionRateBigNumber(){let r=dimensionProductionBigNumber(0);if(state.activeChallenge===12)r=r.add(dimensionProductionBigNumber(1));return r;}
 function dimensionAmountBig(i){const saved=state.amountBN?.[i];if(saved&&Number.isFinite(Number(saved.mantissa))&&Number.isFinite(Number(saved.exponent)))return BigNumber.from(saved).max(0);const b=BigNumber.from(Math.max(0,state.amount[i]||0));state.amountBN[i]=b.toJSON();return b;}
 function setDimensionAmountBig(i,value){const b=BigNumber.from(value).max(0);state.amountBN[i]=b.toJSON();state.amount[i]=b.toNumber();return b;}
-function dimensionDisplayMultiplierBigNumber(i){return dimensionMultiplierBigNumber(i).divide(tickspeedMultiplierBigNumber().max(1));}
 function dimensionProductionBigNumber(i){let mult=dimensionMultiplierBigNumber(i).multiply(tickspeedMultiplierBigNumber());if(challengeRuleActive(2))mult=mult.multiply(Math.max(0,Math.min(1,state.challenge2Recovery)));if(challengeRuleActive(3)&&i===0)mult=mult.multiply(0.01*state.challenge3TimeMult);if(state.activeInfinityChallenge===4&&i!==state.icLastBoughtDimension)mult=mult.power(0.25);if(state.activeInfinityChallenge===8)mult=mult.multiply(Math.max(0,state.ic8ProductionMultiplier));return dimensionAmountBig(i).power(dimensionAmountPower(i)).multiply(mult);}
 function infinityPowerDimensionMultiplierBigNumber(){return BigNumber.from(state.infinityPowerBN||0).max(1).power(7);}
 function dimensionMultiplierBigNumber(i){
@@ -1556,7 +1555,7 @@ function render(){
   const {d,det,amt,b}=rows[i],open=unlocked(i)&&!(challengeRuleActive(10)&&i>=6),c=costBigNumber(i);
   d.className='dim'+(open?'':' locked');
   const lockedReason=challengeRuleActive(10)&&i>=6?'チャレンジ制限':(i>=4&&state.boosts<i-3?'ブースト '+(i-3)+' 回':'未解禁');
-  setText(det,open?'×'+dimensionDisplayMultiplierBigNumber(i).toDisplayString(2):lockedReason);
+  setText(det,open?'×'+dimensionMultiplierBigNumber(i).toDisplayString(2):lockedReason);
   setText(amt,BigNumber.from(state.amountBN?.[i]||state.amount[i]).toDisplayString(2));
   const max=state.buyMax?maxAffordable(i):null;
   const costText=costBigNumber(i).toDisplayString(2);
