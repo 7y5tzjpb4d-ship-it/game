@@ -2319,6 +2319,12 @@ const tsById = new Map(timeStudyData.map(s=>[s[0],s]));
 function tsOwned(id){return Array.isArray(state.timeStudies)&&state.timeStudies.includes(Number(id));}
 function tsSpent(){return timeStudyData.reduce((sum,s)=>sum+(tsOwned(s[0])?s[1]:0),0);}
 function tsTotal(){return Math.max(0,Math.floor(Number(state.timeTheorems)||0));}
+// 現在所持しているTTに、Time StudyとTime Dilation Studyへ使用済みのTTを加えた累計獲得数。
+function tsTotalAcquired(){
+ const dilationCosts={d1:5000,d2:1e6,d3:1e7,d4:1e8,d5:1e9,d6:1e10};
+ const dilationSpent=(Array.isArray(state.timeDilationStudies)?state.timeDilationStudies:[]).reduce((sum,id)=>sum+(dilationCosts[id]||0),0);
+ return tsTotal()+tsSpent()+dilationSpent;
+}
 function tsPrerequisitesMet(study){
  const [id,,req,,kind]=study;
  if(tsOwned(id)||(req.length&&!req.some(r=>tsOwned(r))))return false;
@@ -2610,7 +2616,7 @@ function timeStudyView(){
  const ecNodes='';
  return `<div class="ep-subnav"><button class="active" data-ep-page="studies">Studies</button><button data-ep-page="upgrades">Upgrades</button><button data-ep-page="milestones">Milestones</button></div><section class="ts-screen"><div class="ts-frame"><h2>Time Studies</h2>
  <div class="ts-tree-toolbar"><button type="button" data-ts-respec ${tsSpent()===0?'disabled':''}>Respec time studies</button><button type="button" data-ts-buy-all>Buy all studies</button></div>
- <div class="ts-tt-summary">You have <strong>${tsTotal()}</strong> Time Theorems.<div class="ts-tt-purchased">(Purchased ${tsTotal()} total)</div></div>
+ <div class="ts-tt-summary">You have <strong>${tsTotal()}</strong> Time Theorems.<div class="ts-tt-purchased">(Purchased ${tsTotalAcquired()} total)</div></div>
  <button type="button" class="ts-tt-max" data-ts-buy-tt-max>Buy max Theorems</button>
  <div class="ts-resource-grid ts-tt-grid">
    <button type="button" class="ts-resource ts-tt-button" data-ts-buy-tt="am" ${matterBigNumber().compare(BigNumber.fromLog10(20000*((state.timeTheoremPurchases?.am||0)+1)))<0?'disabled':''}><span>Buy Time Theorems</span><strong>Cost: ${BigNumber.fromLog10(20000*((state.timeTheoremPurchases?.am||0)+1)).toDisplayString(3)}</strong></button>
