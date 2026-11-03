@@ -1911,7 +1911,7 @@ function eternityReset(freeTimeStudyRespec=false){
  if(nextEternities>=8)state.breakInfinityRepeatables=keptBreakRepeatables;
  if(nextEternities>=10){state.replicantiUnlocked=true;state.replicanti=1;state.replicantiLog10Value=0;}
  if(nextEternities>=7)applyEternityMilestoneICAutoComplete();
- state.eternityStartInfinities=Math.max(0,Number(state.infinities)||0);state.infinityTime=0;state.infinityStartTimestamp=Date.now();state.bestIPPerMinBN=BigNumber.from(0).toJSON();state.maxAllUsedThisInfinity=false;state.lastTenIPPerMinBN=[];resetCrunchEfficiencyPeak();resetChallengeTimers();autobuyerElapsed.fill(0);observedAchievements=state.achievements.slice();mainSubpage='timeDimensions';infinitySubpage='upgrades';buildRows();render();save();return true;
+ state.eternityStartInfinities=Math.max(0,Number(state.infinities)||0);state.infinityTime=0;state.infinityStartTimestamp=Date.now();state.bestIPPerMinBN=BigNumber.from(0).toJSON();state.maxAllUsedThisInfinity=false;state.lastTenIPPerMinBN=[];resetCrunchEfficiencyPeak();resetChallengeTimers();autobuyerElapsed.fill(0);observedAchievements=state.achievements.slice();infinitySubpage='upgrades';buildRows();render();save();return true;
 }
 const OFFLINE_PROGRESS_DEFAULT_TICKS=1000;
 let offlineProgressSkipRequested=false;
