@@ -1436,7 +1436,6 @@ function checkAchievements(){
  if(matterBigNumber().compare('1e35000')>=0)unlockAchievement(84);
  if(tickspeedMultiplierBigNumber().compare('1e3')>=0)unlockAchievement(86);
  if(state.infinities>=2e6)unlockAchievement(87);
- checkInfinityChallengeTimeAchievement();
 }
 
 function checkInfinityCompletionAchievements(elapsed, challengeId=0){
@@ -1925,7 +1924,7 @@ function offlineProgressOverlay(){
 
 // Both online and offline progression use this exact state-advancement sequence.
 // Rendering, wall-clock scheduling and saving are deliberately kept outside it.
-function simulateGameStep(dt){
+function simulateGameStep(dt, options={}){
  if(!(dt>0))return;
  state.playTime=Math.max(0,Number(state.playTime)||0)+dt;
  state.eternityRunTime=Math.max(0,Number(state.eternityRunTime)||0)+dt;
@@ -1970,7 +1969,10 @@ function simulateGameStep(dt){
  }
  updateCrunchEfficiencyPeak();
  updateEternityEfficiencyPeak();
- checkAchievements();notifyNewAchievements();
+ // Achievement conditions are checked every tick because rewards can affect
+ // subsequent production. Offline toast/DOM work is deferred until the batch ends.
+ checkAchievements();
+ if(!options.deferAchievementNotifications)notifyNewAchievements();
 }
 
 async function applyOfflineProgress(seconds){
@@ -2009,14 +2011,16 @@ async function applyOfflineProgress(seconds){
   let remainingSeconds=offlineSeconds;
   let ticksRemaining=offlineTicks;
   let completedTicks=0;
-  const progressInterval=Math.max(1,Math.floor(offlineTicks/200));
+  // Progress UI is informational only; update it at most 20 times per run.
+  // Avoid yielding hundreds of animation frames during a large offline batch.
+  const progressInterval=Math.max(1,Math.floor(offlineTicks/20));
   while(ticksRemaining>0){
    if(offlineProgressSkipRequested&&ticksRemaining>10)ticksRemaining=10;
    const dt=remainingSeconds/ticksRemaining;
    // Offline-only IP upgrade is added in addition to the shared normal game tick.
    const offlineIPGain=offlineIPRateBigNumber().multiply(dt);
    if(offlineIPGain.compare(0)>0){addIPBigNumber(offlineIPGain);state.totalIPGained=(state.totalIPGained||0)+offlineIPGain.toNumber();}
-   simulateGameStep(dt);
+   simulateGameStep(dt,{deferAchievementNotifications:true});
    remainingSeconds=Math.max(0,remainingSeconds-dt);
    ticksRemaining--;
    completedTicks++;
