@@ -1060,6 +1060,8 @@ const infinityChallengeData=[
 function infinityChallengeUnlocked(id){const c=infinityChallengeData[id-1];return Boolean(c)&&Number(state.totalAntimatterLog10||0)>=BigNumber.from(c.unlock).log10();}
 function infinityChallengeActive(id){return Number(state.activeInfinityChallenge)===Number(id);}
 function infinityChallengeCompleted(id){return Array.isArray(state.completedInfinityChallenges)&&state.completedInfinityChallenges.includes(Number(id));}
+function infinityChallengeEffectActive(id){return infinityChallengeUnlocked(id)&&infinityChallengeCompleted(id);}
+function completedUnlockedInfinityChallengeCount(){return infinityChallengeData.reduce((count,c)=>count+(infinityChallengeEffectActive(c.id)?1:0),0);}
 function applyEternityMilestoneICAutoComplete(){if(Number(state.eternities)<7||state.activeInfinityChallenge||state.activeChallenge)return false;let changed=false;for(const c of infinityChallengeData){if(infinityChallengeUnlocked(c.id)&&!infinityChallengeCompleted(c.id)){state.completedInfinityChallenges.push(c.id);state.infinityChallengeTimes=state.infinityChallengeTimes&&typeof state.infinityChallengeTimes==='object'?state.infinityChallengeTimes:{};state.infinityChallengeTimes[c.id]=0;changed=true;}}if(changed){if(state.completedInfinityChallenges.length>=8)unlockAchievement(82);checkAchievements();}return changed;}
 // IC1 combines the Normal Challenge restrictions except NC9 and NC12.
 function challengeRuleActive(id){return state.activeChallenge===id||(state.activeInfinityChallenge===1&&[2,3,4,5,6,7,8,10,11].includes(id));}
@@ -1170,8 +1172,8 @@ function dimensionMultiplierBigNumber(i){
  m=m.multiply(infinityPowerDimensionMultiplierBigNumber());
  const tenBuy=(challengeRuleActive(7)?Math.min(2,1+0.2*state.boosts):(state.infinityUpgrades.includes('dimMult')?2.2:2))+(hasAchievement(58)?0.01:0);
  m=m.multiply(BigNumber.from(tenBuy).power(Math.floor(state.bought[i]/10)));
- if(state.activeInfinityChallenge===3||infinityChallengeCompleted(3))m=m.multiply(BigNumber.from(1.05+Math.max(0,Number(state.galaxies)||0)/200).power(state.tickspeed));
- if(infinityChallengeCompleted(8)&&i>=1&&i<=6)m=m.multiply(dimensionMultiplierBigNumber(0).multiply(dimensionMultiplierBigNumber(7)).power(0.02));
+ if(state.activeInfinityChallenge===3||infinityChallengeEffectActive(3))m=m.multiply(BigNumber.from(1.05+Math.max(0,Number(state.galaxies)||0)/200).power(state.tickspeed));
+ if(infinityChallengeEffectActive(8)&&i>=1&&i<=6)m=m.multiply(dimensionMultiplierBigNumber(0).multiply(dimensionMultiplierBigNumber(7)).power(0.02));
  if(state.activeInfinityChallenge===6&&state.amount[1]>0)m=m.divide(BigNumber.from(Math.max(1,state.icMatter)));
  for(const f of [(i===0&&state.achievements[15])?1.1:1,(i===7&&state.achievements[10])?1.1:1,(i===0&&state.achievements[16])?1.05:1,(i<7&&state.achievements[19])?1.02:1,state.achievements[26]?1+(i+1)*0.01:1,state.achievements[31]?1.1:1])m=m.multiply(f);
  m=m.multiply(infinityUpgradeMultiplierBigNumber('timeMult')).multiply(infinityUpgradeMultiplierBigNumber('timeMult2'));
@@ -1199,7 +1201,7 @@ function dimensionMultiplierBigNumber(i){
  const finalMultiplier=m.multiply(achievementMultiplier());
  // IC4's reward raises the complete Antimatter Dimension multiplier, including
  // tickspeed, achievements, and other applicable bonuses, to the 1.05 power.
- return infinityChallengeCompleted(4)?finalMultiplier.power(1.05):finalMultiplier;
+ return infinityChallengeEffectActive(4)?finalMultiplier.power(1.05):finalMultiplier;
 }
 function tickspeedMultiplierBigNumber(){if(state.activeInfinityChallenge===3)return BigNumber.from(1);const base=tickspeedBase();const freeTimeShardTickspeedCount=timeShardsFreeTickspeedInfo().count;let mult=BigNumber.from(base).power(Math.min(Math.max(0,Number(state.tickspeed)||0)+freeTimeShardTickspeedCount,1e9));mult=mult.multiply(BigNumber.from(tickspeedAchievementRewardMultiplier()));if(hasAchievement(83)){const galaxies=Math.max(0,Number(state.galaxies)||0);mult=mult.multiply(BigNumber.from(Math.pow(0.95,-galaxies)));}return mult;}
 function sacrificeMultiplierBigNumber(){const b=state.sacrificeMultBN;return b&&Number.isFinite(Number(b.mantissa))&&Number.isFinite(Number(b.exponent))?BigNumber.from(b).max(1):BigNumber.from(state.sacrificeMult||1).max(1);}
@@ -1256,7 +1258,7 @@ function applyChallenge9CostStep(purchasedCost, excludeDimension=-1, purchasedTi
  if(!purchasedTickspeed&&sameExponent(tickspeedCostBigNumber()))state.challenge9TickspeedCostBumps=(state.challenge9TickspeedCostBumps||0)+1;
 }
 function totalGalaxyCount(){return Math.max(0,Number(state.galaxies)||0)+Math.max(0,Number(state.replicantiGalaxies)||0);}
-function galaxyStrength(){let strength=(hasInfinityUpgrade('galaxyBoost')?2:1)*(breakInfinityUpgradeBought('galaxyEffect')?1.5:1)*(infinityChallengeCompleted(5)?1.1:1)*(hasAchievement(86)?1.01:1);if(tsOwned(212))strength*=Math.min(1.1,Math.pow(Math.max(1,BigNumber.from(state.timeShardsBN||0).log10()/Math.log10(2)),0.005));if(tsOwned(232))strength*=Math.pow(1+Math.max(0,Number(state.galaxies)||0)/1000,0.2);return strength;}
+function galaxyStrength(){let strength=(hasInfinityUpgrade('galaxyBoost')?2:1)*(breakInfinityUpgradeBought('galaxyEffect')?1.5:1)*(infinityChallengeEffectActive(5)?1.1:1)*(hasAchievement(86)?1.01:1);if(tsOwned(212))strength*=Math.min(1.1,Math.pow(Math.max(1,BigNumber.from(state.timeShardsBN||0).log10()/Math.log10(2)),0.005));if(tsOwned(232))strength*=Math.pow(1+Math.max(0,Number(state.galaxies)||0)/1000,0.2);return strength;}
 function tickspeedBase(){
  // Achievement rewards modify the starting tick interval once, independently
  // from the number of purchased/free Tickspeed upgrades.
@@ -1295,7 +1297,7 @@ function canAffordTickspeed(c=tickspeedCost()){return matterBigNumber().compare(
 function spendTickspeed(c){c=BigNumber.from(c);if(!canAffordTickspeed(c))return false;setMatterBigNumber(matterBigNumber().subtract(c));return true;}
 function dimensionBoostMult(i){
  const effectiveBoosts=state.boosts-(challengeRuleActive(11)?state.challenge11NoBonusBoosts:0);
- const boostPower=tsOwned(81)?10:(state.activeInfinityChallenge===7?10:(infinityChallengeCompleted(7)?4:(state.infinityUpgrades.includes('resetMult')?2.5:2)));
+ const boostPower=tsOwned(81)?10:(state.activeInfinityChallenge===7?10:(infinityChallengeEffectActive(7)?4:(state.infinityUpgrades.includes('resetMult')?2.5:2)));
  // Match the official order: TS83 and TS231 modify DimBoost.power before
  // that power is raised to the per-dimension boost exponent.
  let perBoostPower=state.activeInfinityChallenge===1&&challengeRuleActive(8)?1:boostPower;
@@ -1460,14 +1462,14 @@ function startingAntimatter(){
 }
 function infinityStartingAntimatter(){return startingAntimatter();}
 function sacrificeTotalMultiplier(total){const t=BigNumber.from(total).max(1);const log=t.log10();const base=Math.max(1,log/10);const exponent=hasAchievement(57)?2.5:(hasAchievement(32)?2.2:2);return BigNumber.from(base).power(exponent);}
-function sacrificeGainBigNumber(){const first=dimensionAmountBig(0);const total=sacrificedFirstBigNumber().add(first).max(1);if(infinityChallengeCompleted(2))return total.power(hasAchievement(88)?0.011:0.01).divide(sacrificeMultiplierBigNumber()).max(1);if(challengeRuleActive(8)){const denom=total.max(1).log10();const numer=first.max(1).log10();if(denom<=0)return BigNumber.from(1);return BigNumber.from(10).power(numer*0.05-denom*0.04).max(1); }const next=sacrificeTotalMultiplier(total);return next.divide(sacrificeMultiplierBigNumber()).max(1);}
+function sacrificeGainBigNumber(){const first=dimensionAmountBig(0);const total=sacrificedFirstBigNumber().add(first).max(1);if(infinityChallengeEffectActive(2))return total.power(hasAchievement(88)?0.011:0.01).divide(sacrificeMultiplierBigNumber()).max(1);if(challengeRuleActive(8)){const denom=total.max(1).log10();const numer=first.max(1).log10();if(denom<=0)return BigNumber.from(1);return BigNumber.from(10).power(numer*0.05-denom*0.04).max(1); }const next=sacrificeTotalMultiplier(total);return next.divide(sacrificeMultiplierBigNumber()).max(1);}
 function sacrificeGain(){return sacrificeGainBigNumber().toNumber();}
 function unlocked(i){if(Number(state.eternities)>=30)return !(challengeRuleActive(10)&&i>=6);if(challengeRuleActive(10)&&i>=6)return false;if(i>0&&dimensionAmountBig(i-1).compare(0)<=0)return false;return i<4||state.boosts>=i-3;}
 function productionRate(){return productionRateBigNumber().toNumber();}
-function boostRequirement(){const n=state.boosts+1;let base=20;if(challengeRuleActive(10))base+=20*Math.max(0,n-3);else if(n>5)base+=15*(n-5);const tsReduction=(tsOwned(211)?5:0)+(tsOwned(222)?2:0);return Math.max(1,base-tsReduction-(hasInfinityUpgrade('resetBoost')?9:0)-(infinityChallengeCompleted(5)?1:0));}
+function boostRequirement(){const n=state.boosts+1;let base=20;if(challengeRuleActive(10))base+=20*Math.max(0,n-3);else if(n>5)base+=15*(n-5);const tsReduction=(tsOwned(211)?5:0)+(tsOwned(222)?2:0);return Math.max(1,base-tsReduction-(hasInfinityUpgrade('resetBoost')?9:0)-(infinityChallengeEffectActive(5)?1:0));}
 function boostRequirementTier(){const n=state.boosts+1;return challengeRuleActive(10)?Math.min(6,n+3):(n<=5?n+3:8);}
 function canBoost(){if(state.activeInfinityChallenge===1&&state.boosts>=2)return false;if(state.activeChallenge===8&&state.boosts>=5)return false;const tier=boostRequirementTier();return dimensionAmountBig(tier-1).compare(boostRequirement())>=0;}
-function galaxyRequirement(){let g=Math.max(0,Number(state.galaxies)||0);let effectiveG=g;if(tsOwned(223))effectiveG=Math.max(0,effectiveG-7);if(tsOwned(224))effectiveG=Math.max(0,effectiveG-Math.floor(Math.max(0,Number(state.boosts)||0)/200));let base;if(challengeRuleActive(10)){base=99+90*effectiveG;}else{const linear=80+(tsOwned(42)?52:60)*effectiveG;/* Distant Galaxies: after 100 normal Galaxies, the requirement increment rises by 2 for each additional Galaxy. */const distant=Math.max(0,effectiveG-100);base=linear+distant*(distant+1);}return Math.max(1,base-(hasInfinityUpgrade('resetBoost')?9:0)-(infinityChallengeCompleted(5)?1:0));}
+function galaxyRequirement(){let g=Math.max(0,Number(state.galaxies)||0);let effectiveG=g;if(tsOwned(223))effectiveG=Math.max(0,effectiveG-7);if(tsOwned(224))effectiveG=Math.max(0,effectiveG-Math.floor(Math.max(0,Number(state.boosts)||0)/200));let base;if(challengeRuleActive(10)){base=99+90*effectiveG;}else{const linear=80+(tsOwned(42)?52:60)*effectiveG;/* Distant Galaxies: after 100 normal Galaxies, the requirement increment rises by 2 for each additional Galaxy. */const distant=Math.max(0,effectiveG-100);base=linear+distant*(distant+1);}return Math.max(1,base-(hasInfinityUpgrade('resetBoost')?9:0)-(infinityChallengeEffectActive(5)?1:0));}
 function canGalaxy(){const tier=challengeRuleActive(10)?5:7;return state.activeInfinityChallenge!==7&&!challengeRuleActive(8)&&dimensionAmountBig(tier).compare(galaxyRequirement())>=0;}
 
 </script>
@@ -2205,7 +2207,7 @@ function timeShardsFreeTickspeedInfo(){
 }
 function timeDimensionView(){const ep=getEPBigNumber();const shards=BigNumber.from(state.timeShardsBN||0);const freeTS=timeShardsFreeTickspeedInfo();return `<div class="td-screen"><h2>Time Dimensions</h2><div class="td-summary">Time Shards：<strong>${fmtBig(shards)}</strong><br>Time ShardsによるTickspeedアップグレード：<strong>${fmt(freeTS.count)} 回</strong><br>次のTickspeedアップグレードまで：<strong>${fmtBig(freeTS.next)} Time Shards</strong></div><p>時間次元はEPで購入し、下位の時間次元とTime Shardsを生産します。</p><div class="dimension-maxall-wrap"><button type="button" class="dimension-maxall td-maxall" data-maxall-td>Max all</button></div><div class="td-list">${timeDimensionBaseCosts.map((base,i)=>{const d=state.timeDimensions[i]||{amount:0,bought:0};const cost=timeDimensionCost(i);return `<article class="td-row"><div class="td-tier">${i+1}</div><div class="td-info"><strong>${i+1}th Time Dimension</strong><span>所持数：${fmtBig(BigNumber.from(d.amount||0))} · 購入数：${fmt(d.bought||0)}</span><span>倍率：×${fmtBig(timeDimensionMultiplier(i))}</span></div><button type="button" class="td-buy" data-buy-td="${i}" ${canBuyTimeDimension(i)?'':'disabled'}><small>コスト：${fmtBig(cost)} EP</small>購入</button></article>`;}).join('')}</div></div>`;}
 function replicantiInfinityDimensionMultiplier(){if(!state.replicantiUnlocked)return BigNumber.from(1);const log2=replicantiLog10()/Math.log10(2);let m=BigNumber.from(Math.max(1,log2*log2));if(tsOwned(21))m=m.add(replicantiBigNumber().power(0.032));if(tsOwned(102))m=m.multiply(BigNumber.from(5).power(Math.max(0,Number(state.replicantiGalaxies)||0)));if(tsOwned(162))m=m.multiply('1e11');if(tsOwned(82))m=m.multiply(BigNumber.from(1.0000109).power(Math.pow(Math.max(0,Number(state.boosts)||0),2)).min('1e10000000'));if(tsOwned(92)){const fastest=Math.max(2,Number(state.fastestEternity)||Number(state.fastestEternityTime)||Infinity);if(Number.isFinite(fastest))m=m.multiply(Math.min(2**30,Math.pow(2,60/fastest)));}return m;}
-function infinityDimensionProductionMultiplier(){let mult=BigNumber.from(1);if(infinityChallengeCompleted(1))mult=mult.multiply(BigNumber.from(1.3).power(state.completedInfinityChallenges.length));if(infinityChallengeCompleted(6))mult=mult.multiply(tickspeedMultiplierBigNumber().max(1).power(0.0005));if(hasAchievement(75))mult=mult.multiply(achievementMultiplier());if(state.eternityUpgrades?.includes(2))mult=mult.multiply(getEPBigNumber().add(1));if(state.eternityUpgrades?.includes(3))mult=mult.multiply(eternityUpgrade2Multiplier());if(state.eternityUpgrades?.includes(4))mult=mult.multiply(eternityUpgrade3Multiplier());return mult.multiply(replicantiInfinityDimensionMultiplier());}
+function infinityDimensionProductionMultiplier(){let mult=BigNumber.from(1);if(infinityChallengeEffectActive(1))mult=mult.multiply(BigNumber.from(1.3).power(completedUnlockedInfinityChallengeCount()));if(infinityChallengeEffectActive(6))mult=mult.multiply(tickspeedMultiplierBigNumber().max(1).power(0.0005));if(hasAchievement(75))mult=mult.multiply(achievementMultiplier());if(state.eternityUpgrades?.includes(2))mult=mult.multiply(getEPBigNumber().add(1));if(state.eternityUpgrades?.includes(3))mult=mult.multiply(eternityUpgrade2Multiplier());if(state.eternityUpgrades?.includes(4))mult=mult.multiply(eternityUpgrade3Multiplier());return mult.multiply(replicantiInfinityDimensionMultiplier());}
 function replicantiChanceCost(){return BigNumber.fromLog10(150+15*state.replicantiChanceUpgrades);}
 function replicantiIntervalCost(){return BigNumber.fromLog10(140+10*state.replicantiIntervalUpgrades);}
 function replicantiGalaxyCost(){
