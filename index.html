@@ -2412,7 +2412,12 @@ function tsRespec(){
  state.timeStudies=[];
  state.timeDilationStudies=[];
  state.timeStudyRespec=false;
- return eternityReset(true);
+ const reset=eternityReset(true);
+ // eternityReset() updates the game state and top-level HUD, but does not
+ // rebuild the currently mounted tab content. Re-render the Eternity tab so
+ // the cleared study tree and refunded TT are visible immediately.
+ if(reset)switchScreen('eternity');
+ return reset;
 }
 let timeStudyZoom=window.innerWidth<=540?0.55:1;
 // 現在のTime Study効果。数式はAntimatter Dimensions Wikiおよび公式ソースの効果式に合わせる。
