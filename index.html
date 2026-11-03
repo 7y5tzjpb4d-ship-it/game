@@ -1901,11 +1901,14 @@ function eternityReset(freeTimeStudyRespec=false){
  setIPBigNumber(0);state.ip=0;state.infinityUpgrades=[];state.ipMultLevel=0;state.ipOffline=keptOfflineIP;state.activeChallenge=0;state.activeInfinityChallenge=0;state.ic2SacrificeTimer=0;state.ic5CostSteps=Array(8).fill(0);state.ic8ProductionMultiplier=1;state.icLastBoughtDimension=-1;state.icMatter=10;state.challenge11Matter=0;state.challenge11NoBonusBoosts=0;state.challenge9CostSteps=Array(8).fill(0);state.challenge9TickspeedCostBumps=0;state.challenge2Recovery=1;state.challenge3TimeMult=1;state.exceedProductionTime=0;
  state.autobuyers={infinityDims:Array(8).fill(false),ipMult:false,replicantiGalaxy:false,dims:Array(8).fill(false),tickspeed:false,tickspeedMode:'single',unlockedDims:Array(8).fill(false),tickspeedUnlocked:false,boost:false,galaxy:false,crunch:false,sacrifice:false,replicantiMaster:false,replicantiChance:false,replicantiInterval:false,replicantiMaxGalaxies:false,dimModes:Array(8).fill('10'),dimMode:'10',intervalUpgradeLevel:0,intervalUpgradeLevels:Array(12).fill(0),dimBulkLevels:Array(8).fill(0),boostMode:'amount',boostValue:4,boostLimit:'',galaxyMode:'amount',galaxyValue:1,galaxyLimit:'',crunchMode:'amount',crunchValue:'1',crunchIPTarget:'',sacrificeValue:2};
  if(keptAutobuyers)state.autobuyers=keptAutobuyers;state.autobuyers.infinityDims=Array.from({length:8},(_,i)=>Boolean(state.autobuyers.infinityDims?.[i]));
- if(nextEternities>=2){state.completedChallenges=Array.from({length:12},(_,i)=>i+1);state.breakInfinityUnlocked=true;state.breakInfinityActive=true;}
+ if(nextEternities>=2){state.completedChallenges=Array.from({length:12},(_,i)=>i+1);state.breakInfinityUnlocked=true;state.breakInfinityActive=true;}else{state.completedChallenges=[];}
+ // Challenge completion is reset by Eternity until its corresponding milestone grants retention/auto-completion.
+ if(nextEternities<7)state.completedInfinityChallenges=[];
  if(nextEternities>=4)state.infinityUpgrades=keptInfinityUpgrades;
  if(nextEternities>=8)state.breakInfinityUpgrades=keptBreakUpgrades;
  if(nextEternities>=8)state.breakInfinityRepeatables=keptBreakRepeatables;
  if(nextEternities>=10){state.replicantiUnlocked=true;state.replicanti=1;state.replicantiLog10Value=0;}
+ if(nextEternities>=7)applyEternityMilestoneICAutoComplete();
  state.eternityStartInfinities=Math.max(0,Number(state.infinities)||0);state.infinityTime=0;state.infinityStartTimestamp=Date.now();state.bestIPPerMinBN=BigNumber.from(0).toJSON();state.maxAllUsedThisInfinity=false;state.lastTenIPPerMinBN=[];resetCrunchEfficiencyPeak();resetChallengeTimers();autobuyerElapsed.fill(0);observedAchievements=state.achievements.slice();mainSubpage='timeDimensions';infinitySubpage='upgrades';buildRows();render();save();switchScreen('main');return true;
 }
 const OFFLINE_PROGRESS_DEFAULT_TICKS=1000;
