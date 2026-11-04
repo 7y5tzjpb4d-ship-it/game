@@ -1377,65 +1377,68 @@ function checkReplicantiAchievement(){
     Number(state.replicanti)>=Number.MAX_VALUE)unlockAchievement(95);
 }
 function checkAchievements(){
- if(state.infinities>0)unlockAchievement(21);
- if(state.boosts>=1)unlockAchievement(22);
- if(state.amount[7]===99)unlockAchievement(23);
- if(matterBigNumber().compare('1e80')>0)unlockAchievement(24);
- if(state.boosts>=10)unlockAchievement(25);
- if(state.galaxies>=1)unlockAchievement(26);
- if(state.galaxies>=2)unlockAchievement(27);
- if(dimensionAmountBig(0).compare('1e150')>=0)unlockAchievement(28);
- if(Array.from({length:8},(_,i)=>dimensionMultiplierBigNumber(i)).some(m=>m.compare('1e31')>=0))unlockAchievement(31);
- if(state.activeChallenge!==8&&sacrificeMultiplierBigNumber().compare(600)>0)unlockAchievement(32);
- if(state.infinities>=10)unlockAchievement(33);
- if(matterBigNumber().compare('1e63')>=0&&productionRateBigNumber().compare(matterBigNumber())>0)unlockAchievement(42);
- if(tickspeedMultiplierBigNumber().log10()>=29)unlockAchievement(45);
- if(tickspeedMultiplierBigNumber().compare('1e58')>=0)unlockAchievement(66);
- if(Array.from({length:7},(_,i)=>dimensionAmountBig(i).compare('1e12')>=0).every(Boolean))unlockAchievement(46);
- if(state.completedChallenges.length>=3)unlockAchievement(47);
- if(state.completedChallenges.length>=12)unlockAchievement(48);
- if(state.infinityUpgrades.length>=16)unlockAchievement(41);
- if(state.exceedProductionTime>=30)unlockAchievement(44);
- const antitableMults=Array.from({length:8},(_,i)=>dimensionMultiplierBigNumber(i).log10());
- if(antitableMults.every((m,i)=>i===0||m>antitableMults[i-1]))unlockAchievement(43);
- // Break Infinity and autobuyer milestones.
- if(state.breakInfinityUnlocked||state.breakInfinityActive)unlockAchievement(51);
- const intervals=autobuyerInterval();
- if(intervals.slice(0,9).every(v=>v<=0.1000001))unlockAchievement(52);
- if(intervals.every(v=>v<=0.1000001))unlockAchievement(53);
- if(infinityRealTimeSeconds()>0&&infinityRealTimeSeconds()<=600&&atInfinity())unlockAchievement(54);
- if(infinityRealTimeSeconds()>0&&infinityRealTimeSeconds()<=60&&atInfinity())unlockAchievement(55);
- if(Array.isArray(state.autobuyers.dimBulkLevels)&&state.autobuyers.dimBulkLevels.length>=8&&state.autobuyers.dimBulkLevels.slice(0,8).every(v=>Number(v)>=9))unlockAchievement(61);
- if(currentIPPerMinuteBigNumber().compare('1e8')>=0)unlockAchievement(62);
- if(BigNumber.from(state.infinityPowerBN||0).compare(0)>0)unlockAchievement(63);
- if(state.completedInfinityChallenges.length>=1)unlockAchievement(67);
- if(Array.from({length:8},(_,i)=>dimensionMultiplierBigNumber(i).compare('1.8e308')>=0).every(Boolean))unlockAchievement(72);
- if(matterBigNumber().compare('9.9999e9999')>=0)unlockAchievement(73);
- // Achievement 65/74 use the best times for each of the 12 Normal Challenges only.
- // Do not sum arbitrary object values: old saves or extra keys can otherwise block the achievement.
- const normalChallengeBestTimes=Array.from({length:12},(_,i)=>{
-   const key=String(i+1), raw=state.challengeTimes?.[key];
-   return raw!==undefined&&raw!==null&&Number.isFinite(Number(raw))&&Number(raw)>=0?Number(raw):null;
- });
- if(normalChallengeBestTimes.every(t=>t!==null)){
-   const totalBestTime=normalChallengeBestTimes.reduce((a,b)=>a+b,0);
-   if(totalBestTime<180)unlockAchievement(65);
-   if(totalBestTime<5)unlockAchievement(74);
+ // Achievements are permanent. Once unlocked, skip their predicates entirely;
+ // this preserves the exact unlock tick while avoiding repeated BigNumber work.
+ if(!hasAchievement(21)&&state.infinities>0)unlockAchievement(21);
+ if(!hasAchievement(22)&&state.boosts>=1)unlockAchievement(22);
+ if(!hasAchievement(23)&&state.amount[7]===99)unlockAchievement(23);
+ if(!hasAchievement(24)&&matterBigNumber().compare('1e80')>0)unlockAchievement(24);
+ if(!hasAchievement(25)&&state.boosts>=10)unlockAchievement(25);
+ if(!hasAchievement(26)&&state.galaxies>=1)unlockAchievement(26);
+ if(!hasAchievement(27)&&state.galaxies>=2)unlockAchievement(27);
+ if(!hasAchievement(28)&&dimensionAmountBig(0).compare('1e150')>=0)unlockAchievement(28);
+ if(!hasAchievement(31)&&Array.from({length:8},(_,i)=>dimensionMultiplierBigNumber(i)).some(m=>m.compare('1e31')>=0))unlockAchievement(31);
+ if(!hasAchievement(32)&&state.activeChallenge!==8&&sacrificeMultiplierBigNumber().compare(600)>0)unlockAchievement(32);
+ if(!hasAchievement(33)&&state.infinities>=10)unlockAchievement(33);
+ if(!hasAchievement(42)&&matterBigNumber().compare('1e63')>=0&&productionRateBigNumber().compare(matterBigNumber())>0)unlockAchievement(42);
+ if(!hasAchievement(45)&&tickspeedMultiplierBigNumber().log10()>=29)unlockAchievement(45);
+ if(!hasAchievement(66)&&tickspeedMultiplierBigNumber().compare('1e58')>=0)unlockAchievement(66);
+ if(!hasAchievement(46)&&Array.from({length:7},(_,i)=>dimensionAmountBig(i).compare('1e12')>=0).every(Boolean))unlockAchievement(46);
+ if(!hasAchievement(47)&&state.completedChallenges.length>=3)unlockAchievement(47);
+ if(!hasAchievement(48)&&state.completedChallenges.length>=12)unlockAchievement(48);
+ if(!hasAchievement(41)&&state.infinityUpgrades.length>=16)unlockAchievement(41);
+ if(!hasAchievement(44)&&state.exceedProductionTime>=30)unlockAchievement(44);
+ if(!hasAchievement(43)){
+  const antitableMults=Array.from({length:8},(_,i)=>dimensionMultiplierBigNumber(i).log10());
+  if(antitableMults.every((m,i)=>i===0||m>antitableMults[i-1]))unlockAchievement(43);
  }
- if(state.infinityDimensions?.[3]?.unlocked||BigNumber.from(state.infinityDimensions?.[3]?.amount||0).compare(0)>0)unlockAchievement(75);
- if(state.playTime>=8*86400)unlockAchievement(76);
- if(BigNumber.from(state.infinityPowerBN||0).compare('1e6')>=0)unlockAchievement(77);
- if(state.galaxies>=50)unlockAchievement(83);
- if(BigNumber.from(state.infinityPowerBN||0).compare('1e260')>=0)unlockAchievement(94);
- checkReplicantiAchievement();
- // This project does not yet implement the Eternity reset layer; for now this marks the
- // Eternity milestone when the source game's Eternity IP threshold is reached.
- // Achievement 96 is event-based: it unlocks only on an actual Eternity reset, not at an IP threshold.
+ if(!hasAchievement(51)&&(state.breakInfinityUnlocked||state.breakInfinityActive))unlockAchievement(51);
+ if(!hasAchievement(52)||!hasAchievement(53)){
+  const intervals=autobuyerInterval();
+  if(!hasAchievement(52)&&intervals.slice(0,9).every(v=>v<=0.1000001))unlockAchievement(52);
+  if(!hasAchievement(53)&&intervals.every(v=>v<=0.1000001))unlockAchievement(53);
+ }
+ if(!hasAchievement(54)&&infinityRealTimeSeconds()>0&&infinityRealTimeSeconds()<=600&&atInfinity())unlockAchievement(54);
+ if(!hasAchievement(55)&&infinityRealTimeSeconds()>0&&infinityRealTimeSeconds()<=60&&atInfinity())unlockAchievement(55);
+ if(!hasAchievement(61)&&Array.isArray(state.autobuyers.dimBulkLevels)&&state.autobuyers.dimBulkLevels.length>=8&&state.autobuyers.dimBulkLevels.slice(0,8).every(v=>Number(v)>=9))unlockAchievement(61);
+ if(!hasAchievement(62)&&currentIPPerMinuteBigNumber().compare('1e8')>=0)unlockAchievement(62);
+ if(!hasAchievement(63)&&BigNumber.from(state.infinityPowerBN||0).compare(0)>0)unlockAchievement(63);
+ if(!hasAchievement(67)&&state.completedInfinityChallenges.length>=1)unlockAchievement(67);
+ if(!hasAchievement(72)&&Array.from({length:8},(_,i)=>dimensionMultiplierBigNumber(i).compare('1.8e308')>=0).every(Boolean))unlockAchievement(72);
+ if(!hasAchievement(73)&&matterBigNumber().compare('9.9999e9999')>=0)unlockAchievement(73);
+ // Achievement 65/74 use the best times for each of the 12 Normal Challenges only.
+ if(!hasAchievement(65)||!hasAchievement(74)){
+  const normalChallengeBestTimes=Array.from({length:12},(_,i)=>{
+   const raw=state.challengeTimes?.[String(i+1)];
+   return raw!==undefined&&raw!==null&&Number.isFinite(Number(raw))&&Number(raw)>=0?Number(raw):null;
+  });
+  if(normalChallengeBestTimes.every(t=>t!==null)){
+   const totalBestTime=normalChallengeBestTimes.reduce((a,b)=>a+b,0);
+   if(!hasAchievement(65)&&totalBestTime<180)unlockAchievement(65);
+   if(!hasAchievement(74)&&totalBestTime<5)unlockAchievement(74);
+  }
+ }
+ if(!hasAchievement(75)&&(state.infinityDimensions?.[3]?.unlocked||BigNumber.from(state.infinityDimensions?.[3]?.amount||0).compare(0)>0))unlockAchievement(75);
+ if(!hasAchievement(76)&&state.playTime>=8*86400)unlockAchievement(76);
+ if(!hasAchievement(77)&&BigNumber.from(state.infinityPowerBN||0).compare('1e6')>=0)unlockAchievement(77);
+ if(!hasAchievement(83)&&state.galaxies>=50)unlockAchievement(83);
+ if(!hasAchievement(94)&&BigNumber.from(state.infinityPowerBN||0).compare('1e260')>=0)unlockAchievement(94);
+ if(!hasAchievement(95))checkReplicantiAchievement();
  checkInfinityChallengeTimeAchievement();
- if(state.infinityDimensions?.[7]?.unlocked)unlockAchievement(98);
- if(matterBigNumber().compare('1e35000')>=0)unlockAchievement(84);
- if(tickspeedMultiplierBigNumber().compare('1e3')>=0)unlockAchievement(86);
- if(state.infinities>=2e6)unlockAchievement(87);
+ if(!hasAchievement(98)&&state.infinityDimensions?.[7]?.unlocked)unlockAchievement(98);
+ if(!hasAchievement(84)&&matterBigNumber().compare('1e35000')>=0)unlockAchievement(84);
+ if(!hasAchievement(86)&&tickspeedMultiplierBigNumber().compare('1e3')>=0)unlockAchievement(86);
+ if(!hasAchievement(87)&&state.infinities>=2e6)unlockAchievement(87);
 }
 
 function checkInfinityCompletionAchievements(elapsed, challengeId=0){
@@ -2011,6 +2014,10 @@ async function applyOfflineProgress(seconds){
   let remainingSeconds=offlineSeconds;
   let ticksRemaining=offlineTicks;
   let completedTicks=0;
+  // Cache the offline-IP rate. The source record is replaced only when a new
+  // best IP/min is recorded, so refresh immediately after that state change.
+  let offlineIPRateSource=state.bestIPPerMinBN;
+  let cachedOfflineIPRate=offlineIPRateBigNumber();
   // Progress UI is informational only; update it at most 20 times per run.
   // Avoid yielding hundreds of animation frames during a large offline batch.
   const progressInterval=Math.max(1,Math.floor(offlineTicks/20));
@@ -2018,7 +2025,11 @@ async function applyOfflineProgress(seconds){
    if(offlineProgressSkipRequested&&ticksRemaining>10)ticksRemaining=10;
    const dt=remainingSeconds/ticksRemaining;
    // Offline-only IP upgrade is added in addition to the shared normal game tick.
-   const offlineIPGain=offlineIPRateBigNumber().multiply(dt);
+   if(state.bestIPPerMinBN!==offlineIPRateSource){
+    offlineIPRateSource=state.bestIPPerMinBN;
+    cachedOfflineIPRate=offlineIPRateBigNumber();
+   }
+   const offlineIPGain=cachedOfflineIPRate.multiply(dt);
    if(offlineIPGain.compare(0)>0){addIPBigNumber(offlineIPGain);state.totalIPGained=(state.totalIPGained||0)+offlineIPGain.toNumber();}
    simulateGameStep(dt,{deferAchievementNotifications:true});
    remainingSeconds=Math.max(0,remainingSeconds-dt);
@@ -2132,10 +2143,29 @@ function notifyNewContentUnlocks(){
 
 function infinityDimensionUnlocked(i){const def=infinityDimensionDefs[i];if(!def||Number(state.totalAntimatterLog10||0)<def.unlock)return false;return true;}
 function ensureInfinityDimensionState(){
+ // The ID array is queried by several production/multiplier helpers in one
+ // simulation tick. Keep already-normalized entries in place instead of
+ // allocating eight objects and eight BigNumbers on every query.
  if(!Array.isArray(state.infinityDimensions))state.infinityDimensions=[];
- state.infinityDimensions=Array.from({length:8},(_,i)=>{const d=state.infinityDimensions[i]||{};const amount=BigNumber.from(d.amount||0).max(0);let bought=Math.max(0,Math.floor(Number(d.bought)||0));/* Migrate legacy saves where bought counted 10-unit purchases rather than individual dimensions. */if(bought>0&&bought<10&&amount.compare(10)>=0)bought*=10;/* ID unlocks are permanent: never relock a dimension that was already unlocked. */return {amount:amount.toJSON(),bought,unlocked:Boolean(d.unlocked)||infinityDimensionUnlocked(i)};});
+ if(state.infinityDimensions.length!==8){
+  state.infinityDimensions=Array.from({length:8},(_,i)=>state.infinityDimensions[i]||({amount:BigNumber.from(0).toJSON(),bought:0,unlocked:false}));
+ }
+ for(let i=0;i<8;i++){
+  let d=state.infinityDimensions[i];
+  if(!d||typeof d!=='object')d=state.infinityDimensions[i]={amount:BigNumber.from(0).toJSON(),bought:0,unlocked:false};
+  const a=d.amount;
+  if(!a||!Number.isFinite(Number(a.mantissa))||!Number.isFinite(Number(a.exponent))||Number(a.mantissa)<0){
+   d.amount=BigNumber.from(a||0).max(0).toJSON();
+  }
+  let bought=Number(d.bought);
+  if(!Number.isFinite(bought)||bought<0||!Number.isInteger(bought))bought=Math.max(0,Math.floor(Number.isFinite(bought)?bought:0));
+  // Migrate legacy saves where bought counted 10-unit purchases rather than individual dimensions.
+  if(bought>0&&bought<10&&BigNumber.from(d.amount).compare(10)>=0)bought*=10;
+  if(bought!==d.bought)d.bought=bought;
+  // ID unlocks are permanent; only evaluate the threshold while still locked.
+  if(!d.unlocked&&infinityDimensionUnlocked(i))d.unlocked=true;
+ }
  if(!state.infinityPowerBN||!Number.isFinite(Number(state.infinityPowerBN.exponent)))state.infinityPowerBN=BigNumber.from(0).toJSON();
- state.infinityDimensions.forEach((d,i)=>{d.unlocked=Boolean(d.unlocked)||infinityDimensionUnlocked(i);});
 }
 function infinityDimensionAmount(i){ensureInfinityDimensionState();return BigNumber.from(state.infinityDimensions[i].amount||0).max(0);}
 function infinityDimensionCost(i){ensureInfinityDimensionState();const d=state.infinityDimensions[i],def=infinityDimensionDefs[i],batches=Math.floor(d.bought/10);return BigNumber.from(def.cost).multiply(BigNumber.from(def.growth).power(batches));}
