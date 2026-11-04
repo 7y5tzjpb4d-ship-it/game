@@ -1951,10 +1951,13 @@ function offlineProgressOverlay(){
 // Rendering, wall-clock scheduling and saving are deliberately kept outside it.
 function simulateGameStep(dt, options={}){
  if(!(dt>0))return;
+ const offlineFast=options.offlineFast===true;
  state.playTime=Math.max(0,Number(state.playTime)||0)+dt;
  state.eternityRunTime=Math.max(0,Number(state.eternityRunTime)||0)+dt;
- if(Number(state.eternities)>=7)applyEternityMilestoneICAutoComplete();
- if(Number(state.eternities)>=25)ensureInfinityDimensionState();
+ if(!offlineFast){
+  if(Number(state.eternities)>=7)applyEternityMilestoneICAutoComplete();
+  if(Number(state.eternities)>=25)ensureInfinityDimensionState();
+ }
  if(state.eternities>0)state.eternityTime=Math.max(0,Number(state.eternityTime)||0)+dt;
  if(state.eternities>0&&state.eternityTime>0){
   const gained=Math.max(0,(Number(state.infinities)||0)-(Number(state.eternityStartInfinities)||0));
@@ -1962,7 +1965,7 @@ function simulateGameStep(dt, options={}){
  }
  // The official loop runs autobuyers before resource production and before
  // production multipliers are refreshed. Keep this order for online/offline.
- runAutobuyers(dt);
+ runAutobuyers(dt,offlineFast?{offlineFast:true}:{});
  updateInfinityDimensionProduction(dt);
  updateTimeDimensionProduction(dt);
  updateReplicanti(dt);
@@ -1996,7 +1999,7 @@ function simulateGameStep(dt, options={}){
  updateEternityEfficiencyPeak();
  // Achievement conditions are checked every tick because rewards can affect
  // subsequent production. Offline toast/DOM work is deferred until the batch ends.
- checkAchievements();
+ if(!offlineFast||options.checkAchievements)checkAchievements();
  if(!options.deferAchievementNotifications)notifyNewAchievements();
 }
 
@@ -2033,6 +2036,9 @@ async function applyOfflineProgress(seconds){
   // elapsed time when the configured offline-tick budget is reached.
   // Each simulated tick is capped at one day, matching the game limit.
   const offlineTicks=Math.max(1,Math.min(OFFLINE_PROGRESS_DEFAULT_TICKS,Math.floor(offlineSeconds*20)));
+  // These state invariants do not need to be rebuilt on every offline tick.
+  if(Number(state.eternities)>=7)applyEternityMilestoneICAutoComplete();
+  if(Number(state.eternities)>=25)ensureInfinityDimensionState();
   let remainingSeconds=offlineSeconds;
   let ticksRemaining=offlineTicks;
   let completedTicks=0;
@@ -2042,7 +2048,7 @@ async function applyOfflineProgress(seconds){
   let cachedOfflineIPRate=offlineIPRateBigNumber();
   // Progress UI is informational only; update it at most 20 times per run.
   // Avoid yielding hundreds of animation frames during a large offline batch.
-  const progressInterval=Math.max(1,Math.floor(offlineTicks/20));
+  const progressInterval=Math.max(1,Math.floor(offlineTicks/100));
   while(ticksRemaining>0){
    if(offlineProgressSkipRequested&&ticksRemaining>10)ticksRemaining=10;
    const dt=remainingSeconds/ticksRemaining;
@@ -2053,10 +2059,12 @@ async function applyOfflineProgress(seconds){
    }
    const offlineIPGain=cachedOfflineIPRate.multiply(dt);
    if(offlineIPGain.compare(0)>0){addIPBigNumber(offlineIPGain);state.totalIPGained=(state.totalIPGained||0)+offlineIPGain.toNumber();}
-   simulateGameStep(dt,{deferAchievementNotifications:true});
-   remainingSeconds=Math.max(0,remainingSeconds-dt);
    ticksRemaining--;
    completedTicks++;
+   // Achievement predicates are comparatively expensive and most are monotonic.
+   // Check them every 10 offline ticks, plus the final tick, rather than on every tick.
+   simulateGameStep(dt,{deferAchievementNotifications:true,offlineFast:true,checkAchievements:completedTicks%10===0||ticksRemaining===0});
+   remainingSeconds=Math.max(0,remainingSeconds-dt);
    if(completedTicks%progressInterval===0||ticksRemaining===0){
     const progress=completedTicks/(completedTicks+ticksRemaining),elapsed=(performance.now()-startedAt)/1000,eta=progress>0?elapsed*(1-progress)/progress:0;
     const status=document.getElementById('offlineProgressStatus'),bar=document.getElementById('offlineProgressBar'),etaEl=document.getElementById('offlineProgressEta');
@@ -2988,8 +2996,10 @@ function runReplicantiUpgradeAutobuyers(){
 function runAutobuyers(dt, options={}){
  let changed=runReplicantiUpgradeAutobuyers();
  const intervals=autobuyerInterval();
- ensureInfinityDimensionState();
- if(Number(state.eternities)>=7&&applyEternityMilestoneICAutoComplete())changed=true;
+ if(!options.offlineFast){
+  ensureInfinityDimensionState();
+  if(Number(state.eternities)>=7&&applyEternityMilestoneICAutoComplete())changed=true;
+ }
  if(Number(state.eternities)>=11){for(let i=0;i<8;i++){if(Number(state.eternities)<11+i||!state.autobuyers.infinityDims?.[i])continue;if(!state.infinityDimensions[i].unlocked&&Number(state.eternities)>=25)state.infinityDimensions[i].unlocked=infinityDimensionUnlocked(i);if(state.infinityDimensions[i].unlocked&&canBuyInfinityDimension(i)){if(maxBuyInfinityDimension(i)>0)changed=true;}}}
  if(Number(state.eternities)>=1&&state.autobuyers.ipMult){const ipMultBought=buyMaxIPMultiplier();if(ipMultBought>0)changed=true;}
  if(Number(state.eternities)>=3&&state.autobuyers.replicantiGalaxy&&state.replicantiUnlocked&&replicantiLog10()>=Math.log10(Number.MAX_VALUE)){const maxRG=Math.max(state.replicantiGalaxyUpgrades,hasAchievement(95)?1:0)+(tsOwned(225)?Math.floor(Math.max(0,replicantiLog10())/1000):0)+(tsOwned(226)?Math.floor(Math.max(0,Number(state.replicantiGalaxyUpgrades)||0)/15):0);if(state.replicantiGalaxies<maxRG&&buyReplicantiGalaxy(true))changed=true;}
