@@ -2064,9 +2064,10 @@ async function applyOfflineProgress(seconds){
     }
     ticksRemaining--;
     completedTicks++;
-    // Keep achievement checks on every tick, as in the ordinary game loop;
-    // only defer their visual notifications until the simulation has ended.
-    simulateGameStep(dt,{deferAchievementNotifications:true,offlineFast:true,checkAchievements:true});
+    // Use the same state-advancement path and per-tick maintenance as online play.
+    // Only DOM notifications are deferred; progression, milestone maintenance,
+    // autobuyers, production and achievement checks still run on every tick.
+    simulateGameStep(dt,{deferAchievementNotifications:true});
     remainingSeconds=Math.max(0,remainingSeconds-dt);
     batchTicks++;
     if(offlineProgressSkipRequested&&ticksRemaining>10)ticksRemaining=10;
