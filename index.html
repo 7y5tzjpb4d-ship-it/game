@@ -1966,13 +1966,14 @@ function simulateGameStep(dt, options={}){
  // The official loop runs autobuyers before resource production and before
  // production multipliers are refreshed. Keep this order for online/offline.
  runAutobuyers(dt,offlineFast?{offlineFast:true}:{});
- updateInfinityDimensionProduction(dt);
- updateTimeDimensionProduction(dt);
- updateReplicanti(dt);
+ // Match the ordering of the corresponding systems in the official gameLoop:
+ // challenge state and pre-production timers, then Time Dimensions, Infinity
+ // Dimensions, Antimatter Dimensions, and finally Replicanti.
  if(state.infinities>0)state.infinityTime+=dt;
  if(challengeRuleActive(2))state.challenge2Recovery=Math.min(1,state.challenge2Recovery+dt/180);
- if(productionRateBigNumber().compare(matterBigNumber())>0)state.exceedProductionTime+=dt;else state.exceedProductionTime=0;
  if(challengeRuleActive(3))state.challenge3TimeMult=Math.min(INFINITY,state.challenge3TimeMult*Math.pow(1.00038,10*dt));
+ updateTimeDimensionProduction(dt);
+ updateInfinityDimensionProduction(dt);
  if(challengeRuleActive(11)&&state.amount[1]>0)state.challenge11Matter=Math.min(INFINITY,Math.max(1,state.challenge11Matter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,10*dt));
  if(state.activeInfinityChallenge===6)state.icMatter=Math.min(INFINITY,Math.max(1,state.icMatter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,200*dt));
  if(state.activeInfinityChallenge===8)state.ic8ProductionMultiplier*=Math.pow(0.8446303389034288,1000*dt);
@@ -1987,9 +1988,15 @@ function simulateGameStep(dt, options={}){
  if(state.breakInfinityActive&&breakInfinityUpgradeBought('fastestInfinity')&&state.fastestInfinity>0){const interval=Math.max(0.1,state.fastestInfinity*2);state.infinities+=dt/interval;}
  const generatedIP=ipGenerationRateBigNumber().multiply(dt);
  if(generatedIP.compare(0)>0){addIPBigNumber(generatedIP);state.totalIPGained=(state.totalIPGained||0)+generatedIP.toNumber();}
+ // Antimatter Dimensions are updated before their production is applied, as in
+ // the official gameLoop. Calculate the resulting production rate once and use
+ // that same value for both the challenge timer and the resource update.
+ const productionRate=productionRateBigNumber();
+ if(productionRate.compare(matterBigNumber())>0)state.exceedProductionTime+=dt;else state.exceedProductionTime=0;
  const matterBeforeLog=matterLog();
- addMatterProduction(productionRateBigNumber(),dt);
+ addMatterProduction(productionRate,dt);
  if(matterLog()>=matterBeforeLog)state.totalAntimatterLog10=Math.max(state.totalAntimatterLog10,matterLog());
+ updateReplicanti(dt);
  if(challengeRuleActive(11)&&BigNumber.from(state.challenge11Matter).compare(matterBigNumber())>0){
   state.boosts++;state.challenge11NoBonusBoosts++;state.challenge11Matter=1;setMatterBigNumber(startingAntimatter());
   state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;
