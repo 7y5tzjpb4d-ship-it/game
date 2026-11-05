@@ -2007,7 +2007,6 @@ async function applyOfflineProgress(seconds){
  if(offlineProgressActive)return;
  const offlineSeconds=Math.min(86400*OFFLINE_PROGRESS_DEFAULT_TICKS,Math.max(0,Number(seconds)||0));
  if(offlineSeconds<=0)return;
- // Restore the existing offline milestone generation behavior.
  if(Number(state.eternities)>=100){
   const rate=Math.max(0,Number(state.peakEternitiesPerHour)||0);
   const accumulated=Math.max(0,Number(state.eternityOfflineRemainder)||0)+rate*(offlineSeconds/3600)*0.5;
@@ -2022,8 +2021,6 @@ async function applyOfflineProgress(seconds){
  offlineProgressActive=true;
  let overlay=null;
  try{
-  // EM6: 25% of the best completed Eternity EP/min, unless prestige autobuyers
-  // are active (matching the official offline-EP eligibility rule).
   if(offlineEPGenerationAllowed()){
    const offlineEP=bestEPPerMinuteBigNumber().multiply(offlineSeconds/60/4);
    if(offlineEP.compare(0)>0)addEPBigNumber(offlineEP);
@@ -2032,49 +2029,59 @@ async function applyOfflineProgress(seconds){
   overlay=offlineProgressOverlay();
   const startedAt=performance.now();
   offlineProgressSkipRequested=false;
-  // Use the game 20 Hz base tick rate, then stretch ticks to cover the
-  // elapsed time when the configured offline-tick budget is reached.
-  // Each simulated tick is capped at one day, matching the game limit.
   const offlineTicks=Math.max(1,Math.min(OFFLINE_PROGRESS_DEFAULT_TICKS,Math.floor(offlineSeconds*20)));
-  // These state invariants do not need to be rebuilt on every offline tick.
   if(Number(state.eternities)>=7)applyEternityMilestoneICAutoComplete();
   if(Number(state.eternities)>=25)ensureInfinityDimensionState();
   let remainingSeconds=offlineSeconds;
   let ticksRemaining=offlineTicks;
   let completedTicks=0;
-  // Cache the offline-IP rate. The source record is replaced only when a new
-  // best IP/min is recorded, so refresh immediately after that state change.
   let offlineIPRateSource=state.bestIPPerMinBN;
   let cachedOfflineIPRate=offlineIPRateBigNumber();
-  // Progress UI is informational only; update it at most 20 times per run.
-  // Avoid yielding hundreds of animation frames during a large offline batch.
-  const progressInterval=Math.max(1,Math.floor(offlineTicks/100));
+  const status=document.getElementById('offlineProgressStatus');
+  const bar=document.getElementById('offlineProgressBar');
+  const etaEl=document.getElementById('offlineProgressEta');
+
+  // Match the official simulateTime/Async.run scheduling model: process normal
+  // game ticks in short main-thread slices, then yield before continuing.
+  // The previous implementation ran roughly 1% of the entire simulation
+  // synchronously; on long sessions this blocked input and rendering for seconds.
+  const MAX_BATCH_MS=60;
+  const YIELD_MS=1;
   while(ticksRemaining>0){
    if(offlineProgressSkipRequested&&ticksRemaining>10)ticksRemaining=10;
-   const dt=remainingSeconds/ticksRemaining;
-   // Offline-only IP upgrade is added in addition to the shared normal game tick.
-   if(state.bestIPPerMinBN!==offlineIPRateSource){
-    offlineIPRateSource=state.bestIPPerMinBN;
-    cachedOfflineIPRate=offlineIPRateBigNumber();
-   }
-   const offlineIPGain=cachedOfflineIPRate.multiply(dt);
-   if(offlineIPGain.compare(0)>0){addIPBigNumber(offlineIPGain);state.totalIPGained=(state.totalIPGained||0)+offlineIPGain.toNumber();}
-   ticksRemaining--;
-   completedTicks++;
-   // Achievement predicates are comparatively expensive and most are monotonic.
-   // Check them every 10 offline ticks, plus the final tick, rather than on every tick.
-   simulateGameStep(dt,{deferAchievementNotifications:true,offlineFast:true,checkAchievements:completedTicks%10===0||ticksRemaining===0});
-   remainingSeconds=Math.max(0,remainingSeconds-dt);
-   if(completedTicks%progressInterval===0||ticksRemaining===0){
-    const progress=completedTicks/(completedTicks+ticksRemaining),elapsed=(performance.now()-startedAt)/1000,eta=progress>0?elapsed*(1-progress)/progress:0;
-    const status=document.getElementById('offlineProgressStatus'),bar=document.getElementById('offlineProgressBar'),etaEl=document.getElementById('offlineProgressEta');
-    if(status)status.textContent=`${(progress*100).toFixed(1)}%（${completedTicks.toLocaleString()} ticks）`;
-    if(bar)bar.style.width=`${(progress*100).toFixed(2)}%`;
-    if(etaEl)etaEl.textContent=`経過 ${formatPlayTime(elapsed)} ／ 残り約 ${formatPlayTime(eta)}`;
-    await new Promise(resolve=>requestAnimationFrame(()=>resolve()));
-   }
+   const batchStartedAt=performance.now();
+   let batchTicks=0;
+   do{
+    const dt=remainingSeconds/ticksRemaining;
+    if(state.bestIPPerMinBN!==offlineIPRateSource){
+     offlineIPRateSource=state.bestIPPerMinBN;
+     cachedOfflineIPRate=offlineIPRateBigNumber();
+    }
+    const offlineIPGain=cachedOfflineIPRate.multiply(dt);
+    if(offlineIPGain.compare(0)>0){
+     addIPBigNumber(offlineIPGain);
+     state.totalIPGained=(state.totalIPGained||0)+offlineIPGain.toNumber();
+    }
+    ticksRemaining--;
+    completedTicks++;
+    // Keep achievement checks on every tick, as in the ordinary game loop;
+    // only defer their visual notifications until the simulation has ended.
+    simulateGameStep(dt,{deferAchievementNotifications:true,offlineFast:true,checkAchievements:true});
+    remainingSeconds=Math.max(0,remainingSeconds-dt);
+    batchTicks++;
+    if(offlineProgressSkipRequested&&ticksRemaining>10)ticksRemaining=10;
+   }while(ticksRemaining>0&&performance.now()-batchStartedAt<MAX_BATCH_MS);
+
+   const progress=completedTicks/(completedTicks+ticksRemaining);
+   const elapsed=(performance.now()-startedAt)/1000;
+   const eta=progress>0?elapsed*(1-progress)/progress:0;
+   if(status)status.textContent=`${(progress*100).toFixed(1)}%（${completedTicks.toLocaleString()} ticks）`;
+   if(bar)bar.style.width=`${(progress*100).toFixed(2)}%`;
+   if(etaEl)etaEl.textContent=`経過 ${formatPlayTime(elapsed)} ／ 残り約 ${formatPlayTime(eta)}`;
+   if(ticksRemaining>0)await new Promise(resolve=>setTimeout(resolve,YIELD_MS));
   }
-  checkAchievements();notifyNewAchievements();
+  checkAchievements();
+  notifyNewAchievements();
  }finally{
   if(overlay)overlay.remove();
   offlineProgressActive=false;
@@ -2371,7 +2378,30 @@ function updateReplicanti(dt){
  checkReplicantiAchievement();
 }
 function replicantiView(){const unlocked=state.replicantiUnlocked;const r=Math.max(1,state.replicanti||1);const repAtCap=replicantiLog10()>=Math.log10(Number.MAX_VALUE);const maxGal=Math.max(state.replicantiGalaxyUpgrades,hasAchievement(95)?1:0)+(tsOwned(225)?Math.floor(Math.max(0,replicantiLog10())/1000):0)+(tsOwned(226)?Math.floor(Math.max(0,Number(state.replicantiGalaxyUpgrades)||0)/15):0);if(!unlocked)return `<div class="replicanti-screen"><h2>Replicanti</h2><button type="button" class="replicanti-primary" data-rep-action="unlock" ${hasIPAtLeast('1e140')?'':'disabled'}>Replicantiを解放（1e140 IP）</button></div>`;return `<div class="replicanti-screen"><h2>Replicanti</h2><div class="replicanti-count"><small>所持Replicanti</small><strong>${repAtCap?fmtBig(replicantiBigNumber()):fmt(r)}</strong><span>Infinity Dimension倍率：×${fmtBig(replicantiInfinityDimensionMultiplier())}</span></div><div class="replicanti-time-estimate">${tsOwned(192)?'Replicanti増殖速度はInfinity以降、所持量に応じて低下します。':'1.8e308到達まで：'}<strong id="replicanti-time-remaining">${formatReplicantiTimeRemaining()}</strong></div><div class="replicanti-upgrades"><button type="button" class="${state.replicantiChanceUpgrades<99&&hasIPAtLeast(replicantiChanceCost())?'available':''}" data-rep-action="chance" ${state.replicantiChanceUpgrades>=99||!hasIPAtLeast(replicantiChanceCost())?'disabled':''}><strong>増殖確率</strong><span>現在：${state.replicantiChance}%</span><small>+1% · コスト：${fmtBig(replicantiChanceCost())} IP</small></button><button type="button" class="${state.replicantiInterval>50&&hasIPAtLeast(replicantiIntervalCost())?'available':''}" data-rep-action="interval" ${state.replicantiInterval<=(tsOwned(22)?1:50)||!hasIPAtLeast(replicantiIntervalCost())?'disabled':''}><strong>増殖間隔</strong><span>現在：${state.replicantiInterval.toFixed(1)} ms</span><small>×0.9 · コスト：${fmtBig(replicantiIntervalCost())} IP</small></button><button type="button" class="${hasIPAtLeast(replicantiGalaxyCost())?'available':''}" data-rep-action="galaxy" ${!hasIPAtLeast(replicantiGalaxyCost())?'disabled':''}><strong>最大Replicanti Galaxy</strong><span>現在：${state.replicantiGalaxies} / ${maxGal}</span><small>上限+1 · コスト：${fmtBig(replicantiGalaxyCost())} IP</small></button></div><div class="replicanti-galaxy"><strong>Replicanti Galaxy：${state.replicantiGalaxies}</strong><p>${repAtCap?'ReplicantiがInfinityに到達しました。Galaxyを購入できます。':'1.80e308に到達すると購入できます。'}</p><button type="button" class="replicanti-primary" data-rep-action="buyGalaxy" ${repAtCap&&state.replicantiGalaxies<maxGal?'':'disabled'}>Replicanti Galaxyを獲得</button></div></div>`;}
-function updateInfinityDimensionProduction(dt){ensureInfinityDimensionState();if(!(dt>0))return;for(let i=7;i>=1;i--){const source=infinityDimensionAmount(i);const produced=source.multiply(BigNumber.from(dt/10).multiply(infinityDimensionMultiplier(i)));const targetAmount=infinityDimensionAmount(i-1).add(produced).toJSON();/* infinityDimensionAmount()/infinityDimensionMultiplier() normalize the array by replacing it; compute the RHS first so we don't assign into a stale array object. */state.infinityDimensions[i-1].amount=targetAmount;}let producedPower=infinityDimensionAmount(0).multiply(BigNumber.from(dt).multiply(infinityDimensionMultiplier(0)));if(hasAchievement(94))producedPower=producedPower.multiply(2);state.infinityPowerBN=BigNumber.from(state.infinityPowerBN||0).add(producedPower).toJSON();}
+function updateInfinityDimensionProduction(dt){
+ if(!(dt>0))return;
+ // The save is normalized once when loading and once at the beginning of an
+ // offline batch (or by the online autobuyer pass). Do not call the validating
+ // accessors here: each accessor used to normalize all eight dimensions again,
+ // resulting in dozens of full-array scans and BigNumber allocations per tick.
+ const dims=state.infinityDimensions;
+ if(!Array.isArray(dims)||dims.length!==8)return;
+ const baseMultiplier=infinityDimensionProductionMultiplier();
+ const dt10=BigNumber.from(dt/10);
+ for(let i=7;i>=1;i--){
+  const source=BigNumber.from(dims[i].amount||0).max(0);
+  if(source.compare(0)<=0)continue;
+  let mult=baseMultiplier.multiply(BigNumber.from(infinityDimensionDefs[i].step).power(Math.floor((Number(dims[i].bought)||0)/10)));
+  if(i===3&&tsOwned(72))mult=mult.multiply(sacrificeMultiplierBigNumber().power(0.04).min('1e30000'));
+  const produced=source.multiply(dt10).multiply(mult);
+  dims[i-1].amount=BigNumber.from(dims[i-1].amount||0).add(produced).toJSON();
+ }
+ let firstMultiplier=baseMultiplier.multiply(BigNumber.from(infinityDimensionDefs[0].step).power(Math.floor((Number(dims[0].bought)||0)/10)));
+ const firstAmount=BigNumber.from(dims[0].amount||0).max(0);
+ let producedPower=firstAmount.multiply(BigNumber.from(dt).multiply(firstMultiplier));
+ if(hasAchievement(94))producedPower=producedPower.multiply(2);
+ state.infinityPowerBN=BigNumber.from(state.infinityPowerBN||0).add(producedPower).toJSON();
+}
 function breakInfinityView(){
  const active=Boolean(state.breakInfinityActive);
  const oneTime=breakInfinityUpgradeData().map(([id,name,desc,cost])=>{
