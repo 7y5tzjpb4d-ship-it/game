@@ -1165,31 +1165,48 @@ function dimensionAmountBig(i){const saved=state.amountBN?.[i];if(saved&&Number.
 function setDimensionAmountBig(i,value){const b=BigNumber.from(value).max(0);state.amountBN[i]=b.toJSON();state.amount[i]=b.toNumber();return b;}
 function dimensionProductionBigNumber(i){let mult=dimensionMultiplierBigNumber(i).multiply(tickspeedMultiplierBigNumber());if(challengeRuleActive(2))mult=mult.multiply(Math.max(0,Math.min(1,state.challenge2Recovery)));if(challengeRuleActive(3)&&i===0)mult=mult.multiply(0.01*state.challenge3TimeMult);if(state.activeInfinityChallenge===4&&i!==state.icLastBoughtDimension)mult=mult.power(0.25);if(state.activeInfinityChallenge===8)mult=mult.multiply(Math.max(0,state.ic8ProductionMultiplier));return dimensionAmountBig(i).power(dimensionAmountPower(i)).multiply(mult);}
 function infinityPowerDimensionMultiplierBigNumber(){return BigNumber.from(state.infinityPowerBN||0).max(1).power(7);}
+// Dimension multiplier caches are intentionally scoped to one production phase.
+// They are never retained across user actions or game ticks, so state changes
+// cannot leave stale multipliers behind.
+let dimensionMultiplierCacheActive=false;
+let dimensionMultiplierTierCache=new Map();
+let dimensionMultiplierCommonCache=new Map();
+function clearDimensionMultiplierCache(){
+ dimensionMultiplierTierCache.clear();
+ dimensionMultiplierCommonCache.clear();
+}
+function cachedDimensionMultiplierValue(key,factory){
+ if(!dimensionMultiplierCacheActive)return factory();
+ if(!dimensionMultiplierCommonCache.has(key))dimensionMultiplierCommonCache.set(key,factory());
+ const value=dimensionMultiplierCommonCache.get(key);
+ return value instanceof BigNumber?BigNumber.from(value):value;
+}
 function dimensionMultiplierBigNumber(i){
+ if(dimensionMultiplierCacheActive&&dimensionMultiplierTierCache.has(i))return BigNumber.from(dimensionMultiplierTierCache.get(i));
  let m=BigNumber.from(challengeRuleActive(8)?1:dimensionBoostMult(i));
  if(tsOwned(91)){const eternityMinutes=Math.min(20,Math.max(0,Number(state.eternityTime)||0)/60);m=m.multiply(BigNumber.from(10).power(15*eternityMinutes).min('1e300'));}
  if(tsOwned(101)&&state.replicantiUnlocked)m=m.multiply(replicantiBigNumber().max(1));
  if(tsOwned(193))m=m.multiply(BigNumber.from('1e13000').power(Math.min(1,Math.max(0,Number(state.eternities)||0)/1e6)).min('1e13000'));
  if(tsOwned(161))m=m.multiply('1e616');
  // Infinity Power's x^7 bonus applies to every normal Dimension's production.
- m=m.multiply(infinityPowerDimensionMultiplierBigNumber());
+ m=m.multiply(cachedDimensionMultiplierValue('infinityPower',infinityPowerDimensionMultiplierBigNumber));
  const tenBuy=(challengeRuleActive(7)?Math.min(2,1+0.2*state.boosts):(state.infinityUpgrades.includes('dimMult')?2.2:2))+(hasAchievement(58)?0.01:0);
  m=m.multiply(BigNumber.from(tenBuy).power(Math.floor(state.bought[i]/10)));
  if(state.activeInfinityChallenge===3||infinityChallengeEffectActive(3))m=m.multiply(BigNumber.from(1.05+Math.max(0,Number(state.galaxies)||0)/200).power(state.tickspeed));
  if(infinityChallengeEffectActive(8)&&i>=1&&i<=6)m=m.multiply(dimensionMultiplierBigNumber(0).multiply(dimensionMultiplierBigNumber(7)).power(0.02));
  if(state.activeInfinityChallenge===6&&state.amount[1]>0)m=m.divide(BigNumber.from(Math.max(1,state.icMatter)));
  for(const f of [(i===0&&state.achievements[15])?1.1:1,(i===7&&state.achievements[10])?1.1:1,(i===0&&state.achievements[16])?1.05:1,(i<7&&state.achievements[19])?1.02:1,state.achievements[26]?1+(i+1)*0.01:1,state.achievements[31]?1.1:1])m=m.multiply(f);
- m=m.multiply(infinityUpgradeMultiplierBigNumber('timeMult')).multiply(infinityUpgradeMultiplierBigNumber('timeMult2'));
- if(i===0)m=m.multiply(infinityUpgradeMultiplierBigNumber('unspentBonus'));
+ m=m.multiply(cachedDimensionMultiplierValue('timeMult',()=>infinityUpgradeMultiplierBigNumber('timeMult'))).multiply(cachedDimensionMultiplierValue('timeMult2',()=>infinityUpgradeMultiplierBigNumber('timeMult2')));
+ if(i===0)m=m.multiply(cachedDimensionMultiplierValue('unspentBonus',()=>infinityUpgradeMultiplierBigNumber('unspentBonus')));
  if(i===0||i===7)m=m.multiply(infinityUpgradeMultiplierBigNumber('18Mult'));
  if(i===1||i===6)m=m.multiply(infinityUpgradeMultiplierBigNumber('27Mult'));
  if(i===2||i===5)m=m.multiply(infinityUpgradeMultiplierBigNumber('36Mult'));
  if(i===3||i===4)m=m.multiply(infinityUpgradeMultiplierBigNumber('45Mult'));
- for(const id of ['totalAM','currentAM','infinities','achievements','slowestChallenge'])if(breakInfinityUpgradeBought(id))m=m.multiply(breakInfinityUpgradeEffectBigNumber(id));
- if(i===(state.activeChallenge===12?5:7))m=m.multiply(sacrificeMultiplierBigNumber());
- if(tsOwned(71)&&i!== (state.activeChallenge===12?5:7))m=m.multiply(sacrificeMultiplierBigNumber().power(0.25).min('1e210000'));
- if(tsOwned(214)&&i===7)m=m.multiply(sacrificeMultiplierBigNumber().power(7.6).min('1e44000')).multiply(sacrificeMultiplierBigNumber().power(1.05).min('1e120000')).min('1e164000');
- if(tsOwned(234)&&i===0)m=m.multiply(sacrificeMultiplierBigNumber());
+ for(const id of ['totalAM','currentAM','infinities','achievements','slowestChallenge'])if(breakInfinityUpgradeBought(id))m=m.multiply(cachedDimensionMultiplierValue('break:'+id,()=>breakInfinityUpgradeEffectBigNumber(id)));
+ if(i===(state.activeChallenge===12?5:7))m=m.multiply(cachedDimensionMultiplierValue('sacrifice',sacrificeMultiplierBigNumber));
+ if(tsOwned(71)&&i!== (state.activeChallenge===12?5:7))m=m.multiply(cachedDimensionMultiplierValue('sacrifice',sacrificeMultiplierBigNumber).power(0.25).min('1e210000'));
+ if(tsOwned(214)&&i===7){const sacrifice=cachedDimensionMultiplierValue('sacrifice',sacrificeMultiplierBigNumber);m=m.multiply(sacrifice.power(7.6).min('1e44000')).multiply(sacrifice.power(1.05).min('1e120000')).min('1e164000');}
+ if(tsOwned(234)&&i===0)m=m.multiply(cachedDimensionMultiplierValue('sacrifice',sacrificeMultiplierBigNumber));
  if(hasAchievement(64)&&i<4)m=m.multiply(1.25);
  if(hasAchievement(68)&&i===0)m=m.multiply(1.5);
  if(hasAchievement(71)&&i===0)m=m.multiply(3);
@@ -1201,10 +1218,12 @@ function dimensionMultiplierBigNumber(i){
  if(hasAchievement(56)&&state.infinityTime<180)m=m.multiply(Math.max(6/(state.infinityTime/60+3),1));
  if(hasAchievement(65)&&(state.activeChallenge||state.activeInfinityChallenge)&&state.infinityTime<180)m=m.multiply(Math.max(4/(state.infinityTime/60+1),1));
  if(hasAchievement(74)&&(state.activeChallenge||state.activeInfinityChallenge))m=m.multiply(1.4);
- const finalMultiplier=m.multiply(achievementMultiplier());
+ const finalMultiplier=m.multiply(cachedDimensionMultiplierValue('achievementMultiplier',achievementMultiplier));
  // IC4's reward raises the complete Antimatter Dimension multiplier, including
  // tickspeed, achievements, and other applicable bonuses, to the 1.05 power.
- return infinityChallengeEffectActive(4)?finalMultiplier.power(1.05):finalMultiplier;
+ const result=infinityChallengeEffectActive(4)?finalMultiplier.power(1.05):finalMultiplier;
+ if(dimensionMultiplierCacheActive)dimensionMultiplierTierCache.set(i,BigNumber.from(result));
+ return result;
 }
 function tickspeedMultiplierBigNumber(){if(state.activeInfinityChallenge===3)return BigNumber.from(1);const base=tickspeedBase();const freeTimeShardTickspeedCount=timeShardsFreeTickspeedInfo().count;let mult=BigNumber.from(base).power(Math.min(Math.max(0,Number(state.tickspeed)||0)+freeTimeShardTickspeedCount,1e9));mult=mult.multiply(BigNumber.from(tickspeedAchievementRewardMultiplier()));if(hasAchievement(83)){const galaxies=Math.max(0,Number(state.galaxies)||0);mult=mult.multiply(BigNumber.from(Math.pow(0.95,-galaxies)));}return mult;}
 function sacrificeMultiplierBigNumber(){const b=state.sacrificeMultBN;return b&&Number.isFinite(Number(b.mantissa))&&Number.isFinite(Number(b.exponent))?BigNumber.from(b).max(1):BigNumber.from(state.sacrificeMult||1).max(1);}
@@ -1963,9 +1982,15 @@ function simulateGameStep(dt, options={}){
  const offlineFast=options.offlineFast===true;
  state.playTime=Math.max(0,Number(state.playTime)||0)+dt;
  state.eternityRunTime=Math.max(0,Number(state.eternityRunTime)||0)+dt;
- if(!offlineFast){
+ if(!offlineFast|| (options.offlineRuntime&&options.offlineRuntime.eternities!==state.eternities)){
   if(Number(state.eternities)>=7)applyEternityMilestoneICAutoComplete();
   if(Number(state.eternities)>=25)ensureInfinityDimensionState();
+  if(options.offlineRuntime){
+   options.offlineRuntime.eternities=state.eternities;
+   // Eternity can reset autobuyer upgrades on the first reset. Refresh the
+   // cached interval table only when that state transition actually occurs.
+   options.offlineRuntime.intervals=autobuyerInterval();
+  }
  }
  if(state.eternities>0)state.eternityTime=Math.max(0,Number(state.eternityTime)||0)+dt;
  if(state.eternities>0&&state.eternityTime>0){
@@ -1974,7 +1999,7 @@ function simulateGameStep(dt, options={}){
  }
  // The official loop runs autobuyers before resource production and before
  // production multipliers are refreshed. Keep this order for online/offline.
- runAutobuyers(dt,offlineFast?{offlineFast:true}:{});
+ runAutobuyers(dt,offlineFast?{offlineFast:true,intervals:options.offlineRuntime?.intervals}:{});
  // Match the ordering of the corresponding systems in the official gameLoop:
  // challenge state and pre-production timers, then Time Dimensions, Infinity
  // Dimensions, Antimatter Dimensions, and finally Replicanti.
@@ -1987,11 +2012,15 @@ function simulateGameStep(dt, options={}){
  if(state.activeInfinityChallenge===6)state.icMatter=Math.min(INFINITY,Math.max(1,state.icMatter)*Math.pow(1.03+state.boosts/200+state.galaxies/100,200*dt));
  if(state.activeInfinityChallenge===8)state.ic8ProductionMultiplier*=Math.pow(0.8446303389034288,1000*dt);
  if(state.activeInfinityChallenge===2&&state.amount[7]>0){state.ic2SacrificeTimer+=dt;if(state.ic2SacrificeTimer>=0.4){state.ic2SacrificeTimer%=0.4;sacrifice(true);}}
+ clearDimensionMultiplierCache();
+ dimensionMultiplierCacheActive=true;
  if(state.activeChallenge===12){
   for(let i=7;i>=2;i--){const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-2);setDimensionAmountBig(i-2,cur.add(prod));}
  }else{
   for(let i=7;i>=1;i--){if(challengeRuleActive(10)&&i>=6)continue;const prod=dimensionProductionBigNumber(i).multiply(0.1*dt);const cur=dimensionAmountBig(i-1);setDimensionAmountBig(i-1,cur.add(prod));}
  }
+ dimensionMultiplierCacheActive=false;
+ clearDimensionMultiplierCache();
  const passiveGain=passiveIPRateBigNumber().multiply(dt);
  addIPBigNumber(passiveGain);state.totalIPGained=(state.totalIPGained||0)+passiveGain.toNumber();
  if(state.breakInfinityActive&&breakInfinityUpgradeBought('fastestInfinity')&&state.fastestInfinity>0){const interval=Math.max(0.1,state.fastestInfinity*2);state.infinities+=dt/interval;}
@@ -2053,6 +2082,10 @@ async function applyOfflineProgress(seconds){
   if(Number(state.eternities)>=25)ensureInfinityDimensionState();
   let remainingSeconds=offlineSeconds;
   let ticksRemaining=offlineTicks;
+  // Autobuyer intervals only change through explicit upgrades or reset state.
+  // No upgrade UI can run during offline simulation, so compute this 12-entry
+  // table once instead of rebuilding it on every simulated tick.
+  const offlineRuntime={eternities:state.eternities,intervals:autobuyerInterval()};
   let completedTicks=0;
   // 本家 simulateTime() と同様、オフラインIPはシミュレーション開始時点の
   // ベストIP/minを基準に一括計算する。各Tickで再評価・加算しない。
@@ -2082,7 +2115,7 @@ async function applyOfflineProgress(seconds){
     // Use the same state-advancement path and per-tick maintenance as online play.
     // Only DOM notifications are deferred; progression, milestone maintenance,
     // autobuyers, production and achievement checks still run on every tick.
-    simulateGameStep(dt,{offlineFast:true,deferAchievementNotifications:true});
+    simulateGameStep(dt,{offlineFast:true,deferAchievementNotifications:true,offlineRuntime});
     remainingSeconds=Math.max(0,remainingSeconds-dt);
     batchTicks++;
     if(offlineProgressSkipRequested&&ticksRemaining>10)ticksRemaining=10;
@@ -3025,6 +3058,10 @@ function notifyNewAchievements(){state.achievements.forEach((unlocked,i)=>{if(un
 function crunchAutobuyerReady(){if(!canCrunchNow())return false;if(state.activeChallenge)return true;if(Number(state.eternities)<5){const target=parseBigNumberInput(String(state.autobuyers?.crunchIPTarget??'1'));return !!target&&ipGainBigNumber().compare(target)>=0;}if(state.autobuyers?.crunchMode==='relative'){const previous=lastCrunchIPGainBigNumber();const multiplier=parseBigNumberInput(String(state.autobuyers.crunchValue??'1'));if(previous.compare(0)<=0||!multiplier||multiplier.compare(1)<0)return false;return ipGainBigNumber().compare(previous.multiply(multiplier))>=0;}return true;}
 function runReplicantiUpgradeAutobuyers(){
  if(Number(state.eternities)<50||!state.replicantiUnlocked)return false;
+ const ab=state.autobuyers;
+ // Avoid three repeated BigNumber affordability/cost checks on every tick
+ // when all Replicanti upgrade autobuyers are disabled.
+ if(!ab.replicantiChance&&!ab.replicantiInterval&&!ab.replicantiMaxGalaxies)return false;
  let changed=false;
  const buyAsMany=(enabled,unlocked,canBuy,buy)=>{
   if(!enabled||!unlocked)return;
@@ -3041,7 +3078,7 @@ function runReplicantiUpgradeAutobuyers(){
 }
 function runAutobuyers(dt, options={}){
  let changed=runReplicantiUpgradeAutobuyers();
- const intervals=autobuyerInterval();
+ const intervals=options.intervals||autobuyerInterval();
  if(!options.offlineFast){
   ensureInfinityDimensionState();
   if(Number(state.eternities)>=7&&applyEternityMilestoneICAutoComplete())changed=true;
