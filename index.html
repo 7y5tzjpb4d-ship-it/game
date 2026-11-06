@@ -1388,20 +1388,21 @@ function checkAchievements(){
  if(!hasAchievement(26)&&state.galaxies>=1)unlockAchievement(26);
  if(!hasAchievement(27)&&state.galaxies>=2)unlockAchievement(27);
  if(!hasAchievement(28)&&dimensionAmountBig(0).compare('1e150')>=0)unlockAchievement(28);
- if(!hasAchievement(31)&&Array.from({length:8},(_,i)=>dimensionMultiplierBigNumber(i)).some(m=>m.compare('1e31')>=0))unlockAchievement(31);
+ if(!hasAchievement(31)){for(let i=0;i<8;i++){if(dimensionMultiplierBigNumber(i).compare('1e31')>=0){unlockAchievement(31);break;}}}
  if(!hasAchievement(32)&&state.activeChallenge!==8&&sacrificeMultiplierBigNumber().compare(600)>0)unlockAchievement(32);
  if(!hasAchievement(33)&&state.infinities>=10)unlockAchievement(33);
  if(!hasAchievement(42)&&matterBigNumber().compare('1e63')>=0&&productionRateBigNumber().compare(matterBigNumber())>0)unlockAchievement(42);
  if(!hasAchievement(45)&&tickspeedMultiplierBigNumber().log10()>=29)unlockAchievement(45);
  if(!hasAchievement(66)&&tickspeedMultiplierBigNumber().compare('1e58')>=0)unlockAchievement(66);
- if(!hasAchievement(46)&&Array.from({length:7},(_,i)=>dimensionAmountBig(i).compare('1e12')>=0).every(Boolean))unlockAchievement(46);
+ if(!hasAchievement(46)){let allReached=true;for(let i=0;i<7;i++){if(dimensionAmountBig(i).compare('1e12')<0){allReached=false;break;}}if(allReached)unlockAchievement(46);}
  if(!hasAchievement(47)&&state.completedChallenges.length>=3)unlockAchievement(47);
  if(!hasAchievement(48)&&state.completedChallenges.length>=12)unlockAchievement(48);
  if(!hasAchievement(41)&&state.infinityUpgrades.length>=16)unlockAchievement(41);
  if(!hasAchievement(44)&&state.exceedProductionTime>=30)unlockAchievement(44);
  if(!hasAchievement(43)){
-  const antitableMults=Array.from({length:8},(_,i)=>dimensionMultiplierBigNumber(i).log10());
-  if(antitableMults.every((m,i)=>i===0||m>antitableMults[i-1]))unlockAchievement(43);
+  let increasing=true,previous=-Infinity;
+  for(let i=0;i<8;i++){const current=dimensionMultiplierBigNumber(i).log10();if(i>0&&!(current>previous)){increasing=false;break;}previous=current;}
+  if(increasing)unlockAchievement(43);
  }
  if(!hasAchievement(51)&&(state.breakInfinityUnlocked||state.breakInfinityActive))unlockAchievement(51);
  if(!hasAchievement(52)||!hasAchievement(53)){
@@ -1415,7 +1416,7 @@ function checkAchievements(){
  if(!hasAchievement(62)&&currentIPPerMinuteBigNumber().compare('1e8')>=0)unlockAchievement(62);
  if(!hasAchievement(63)&&BigNumber.from(state.infinityPowerBN||0).compare(0)>0)unlockAchievement(63);
  if(!hasAchievement(67)&&state.completedInfinityChallenges.length>=1)unlockAchievement(67);
- if(!hasAchievement(72)&&Array.from({length:8},(_,i)=>dimensionMultiplierBigNumber(i).compare('1.8e308')>=0).every(Boolean))unlockAchievement(72);
+ if(!hasAchievement(72)){let allReached=true;for(let i=0;i<8;i++){if(dimensionMultiplierBigNumber(i).compare('1.8e308')<0){allReached=false;break;}}if(allReached)unlockAchievement(72);}
  if(!hasAchievement(73)&&matterBigNumber().compare('9.9999e9999')>=0)unlockAchievement(73);
  // Achievement 65/74 use the best times for each of the 12 Normal Challenges only.
  if(!hasAchievement(65)||!hasAchievement(74)){
@@ -1938,7 +1939,13 @@ function eternityReset(freeTimeStudyRespec=false){
  if(nextEternities>=7)applyEternityMilestoneICAutoComplete();
  state.eternityStartInfinities=Math.max(0,Number(state.infinities)||0);state.infinityTime=0;state.infinityStartTimestamp=Date.now();state.bestIPPerMinBN=BigNumber.from(0).toJSON();state.maxAllUsedThisInfinity=false;state.lastTenIPPerMinBN=[];resetCrunchEfficiencyPeak();resetChallengeTimers();autobuyerElapsed.fill(0);infinitySubpage='upgrades';buildRows();render();notifyNewAchievements();save();return true;
 }
+// Official GameStorage.maxOfflineTicks(): offline ticks are never shorter than
+// 33ms and are capped at 1e6; the user's local default is 100000 ticks.
 const OFFLINE_PROGRESS_DEFAULT_TICKS=100000;
+function maxOfflineTicks(simulatedMs,defaultTicks=OFFLINE_PROGRESS_DEFAULT_TICKS){
+ const tickLimit=Math.min(Math.floor(Math.max(0,Number(simulatedMs)||0)/33),1e6);
+ return Math.max(0,Math.min(Math.floor(Number(defaultTicks)||0),tickLimit));
+}
 let offlineProgressSkipRequested=false;
 let offlineProgressActive=false;
 function offlineProgressOverlay(){
@@ -2036,14 +2043,22 @@ async function applyOfflineProgress(seconds){
   overlay=offlineProgressOverlay();
   const startedAt=performance.now();
   offlineProgressSkipRequested=false;
-  const offlineTicks=Math.max(1,Math.min(OFFLINE_PROGRESS_DEFAULT_TICKS,Math.floor(offlineSeconds*20)));
+  // Match the official simulateTime(): start at 20 ticks/second, then
+  // reduce (never increase) to GameStorage.maxOfflineTicks().
+  const requestedTicks=Math.floor(offlineSeconds*20);
+  const offlineTicks=Math.max(1,Math.min(requestedTicks,maxOfflineTicks(offlineSeconds*1000)));
   if(Number(state.eternities)>=7)applyEternityMilestoneICAutoComplete();
   if(Number(state.eternities)>=25)ensureInfinityDimensionState();
   let remainingSeconds=offlineSeconds;
   let ticksRemaining=offlineTicks;
   let completedTicks=0;
-  let offlineIPRateSource=state.bestIPPerMinBN;
-  let cachedOfflineIPRate=offlineIPRateBigNumber();
+  // 本家 simulateTime() と同様、オフラインIPはシミュレーション開始時点の
+  // ベストIP/minを基準に一括計算する。各Tickで再評価・加算しない。
+  const offlineIPGain=offlineIPRateBigNumber().multiply(offlineSeconds);
+  if(offlineIPGain.compare(0)>0){
+   addIPBigNumber(offlineIPGain);
+   state.totalIPGained=(state.totalIPGained||0)+offlineIPGain.toNumber();
+  }
   const status=document.getElementById('offlineProgressStatus');
   const bar=document.getElementById('offlineProgressBar');
   const etaEl=document.getElementById('offlineProgressEta');
@@ -2060,15 +2075,6 @@ async function applyOfflineProgress(seconds){
    let batchTicks=0;
    do{
     const dt=remainingSeconds/ticksRemaining;
-    if(state.bestIPPerMinBN!==offlineIPRateSource){
-     offlineIPRateSource=state.bestIPPerMinBN;
-     cachedOfflineIPRate=offlineIPRateBigNumber();
-    }
-    const offlineIPGain=cachedOfflineIPRate.multiply(dt);
-    if(offlineIPGain.compare(0)>0){
-     addIPBigNumber(offlineIPGain);
-     state.totalIPGained=(state.totalIPGained||0)+offlineIPGain.toNumber();
-    }
     ticksRemaining--;
     completedTicks++;
     // Use the same state-advancement path and per-tick maintenance as online play.
