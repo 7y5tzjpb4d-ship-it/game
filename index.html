@@ -370,6 +370,8 @@ body.id-screen-active #tabContent{padding:0!important;border:0!important;backgro
 /* Inlined from css/src/19-dimension-layout-2.css */
 /* Extracted from the original index.html in cascade order. */
 /* 次元名・倍率・購入数・購入ボタンをそれぞれ独立した列に固定 */
+/* Keep all eight dimensions in one full-width column; five fixed columns overflow two half-width cards and overlap. */
+#dimensions.dimensions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:5px!important;}
 #dimensions .dim{
  display:grid!important;
  grid-template-columns: 27px minmax(90px,1fr) minmax(95px,1fr) minmax(60px,.7fr) 180px!important;
@@ -2080,7 +2082,7 @@ async function applyOfflineProgress(seconds){
     // Use the same state-advancement path and per-tick maintenance as online play.
     // Only DOM notifications are deferred; progression, milestone maintenance,
     // autobuyers, production and achievement checks still run on every tick.
-    simulateGameStep(dt,{deferAchievementNotifications:true});
+    simulateGameStep(dt,{offlineFast:true,deferAchievementNotifications:true});
     remainingSeconds=Math.max(0,remainingSeconds-dt);
     batchTicks++;
     if(offlineProgressSkipRequested&&ticksRemaining>10)ticksRemaining=10;
