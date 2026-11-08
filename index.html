@@ -1225,7 +1225,7 @@ function dimensionMultiplierBigNumber(i){
  if(dimensionMultiplierCacheActive)dimensionMultiplierTierCache.set(i,BigNumber.from(result));
  return result;
 }
-function tickspeedMultiplierBigNumber(){if(state.activeInfinityChallenge===3)return BigNumber.from(1);const base=tickspeedBase();const freeTimeShardTickspeedCount=timeShardsFreeTickspeedInfo().count;let mult=BigNumber.from(base).power(Math.min(Math.max(0,Number(state.tickspeed)||0)+freeTimeShardTickspeedCount,1e9));mult=mult.multiply(BigNumber.from(tickspeedAchievementRewardMultiplier()));if(hasAchievement(83)){const galaxies=Math.max(0,Number(state.galaxies)||0);mult=mult.multiply(BigNumber.from(Math.pow(0.95,-galaxies)));}return mult;}
+function tickspeedMultiplierBigNumber(){return cachedDimensionMultiplierValue('tickspeedMultiplier',()=>{if(state.activeInfinityChallenge===3)return BigNumber.from(1);const base=tickspeedBase();const freeTimeShardTickspeedCount=timeShardsFreeTickspeedInfo().count;let mult=BigNumber.from(base).power(Math.min(Math.max(0,Number(state.tickspeed)||0)+freeTimeShardTickspeedCount,1e9));mult=mult.multiply(BigNumber.from(tickspeedAchievementRewardMultiplier()));if(hasAchievement(83)){const galaxies=Math.max(0,Number(state.galaxies)||0);mult=mult.multiply(BigNumber.from(Math.pow(0.95,-galaxies)));}return mult;});}
 function sacrificeMultiplierBigNumber(){const b=state.sacrificeMultBN;return b&&Number.isFinite(Number(b.mantissa))&&Number.isFinite(Number(b.exponent))?BigNumber.from(b).max(1):BigNumber.from(state.sacrificeMult||1).max(1);}
 function setSacrificeMultiplierBigNumber(value){const b=BigNumber.from(value).max(1);state.sacrificeMultBN=b.toJSON();state.sacrificeMult=b.toNumber();return b;}
 function sacrificedFirstBigNumber(){const b=state.sacrificedFirstBN;return b&&Number.isFinite(Number(b.mantissa))&&Number.isFinite(Number(b.exponent))?BigNumber.from(b).max(0):BigNumber.from(state.sacrificedFirst||0).max(0);}
@@ -1640,10 +1640,10 @@ function buy(i){
   boughtNow++;
   if(challengeRuleActive(4)){for(let j=0;j<i;j++)setDimensionAmountBig(j,0);}
  }
- if(boughtNow){if(challengeRuleActive(2))challengePurchaseReset();if(state.activeChallenge===9&&state.bought[i]%10===0)applyChallenge9CostStep(cost(i,-1),i);if(i>=0)unlockAchievement(11+i);if(i===0&&dimensionAmountBig(0).compare('1e150')>=0)unlockAchievement(28);checkAchievements();render();save();}
+ if(boughtNow){if(challengeRuleActive(2))challengePurchaseReset();if(state.activeChallenge===9&&state.bought[i]%10===0)applyChallenge9CostStep(cost(i,-1),i);if(i>=0)unlockAchievement(11+i);if(i===0&&dimensionAmountBig(0).compare('1e150')>=0)unlockAchievement(28);if(!silent)checkAchievements();if(!silent){render();save();}}
 }
 
-function buyMaxDimensionTier(i, bulk=Infinity){
+function buyMaxDimensionTier(i, bulk=Infinity, silent=false){
  // Mirrors the original buyMaxDimension(tier, bulk) contract:
  // do nothing unless the next complete group-to-10 is affordable, then buy
  // that remainder first and spend remaining bulk on complete groups of ten.
@@ -1767,15 +1767,15 @@ function infinityChallengeQuickReset(){
  state.infinityCrunchReady=false;
  autobuyerElapsed.fill(0);buildRows();render();save();
 }
-function boost(){
+function boost(silent=false){
  if(!canBoost())return;
  // The original resets the relevant autobuyers' lastTick timestamp on prestige;
  // with elapsed timers this makes dimensions and tickspeed immediately eligible.
  for(let i=0;i<9;i++)autobuyerElapsed[i]=autobuyerInterval()[i];
  autobuyerElapsed[9]=0;
- state.boosts++;if(state.activeChallenge===9){state.challenge9CostSteps=Array(8).fill(0);state.challenge9TickspeedCostBumps=0;}checkAchievements();if(challengeRuleActive(3))state.challenge3TimeMult=1;if(challengeRuleActive(11))state.challenge11Matter=1;if(state.activeInfinityChallenge===4)state.icLastBoughtDimension=-1;if(!hasAchievement(111)){setMatterBigNumber(state.activeInfinityChallenge===5?infinityStartingAntimatter():startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;}state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};if(state.activeInfinityChallenge===5)state.ic5CostSteps=Array(8).fill(0);render();save();
+ state.boosts++;if(state.activeChallenge===9){state.challenge9CostSteps=Array(8).fill(0);state.challenge9TickspeedCostBumps=0;}checkAchievements();if(challengeRuleActive(3))state.challenge3TimeMult=1;if(challengeRuleActive(11))state.challenge11Matter=1;if(state.activeInfinityChallenge===4)state.icLastBoughtDimension=-1;if(!hasAchievement(111)){setMatterBigNumber(state.activeInfinityChallenge===5?infinityStartingAntimatter():startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;}state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};if(state.activeInfinityChallenge===5)state.ic5CostSteps=Array(8).fill(0);if(!silent){render();save();}
 }
-function bulkBoostAutobuy(){
+function bulkBoostAutobuy(silent=false){
  // Bulk DimBoost: 現在所持している各TierのDimension数から、連続して実行可能なBoost数を算出し、リセットを1回にまとめる。
  if(!breakInfinityUpgradeBought('bulkBoost')||!canBoost())return false;
  const originalBoosts=state.boosts;
@@ -1807,7 +1807,7 @@ function bulkBoostAutobuy(){
  state.sacrificedFirst=0;
  state.sacrificedFirstBN={mantissa:0,exponent:0};
  if(state.activeInfinityChallenge===5)state.ic5CostSteps=Array(8).fill(0);
- render();save();
+ if(!silent){render();save();}
  return true;
 }
 function sacrifice(silent=false){
@@ -1826,7 +1826,7 @@ function sacrifice(silent=false){
  if(sacrificeMultiplierBigNumber().compare('1e9000')>=0)unlockAchievement(118);
  checkAchievements();notifyNewAchievements();if(!silent){render();save();}
 }
-function galaxy(){
+function galaxy(silent=false){
  if(challengeRuleActive(8)||state.activeInfinityChallenge===7||!canGalaxy())return;
  autobuyerElapsed[10]=0;
  resetDimensionAutobuyerTicksAfterPrestige();
@@ -1843,7 +1843,7 @@ function galaxy(){
  state.sacrificeMultBN={mantissa:1,exponent:0};
  state.sacrificedFirst=0;
  state.sacrificedFirstBN={mantissa:0,exponent:0};
- render();save();
+ if(!silent){render();save();}
 }
 // Break Infinity後のIP獲得式（wiki.gg: Infinity）:
 // floor(IP_Mult * 10^(log10(今回のInfinity中の最大AM) / 308 - 0.75))
@@ -1960,9 +1960,9 @@ function eternityReset(freeTimeStudyRespec=false){
  if(nextEternities>=7)applyEternityMilestoneICAutoComplete();
  state.eternityStartInfinities=Math.max(0,Number(state.infinities)||0);state.infinityTime=0;state.infinityStartTimestamp=Date.now();state.bestIPPerMinBN=BigNumber.from(0).toJSON();state.maxAllUsedThisInfinity=false;state.lastTenIPPerMinBN=[];resetCrunchEfficiencyPeak();resetChallengeTimers();autobuyerElapsed.fill(0);infinitySubpage='upgrades';buildRows();render();notifyNewAchievements();save();return true;
 }
-// Official GameStorage.maxOfflineTicks(): offline ticks are never shorter than
-// 33ms and are capped at 1e6; the user's local default is 100000 ticks.
-const OFFLINE_PROGRESS_DEFAULT_TICKS=100000;
+// Offline progression is capped at 1000 simulation ticks per session.
+// Short offline periods may use fewer ticks according to the 33ms minimum.
+const OFFLINE_PROGRESS_DEFAULT_TICKS=1000;
 function maxOfflineTicks(simulatedMs,defaultTicks=OFFLINE_PROGRESS_DEFAULT_TICKS){
  const tickLimit=Math.min(Math.floor(Math.max(0,Number(simulatedMs)||0)/33),1e6);
  return Math.max(0,Math.min(Math.floor(Number(defaultTicks)||0),tickLimit));
@@ -3103,7 +3103,7 @@ function runAutobuyers(dt, options={}){
   if(!canAffordDimension(i,cost(i)))continue;
   autobuyerElapsed[i]=0; // 本家は購入処理を呼んだ時点で cooldown を更新する
   const mode=state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10';
-  const boughtNow=mode==='1'?buyOneDimensionTier(i):buyMaxDimensionTier(i,dimAutobuyerBulk(i));
+  const boughtNow=mode==='1'?buyOneDimensionTier(i):buyMaxDimensionTier(i,dimAutobuyerBulk(i),options.offlineFast===true);
   if(boughtNow){
    if(challengeRuleActive(2))challengePurchaseReset();
    state.achievements[i]=true;
@@ -3162,12 +3162,12 @@ function runAutobuyers(dt, options={}){
    state.galaxies=before;
    if(count>0){state.galaxies=before+count-1;galaxy();}
   }else{
-   galaxy();
+   galaxy(options.offlineFast===true);
   }
   if(state.galaxies>before){autobuyerElapsed[10]=0;changed=true;}
  }
  if(!options.skipBoost&&boostReady()&&autobuyerElapsed[9]+1e-9>=intervals[9]){
-  const didBoost=breakInfinityUpgradeBought('bulkBoost')?bulkBoostAutobuy():boost();
+  const didBoost=breakInfinityUpgradeBought('bulkBoost')?bulkBoostAutobuy(options.offlineFast===true):boost(options.offlineFast===true);
   if(didBoost){autobuyerElapsed[9]=0;changed=true;}
  }
 
