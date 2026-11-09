@@ -1272,6 +1272,98 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
 })();
 </script>
 
+
+<style id="initial-main-layout-and-antimatter-copy-fix">
+@media (max-width:700px) {
+  /* Header should contain only the hamburger; suppress the scrolling news line. */
+  body[data-screen="main"] .initial-game-header {
+    overflow:hidden !important;
+  }
+  body[data-screen="main"] .initial-game-header [class*="news"],
+  body[data-screen="main"] [class*="news-ticker"],
+  body[data-screen="main"] [id*="news-ticker"],
+  body[data-screen="main"] marquee {
+    display:none !important;
+  }
+
+  /* Restore the two explanatory lines around the antimatter amount. */
+  body[data-screen="main"] #matter {
+    display:inline-block !important;
+    font-size:25px !important;
+    line-height:1.2 !important;
+    white-space:nowrap !important;
+  }
+  body[data-screen="main"] #matter::before {
+    content:"You have " !important;
+    font-size:14px !important;
+    font-weight:400 !important;
+    color:#888 !important;
+  }
+  body[data-screen="main"] #matter::after {
+    content:" antimatter." !important;
+    font-size:14px !important;
+    font-weight:400 !important;
+    color:#888 !important;
+  }
+  body[data-screen="main"] #rate {
+    display:block !important;
+    font-size:14px !important;
+    line-height:1.3 !important;
+    font-weight:400 !important;
+    white-space:nowrap !important;
+  }
+  body[data-screen="main"] #rate::before {
+    content:"You are getting " !important;
+  }
+  body[data-screen="main"] #rate::after {
+    content:" antimatter per second" !important;
+  }
+
+  /* Put Buy-ten caption back between the rate and first dimension. */
+  body[data-screen="main"] .sticky-tools {
+    padding-bottom:0 !important;
+  }
+  body[data-screen="main"] .initial-buy-ten-label {
+    display:block !important;
+    margin:69px 0 0 !important;
+    text-align:center !important;
+    color:#888 !important;
+    font-size:13px !important;
+    line-height:18px !important;
+    font-weight:400 !important;
+  }
+  body[data-screen="main"] #dimensions {
+    margin-top:0 !important;
+  }
+  body[data-screen="main"] #dimensions .dim:not(.locked) {
+    min-height:42px !important;
+    padding-top:2px !important;
+    padding-bottom:2px !important;
+  }
+}
+</style>
+<script id="initial-buy-ten-caption-and-dynamic-text">
+(function () {
+  function setup() {
+    if (document.body.dataset.screen !== "main") return;
+    const stats = document.querySelector("body[data-screen='main'] .sticky-tools .stats");
+    if (stats && !document.querySelector(".initial-buy-ten-label")) {
+      const label = document.createElement("div");
+      label.className = "initial-buy-ten-label";
+      label.textContent = "Buy ten multiplier: ×2.00";
+      stats.after(label);
+    }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setup, { once: true });
+  } else {
+    setup();
+  }
+  const observer = new MutationObserver(setup);
+  observer.observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+
 </head>
 <body><main>
 <div class="sticky-tools">
