@@ -1563,7 +1563,7 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
   function updateDimensionPurchaseColors() {
     if (document.body.dataset.screen !== "main") return;
     const root = document.getElementById("dimensions");
-    if (!root || typeof state === "undefined" || typeof BigNumber === "undefined") return;
+    if (!root || typeof state === "undefined") return;
 
     root.querySelectorAll(".dim").forEach((row, index) => {
       const button = row.querySelector(".buy");
@@ -1578,23 +1578,29 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
         row.classList.add("dim-cannot-afford");
         button.style.setProperty("--dim-bought-progress", "0%");
         button.style.setProperty("--dim-afford-progress", "0%");
+        button.style.setProperty("border-color", "#555", "important");
         button.dataset.affordableCount = "0";
         return;
       }
 
-      // Dark green: units already bought toward the next group of ten.
       const boughtProgress = Math.max(0, Math.min(10, Number(state.bought[index] || 0) % 10));
-
-      // Light green: additional units that can be purchased now, up to the
-      // next ten-purchase boundary. Each purchasable unit contributes 10%.
       const affordableCount = typeof maxAffordable === "function"
         ? Math.max(0, Math.min(10 - boughtProgress, Number(maxAffordable(index, true).count) || 0))
         : 0;
 
-      const canBuy = affordableCount > 0;
+      // The button's disabled state is assigned by the actual render/purchase logic.
+      // Use it as the authoritative affordability result, not a duplicate condition.
+      const canBuy = !button.disabled;
+      const visibleAffordableCount = canBuy ? Math.max(1, affordableCount) : 0;
+
       button.style.setProperty("--dim-bought-progress", (boughtProgress * 10) + "%");
-      button.style.setProperty("--dim-afford-progress", (affordableCount * 10) + "%");
-      button.dataset.affordableCount = String(affordableCount);
+      button.style.setProperty("--dim-afford-progress", (visibleAffordableCount * 10) + "%");
+      button.style.setProperty(
+        "border-color",
+        canBuy ? "#008b28" : "#a33b50",
+        "important"
+      );
+      button.dataset.affordableCount = String(visibleAffordableCount);
 
       row.classList.toggle("dim-can-afford", canBuy);
       row.classList.toggle("dim-cannot-afford", !canBuy);
@@ -1653,6 +1659,25 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
   }
   body[data-screen="main"] #dimensions .dim.locked .buy {
     border-color: #555 !important;
+  }
+}
+</style>
+
+
+<style id="dimension-button-border-authoritative">
+@media (max-width:700px) {
+  body[data-screen="main"] #dimensions .dim .buy {
+    border-style:solid !important;
+    border-width:2px !important;
+  }
+  body[data-screen="main"] #dimensions .dim .buy:not(:disabled) {
+    border-color:#008b28 !important;
+  }
+  body[data-screen="main"] #dimensions .dim .buy:disabled {
+    border-color:#a33b50 !important;
+  }
+  body[data-screen="main"] #dimensions .dim.locked .buy {
+    border-color:#555 !important;
   }
 }
 </style>
