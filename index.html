@@ -862,6 +862,156 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
   body[data-screen="autobuyers"] .replicanti-autobuyer-option small { font-size: 10px; }
 }
 </style>
+
+<style id="official-initial-main-ui-size-fix">
+@media (max-width:700px) {
+  body[data-screen="main"] main {
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+    padding:56px 5px 58px !important;
+  }
+  body[data-screen="main"] .initial-game-header {
+    height:50px !important;
+    padding:13px 16px !important;
+  }
+  body[data-screen="main"] .initial-menu-button {
+    width:28px !important;
+    height:24px !important;
+  }
+  body[data-screen="main"] .initial-menu-button:before {
+    font-size:25px !important;
+    line-height:24px !important;
+  }
+  body[data-screen="main"] .sticky-tools {
+    padding:0 0 66px !important;
+  }
+  body[data-screen="main"] #matter {
+    font-size:25px !important;
+    line-height:1.2 !important;
+  }
+  body[data-screen="main"] #rate {
+    font-size:14px !important;
+    margin-top:3px !important;
+  }
+
+  body[data-screen="main"] #dimensions {
+    display:flex !important;
+    flex-direction:column !important;
+    gap:0 !important;
+  }
+  body[data-screen="main"] #dimensions .dim:not(.locked) {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 30px minmax(118px,37%) !important;
+    grid-template-rows:auto auto !important;
+    align-items:center !important;
+    column-gap:5px !important;
+    row-gap:0 !important;
+    min-height:42px !important;
+    padding:4px 3px !important;
+  }
+  body[data-screen="main"] #dimensions .dim .tier {
+    display:none !important;
+  }
+  body[data-screen="main"] #dimensions .dim > div:not(.tier) {
+    display:contents !important;
+  }
+  body[data-screen="main"] #dimensions .dim-name {
+    grid-column:1 !important;
+    grid-row:1 !important;
+    min-width:0 !important;
+    font-size:13px !important;
+    line-height:1.15 !important;
+    font-weight:700 !important;
+  }
+  body[data-screen="main"] #dimensions .dim-info {
+    grid-column:1 !important;
+    grid-row:2 !important;
+    margin:1px 0 0 !important;
+    font-size:10px !important;
+    line-height:1.1 !important;
+  }
+  body[data-screen="main"] #dimensions .dim-amount {
+    grid-column:2 !important;
+    grid-row:1 / span 2 !important;
+    margin:0 !important;
+    font-size:16px !important;
+    line-height:1.1 !important;
+    text-align:center !important;
+    font-weight:700 !important;
+  }
+  body[data-screen="main"] #dimensions .dim .buy {
+    grid-column:3 !important;
+    grid-row:1 / span 2 !important;
+    width:100% !important;
+    min-width:0 !important;
+    min-height:32px !important;
+    padding:4px 3px !important;
+    border-width:1px !important;
+    border-radius:6px !important;
+    font-size:12px !important;
+    line-height:1.15 !important;
+    white-space:normal !important;
+  }
+
+  body[data-screen="main"] .initial-reset-grid {
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    gap:7px !important;
+    margin-top:6px !important;
+  }
+  body[data-screen="main"] .initial-reset-card h3 {
+    font-size:13px !important;
+    line-height:1.2 !important;
+    margin-bottom:2px !important;
+  }
+  body[data-screen="main"] .initial-reset-card p {
+    font-size:11px !important;
+    line-height:1.2 !important;
+    margin-bottom:5px !important;
+  }
+  body[data-screen="main"] .initial-reset-card .initial-reset-description {
+    min-height:57px !important;
+    padding:5px 4px !important;
+    border-width:1px !important;
+    border-radius:6px !important;
+    font-size:11px !important;
+    line-height:1.2 !important;
+  }
+  body[data-screen="main"] .initial-infinity-progress {
+    margin-top:6px !important;
+    border-radius:9px !important;
+    padding:7px 4px !important;
+    font-size:15px !important;
+    line-height:1.25 !important;
+  }
+
+  body[data-screen="main"] .initial-main-footer {
+    height:53px !important;
+    padding-bottom:env(safe-area-inset-bottom) !important;
+  }
+  body[data-screen="main"] .initial-footer-icons {
+    height:31px !important;
+  }
+  body[data-screen="main"] .initial-footer-icons button {
+    height:30px !important;
+    font-size:17px !important;
+  }
+  body[data-screen="main"] .initial-footer-icons button.active {
+    border-bottom-width:2px !important;
+  }
+  body[data-screen="main"] .initial-footer-title {
+    height:22px !important;
+    border-bottom-width:2px !important;
+    font-size:12px !important;
+    line-height:1 !important;
+  }
+
+  body.initial-menu-open[data-screen="main"] #screenTabs {
+    top:50px !important;
+  }
+}
+</style>
+
 </head>
 <body><main>
 <div class="sticky-tools">
