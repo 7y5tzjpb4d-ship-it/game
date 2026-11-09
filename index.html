@@ -1408,6 +1408,123 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
 }
 </style>
 
+
+<style id="dimension-affordability-video-colors">
+@media (max-width:700px) {
+  body[data-screen="main"] #dimensions .dim {
+    transition: background-color .12s linear, border-color .12s linear !important;
+  }
+  body[data-screen="main"] #dimensions .dim.dim-can-afford {
+    background: transparent !important;
+  }
+  body[data-screen="main"] #dimensions .dim.dim-cannot-afford {
+    background: rgba(125, 35, 45, .34) !important;
+  }
+  body[data-screen="main"] #dimensions .dim .buy {
+    position: relative !important;
+    overflow: hidden !important;
+    isolation: isolate !important;
+    border: 1px solid #a33b50 !important;
+    background: #19191c !important;
+    color: #bdbdc2 !important;
+  }
+  body[data-screen="main"] #dimensions .dim .buy::before {
+    content: "" !important;
+    position: absolute !important;
+    z-index: -1 !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: var(--dim-afford-progress, 0%) !important;
+    background: rgba(0, 125, 42, .42) !important;
+    border-radius: 5px !important;
+    pointer-events: none !important;
+  }
+  body[data-screen="main"] #dimensions .dim.dim-can-afford .buy {
+    border-color: #008b28 !important;
+  }
+  body[data-screen="main"] #dimensions .dim.dim-cannot-afford .buy {
+    border-color: #a33b50 !important;
+  }
+  body[data-screen="main"] #dimensions .dim.locked .buy {
+    border-color: #555 !important;
+    background: #19191c !important;
+  }
+}
+</style>
+<script id="dimension-affordability-video-colors-logic">
+(function () {
+  function progressPercent(amount, cost) {
+    try {
+      const a = BigNumber.from(amount);
+      const c = BigNumber.from(cost);
+      if (c.compare(0) <= 0) return 100;
+      if (a.compare(c) >= 0) return 100;
+      if (a.compare(0) <= 0) return 0;
+      const delta = a.log10() - c.log10();
+      return Math.max(0, Math.min(100, Math.pow(10, delta) * 100));
+    } catch (_) {
+      const a = Number(amount) || 0;
+      const c = Number(cost) || 0;
+      return c > 0 ? Math.max(0, Math.min(100, a / c * 100)) : 100;
+    }
+  }
+
+  function updateDimensionButtonColors() {
+    if (document.body.dataset.screen !== "main") return;
+    const root = document.getElementById("dimensions");
+    if (!root || !window.state || typeof BigNumber === "undefined") return;
+
+    root.querySelectorAll(".dim").forEach((row, i) => {
+      const button = row.querySelector(".buy");
+      if (!button) return;
+
+      const isUnlocked = typeof unlocked === "function"
+        ? unlocked(i) && !(typeof challengeRuleActive === "function" && challengeRuleActive(10) && i >= 6)
+        : !row.classList.contains("locked");
+
+      if (!isUnlocked) {
+        row.classList.remove("dim-can-afford");
+        row.classList.add("dim-cannot-afford");
+        button.style.setProperty("--dim-afford-progress", "0%");
+        return;
+      }
+
+      const cost = typeof costBigNumber === "function" ? costBigNumber(i) : 0;
+      const affordable = state.buyMax && typeof maxAffordable === "function"
+        ? maxAffordable(i).count > 0
+        : typeof canAffordDimension === "function" && canAffordDimension(i, cost);
+
+      row.classList.toggle("dim-can-afford", affordable);
+      row.classList.toggle("dim-cannot-afford", !affordable);
+      const amount = typeof matterBigNumber === "function"
+        ? matterBigNumber()
+        : (state.matterBN || state.matter || 0);
+      const pct = progressPercent(amount, cost);
+      button.style.setProperty("--dim-afford-progress", pct.toFixed(2) + "%");
+      button.setAttribute("aria-label",
+        (i + 1) + "th Dimension, " + (affordable ? "購入可能" : "購入不可") +
+        ", コスト " + button.textContent.trim());
+    });
+  }
+
+  const originalRender = window.render;
+  if (typeof originalRender === "function") {
+    window.render = function () {
+      const result = originalRender.apply(this, arguments);
+      updateDimensionButtonColors();
+      return result;
+    };
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", updateDimensionButtonColors);
+  } else {
+    updateDimensionButtonColors();
+  }
+  setInterval(updateDimensionButtonColors, 250);
+})();
+</script>
+
 </head>
 <body><main>
 <div class="sticky-tools">
