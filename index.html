@@ -1576,21 +1576,26 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
       if (!isUnlocked) {
         row.classList.remove("dim-can-afford");
         row.classList.add("dim-cannot-afford");
+        button.style.setProperty("--dim-bought-progress", "0%");
         button.style.setProperty("--dim-afford-progress", "0%");
         button.dataset.affordableCount = "0";
         return;
       }
 
-      // maxAffordable(i, true) counts purchasable units up to the next
-      // multiple-of-ten boundary (0..10), matching the game's buy-ten cycle.
-      const affordableCount = typeof maxAffordable === "function"
-        ? Math.max(0, Math.min(10, Number(maxAffordable(index, true).count) || 0))
-        : 0;
-      const progress = affordableCount * 10;
-      const canBuy = affordableCount > 0;
+      // Dark green: units already bought toward the next group of ten.
+      const boughtProgress = Math.max(0, Math.min(10, Number(state.bought[index] || 0) % 10));
 
-      button.style.setProperty("--dim-afford-progress", progress + "%");
+      // Light green: additional units that can be purchased now, up to the
+      // next ten-purchase boundary. Each purchasable unit contributes 10%.
+      const affordableCount = typeof maxAffordable === "function"
+        ? Math.max(0, Math.min(10 - boughtProgress, Number(maxAffordable(index, true).count) || 0))
+        : 0;
+
+      const canBuy = affordableCount > 0;
+      button.style.setProperty("--dim-bought-progress", (boughtProgress * 10) + "%");
+      button.style.setProperty("--dim-afford-progress", (affordableCount * 10) + "%");
       button.dataset.affordableCount = String(affordableCount);
+
       row.classList.toggle("dim-can-afford", canBuy);
       row.classList.toggle("dim-cannot-afford", !canBuy);
       button.dataset.affordable = canBuy ? "true" : "false";
@@ -1616,6 +1621,41 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
   }
 })();
 </script>
+
+
+<style id="dimension-purchased-and-affordable-segments">
+@media (max-width:700px) {
+  body[data-screen="main"] #dimensions .dim .buy {
+    background: linear-gradient(
+      to right,
+      #123b20 0%,
+      #123b20 var(--dim-bought-progress, 0%),
+      #24552f var(--dim-bought-progress, 0%),
+      #24552f calc(var(--dim-bought-progress, 0%) + var(--dim-afford-progress, 0%)),
+      #19191c calc(var(--dim-bought-progress, 0%) + var(--dim-afford-progress, 0%)),
+      #19191c 100%
+    ) !important;
+    border: 1px solid #a33b50 !important;
+    color: #bdbdc2 !important;
+    opacity: 1 !important;
+  }
+  body[data-screen="main"] #dimensions .dim.dim-can-afford .buy {
+    border-color: #008b28 !important;
+  }
+  body[data-screen="main"] #dimensions .dim.dim-cannot-afford .buy {
+    border-color: #a33b50 !important;
+  }
+  body[data-screen="main"] #dimensions .dim.dim-cannot-afford {
+    background: rgba(125,35,45,.34) !important;
+  }
+  body[data-screen="main"] #dimensions .dim.dim-can-afford {
+    background: transparent !important;
+  }
+  body[data-screen="main"] #dimensions .dim.locked .buy {
+    border-color: #555 !important;
+  }
+}
+</style>
 
 </head>
 <body><main>
