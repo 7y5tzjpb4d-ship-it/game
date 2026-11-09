@@ -1364,6 +1364,50 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
 })();
 </script>
 
+
+<style id="main-top-compaction">
+@media (max-width:700px) {
+  /* Move the hamburger to the top edge of the web viewport. */
+  body[data-screen="main"] .initial-game-header {
+    height:32px !important;
+    min-height:32px !important;
+    padding:0 16px !important;
+    align-items:flex-start !important;
+    justify-content:flex-start !important;
+  }
+  body[data-screen="main"] .initial-menu-button {
+    width:28px !important;
+    height:28px !important;
+    min-height:28px !important;
+    margin:0 !important;
+    padding:0 !important;
+    align-self:flex-start !important;
+  }
+  body[data-screen="main"] .initial-menu-button:before {
+    font-size:25px !important;
+    line-height:27px !important;
+  }
+
+  /* Reclaim the height removed from the header and close the empty gap
+     between the antimatter rate and the Buy-ten caption. */
+  body[data-screen="main"] main {
+    padding-top:32px !important;
+  }
+  body[data-screen="main"] .sticky-tools {
+    padding-top:4px !important;
+  }
+  body[data-screen="main"] .initial-buy-ten-label {
+    margin-top:36px !important;
+  }
+  body[data-screen="main"] #screenTabs {
+    top:32px !important;
+  }
+  body.initial-menu-open[data-screen="main"] #screenTabs {
+    top:32px !important;
+  }
+}
+</style>
+
 </head>
 <body><main>
 <div class="sticky-tools">
