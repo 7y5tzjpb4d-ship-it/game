@@ -1525,6 +1525,98 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
 })();
 </script>
 
+
+<style id="dimension-buy-progress-correction">
+@media (max-width:700px) {
+  body[data-screen="main"] #dimensions .dim .buy {
+    background: linear-gradient(
+      to right,
+      rgba(0,125,42,.48) 0%,
+      rgba(0,125,42,.48) var(--dim-afford-progress,0%),
+      #19191c var(--dim-afford-progress,0%),
+      #19191c 100%
+    ) !important;
+    border:1px solid #a33b50 !important;
+    color:#bdbdc2 !important;
+    opacity:1 !important;
+  }
+  body[data-screen="main"] #dimensions .dim.dim-can-afford .buy {
+    border-color:#008b28 !important;
+  }
+  body[data-screen="main"] #dimensions .dim.dim-cannot-afford .buy {
+    border-color:#a33b50 !important;
+  }
+  body[data-screen="main"] #dimensions .dim.dim-cannot-afford {
+    background:rgba(125,35,45,.34) !important;
+  }
+  body[data-screen="main"] #dimensions .dim.dim-can-afford {
+    background:transparent !important;
+  }
+}
+</style>
+<script id="dimension-buy-progress-correction-logic">
+(function () {
+  function asBN(value) {
+    return BigNumber.from(value);
+  }
+
+  function updateDimensionPurchaseColors() {
+    if (document.body.dataset.screen !== "main") return;
+    const root = document.getElementById("dimensions");
+    if (!root || typeof state === "undefined" || typeof BigNumber === "undefined") return;
+
+    root.querySelectorAll(".dim").forEach((row, index) => {
+      const button = row.querySelector(".buy");
+      if (!button) return;
+
+      const isUnlocked = typeof unlocked === "function"
+        ? unlocked(index)
+        : !row.classList.contains("locked");
+
+      if (!isUnlocked) {
+        row.classList.remove("dim-can-afford");
+        row.classList.add("dim-cannot-afford");
+        button.style.setProperty("--dim-afford-progress", "0%");
+        button.dataset.affordableCount = "0";
+        return;
+      }
+
+      // maxAffordable(i, true) counts purchasable units up to the next
+      // multiple-of-ten boundary (0..10), matching the game's buy-ten cycle.
+      const affordableCount = typeof maxAffordable === "function"
+        ? Math.max(0, Math.min(10, Number(maxAffordable(index, true).count) || 0))
+        : 0;
+      const progress = affordableCount * 10;
+      const canBuy = affordableCount > 0;
+
+      button.style.setProperty("--dim-afford-progress", progress + "%");
+      button.dataset.affordableCount = String(affordableCount);
+      row.classList.toggle("dim-can-afford", canBuy);
+      row.classList.toggle("dim-cannot-afford", !canBuy);
+      button.dataset.affordable = canBuy ? "true" : "false";
+    });
+  }
+
+  // Rendering can happen through a lexical global function rather than window.render,
+  // so refresh independently at a modest interval and immediately after DOM changes.
+  function start() {
+    updateDimensionPurchaseColors();
+    const target = document.getElementById("dimensions");
+    if (target) {
+      new MutationObserver(updateDimensionPurchaseColors).observe(target, {
+        childList: true, subtree: true, characterData: true
+      });
+    }
+    setInterval(updateDimensionPurchaseColors, 100);
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start, { once: true });
+  } else {
+    start();
+  }
+})();
+</script>
+
 </head>
 <body><main>
 <div class="sticky-tools">
