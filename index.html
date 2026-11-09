@@ -1409,49 +1409,7 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
 </style>
 
 
-<style id="dimension-affordability-video-colors">
-@media (max-width:700px) {
-  body[data-screen="main"] #dimensions .dim {
-    transition: background-color .12s linear, border-color .12s linear !important;
-  }
-  body[data-screen="main"] #dimensions .dim.dim-can-afford {
-    background: transparent !important;
-  }
-  body[data-screen="main"] #dimensions .dim.dim-cannot-afford {
-    background: rgba(125, 35, 45, .34) !important;
-  }
-  body[data-screen="main"] #dimensions .dim .buy {
-    position: relative !important;
-    overflow: hidden !important;
-    isolation: isolate !important;
-    border: 1px solid #a33b50 !important;
-    background: #19191c !important;
-    color: #bdbdc2 !important;
-  }
-  body[data-screen="main"] #dimensions .dim .buy::before {
-    content: "" !important;
-    position: absolute !important;
-    z-index: -1 !important;
-    left: 0 !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    width: var(--dim-afford-progress, 0%) !important;
-    background: rgba(0, 125, 42, .42) !important;
-    border-radius: 5px !important;
-    pointer-events: none !important;
-  }
-  body[data-screen="main"] #dimensions .dim.dim-can-afford .buy {
-    border-color: #008b28 !important;
-  }
-  body[data-screen="main"] #dimensions .dim.dim-cannot-afford .buy {
-    border-color: #a33b50 !important;
-  }
-  body[data-screen="main"] #dimensions .dim.locked .buy {
-    border-color: #555 !important;
-    background: #19191c !important;
-  }
-}
-</style>
+
 <script id="dimension-affordability-video-colors-logic">
 (function () {
   function progressPercent(amount, cost) {
@@ -1681,6 +1639,100 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
   }
 }
 </style>
+
+
+<style id="dimension-progress-final-fix">
+@media (max-width:700px) {
+  body[data-screen="main"] #dimensions .dim .buy {
+    position:relative !important;
+    overflow:hidden !important;
+    isolation:isolate !important;
+    background-color:#19191c !important;
+    background-image:linear-gradient(
+      to right,
+      #123b20 0%,
+      #123b20 var(--dim-bought-progress, 0%),
+      #24552f var(--dim-bought-progress, 0%),
+      #24552f calc(var(--dim-bought-progress, 0%) + var(--dim-afford-progress, 0%)),
+      #19191c calc(var(--dim-bought-progress, 0%) + var(--dim-afford-progress, 0%)),
+      #19191c 100%
+    ) !important;
+  }
+  body[data-screen="main"] #dimensions .dim .buy::before {
+    content:none !important;
+    display:none !important;
+  }
+}
+</style>
+<script id="dimension-progress-final-fix-logic">
+(function () {
+  function update() {
+    if (document.body.dataset.screen !== "main") return;
+    const root = document.getElementById("dimensions");
+    if (!root || typeof state === "undefined") return;
+
+    root.querySelectorAll(".dim").forEach((row, i) => {
+      const button = row.querySelector(".buy");
+      if (!button) return;
+
+      const isUnlocked = typeof unlocked === "function"
+        ? unlocked(i)
+        : !row.classList.contains("locked");
+
+      if (!isUnlocked) {
+        button.style.setProperty("--dim-bought-progress", "0%");
+        button.style.setProperty("--dim-afford-progress", "0%");
+        button.style.setProperty("border-color", "#555", "important");
+        row.classList.remove("dim-can-afford");
+        row.classList.add("dim-cannot-afford");
+        return;
+      }
+
+      // The dark-green segment represents the amount currently owned
+      // (e.g. 3 dimensions = 30%), not the number of purchase actions.
+      let owned = 0;
+      try {
+        const amount = typeof dimensionAmountBig === "function"
+          ? dimensionAmountBig(i)
+          : BigNumber.from(state.amount[i] || 0);
+        const numeric = amount.toNumber();
+        owned = Number.isFinite(numeric)
+          ? ((numeric % 10) + 10) % 10
+          : 10;
+      } catch (_) {
+        owned = Math.max(0, Number(state.amount[i] || 0) % 10);
+      }
+
+      // The brighter segment starts immediately after the owned segment.
+      // Each additional purchasable unit contributes exactly 10%.
+      const canBuy = !button.disabled;
+      let affordable = 0;
+      if (canBuy && typeof maxAffordable === "function") {
+        affordable = Math.max(1, Number(maxAffordable(i, true).count) || 0);
+      }
+      affordable = Math.min(10 - owned, affordable);
+
+      button.style.setProperty("--dim-bought-progress", (owned * 10) + "%");
+      button.style.setProperty("--dim-afford-progress", (affordable * 10) + "%");
+      button.style.setProperty(
+        "border-color",
+        canBuy ? "#008b28" : "#a33b50",
+        "important"
+      );
+
+      row.classList.toggle("dim-can-afford", canBuy);
+      row.classList.toggle("dim-cannot-afford", !canBuy);
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", update, { once:true });
+  } else {
+    update();
+  }
+  setInterval(update, 100);
+})();
+</script>
 
 </head>
 <body><main>
