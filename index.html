@@ -4493,176 +4493,99 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
 </script>
 
 
-<style id="nd-amount-center-final">
-@media (max-width:700px) {
-  body[data-screen="main"] #dimensions .dim {
-    display:grid !important;
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(118px,38%) !important;
-    column-gap:6px !important;
-  }
-  body[data-screen="main"] #dimensions .dim .dim-amount {
-    grid-column:2 !important;
-    grid-row:1 / span 2 !important;
-    justify-self:stretch !important;
-    width:100% !important;
-    text-align:center !important;
-    margin:0 !important;
-  }
-  body[data-screen="main"] #dimensions .dim .buy {
-    grid-column:3 !important;
-    grid-row:1 / span 2 !important;
-  }
-  body[data-screen="main"] #dimensions .dim .dim-name,
-  body[data-screen="main"] #dimensions .dim .dim-info {
-    grid-column:1 !important;
-  }
+<style id="nd-layout-final">
+/*
+ * ND rows: tier badge hidden; name/multiplier stacked on the left;
+ * amount centered in the middle; purchase button on the right.
+ * Deliberately not media-query-scoped: the deployed iPhone page can
+ * report a layout viewport wider than 700 CSS px.
+ */
+#dimensions.dimensions {
+  display:flex !important;
+  flex-direction:column !important;
+  gap:2px !important;
+  row-gap:2px !important;
+  padding:0 5px !important;
+  margin:0 !important;
 }
-</style>
-
-
-<style id="nd-layout-final-override">
-@media (max-width:700px) {
-  body[data-screen="main"] #dimensions {
-    display:flex !important;
-    flex-direction:column !important;
-    gap:0 !important;
-    row-gap:0 !important;
-    padding:0 5px !important;
-    margin:0 !important;
-  }
-  body[data-screen="main"] #dimensions > .dim {
-    display:grid !important;
-    grid-template-columns:minmax(0,1fr) 90px minmax(118px,38%) !important;
-    grid-template-rows:16px 12px !important;
-    column-gap:6px !important;
-    row-gap:0 !important;
-    height:32px !important;
-    min-height:32px !important;
-    max-height:32px !important;
-    margin:0 !important;
-    padding:1px 3px !important;
-    box-sizing:border-box !important;
-    align-items:center !important;
-  }
-  body[data-screen="main"] #dimensions > .dim > .tier {
-    display:none !important;
-  }
-  body[data-screen="main"] #dimensions > .dim > div:not(.tier) {
-    display:contents !important;
-  }
-  body[data-screen="main"] #dimensions > .dim .dim-name {
-    grid-column:1 !important;
-    grid-row:1 !important;
-    margin:0 !important;
-    font-size:13px !important;
-    line-height:16px !important;
-  }
-  body[data-screen="main"] #dimensions > .dim .dim-info {
-    grid-column:1 !important;
-    grid-row:2 !important;
-    margin:0 !important;
-    font-size:10px !important;
-    line-height:12px !important;
-  }
-  body[data-screen="main"] #dimensions > .dim .dim-amount {
-    grid-column:2 !important;
-    grid-row:1 / span 2 !important;
-    justify-self:stretch !important;
-    width:100% !important;
-    margin:0 !important;
-    padding:0 !important;
-    text-align:center !important;
-    font-size:16px !important;
-    line-height:1.1 !important;
-  }
-  body[data-screen="main"] #dimensions > .dim .buy {
-    grid-column:3 !important;
-    grid-row:1 / span 2 !important;
-    width:100% !important;
-    height:30px !important;
-    min-height:30px !important;
-    max-height:30px !important;
-    margin:0 !important;
-    padding:3px 5px !important;
-    font-size:12px !important;
-  }
+#dimensions.dimensions > .dim {
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 90px minmax(130px,38%) !important;
+  grid-template-rows:17px 13px !important;
+  column-gap:6px !important;
+  row-gap:0 !important;
+  align-items:center !important;
+  width:100% !important;
+  height:40px !important;
+  min-height:40px !important;
+  max-height:40px !important;
+  margin:0 !important;
+  padding:2px 3px !important;
+  box-sizing:border-box !important;
+  background:transparent !important;
+  border:0 !important;
+  border-radius:0 !important;
+  overflow:visible !important;
 }
-</style>
-
-
-<style id="nd-layout-unconditional-fix">
-@media (max-width:700px) {
-  /* Do not depend on body[data-screen]; the app does not set it reliably. */
-  #dimensions {
-    display:flex !important;
-    flex-direction:column !important;
-    gap:0 !important;
-    row-gap:0 !important;
-    padding:0 5px !important;
-    margin:0 !important;
-  }
-  #dimensions .dim {
-    display:grid !important;
-    grid-template-columns:minmax(0,1fr) 104px minmax(118px,38%) !important;
-    grid-template-rows:18px 14px !important;
-    column-gap:6px !important;
-    row-gap:0 !important;
-    align-items:center !important;
-    height:58px !important;
-    min-height:58px !important;
-    max-height:58px !important;
-    margin:0 !important;
-    padding:2px 3px !important;
-    box-sizing:border-box !important;
-    overflow:visible !important;
-  }
-  #dimensions .dim .tier { display:none !important; }
-  #dimensions .dim > div:not(.tier) { display:contents !important; }
-  #dimensions .dim .dim-name {
-    grid-column:1 !important;
-    grid-row:1 !important;
-    margin:0 !important;
-    padding:0 !important;
-    font-size:13px !important;
-    line-height:18px !important;
-    white-space:nowrap !important;
-  }
-  #dimensions .dim .dim-info {
-    grid-column:1 !important;
-    grid-row:2 !important;
-    margin:0 !important;
-    padding:0 !important;
-    font-size:10px !important;
-    line-height:14px !important;
-    white-space:nowrap !important;
-  }
-  #dimensions .dim .dim-amount {
-    grid-column:2 !important;
-    grid-row:1 / span 2 !important;
-    justify-self:stretch !important;
-    align-self:center !important;
-    width:100% !important;
-    margin:0 !important;
-    padding:0 !important;
-    text-align:center !important;
-    font-size:16px !important;
-    line-height:1.1 !important;
-    white-space:nowrap !important;
-  }
-  #dimensions .dim .buy {
-    grid-column:3 !important;
-    grid-row:1 / span 2 !important;
-    align-self:center !important;
-    width:100% !important;
-    min-width:0 !important;
-    height:34px !important;
-    min-height:34px !important;
-    max-height:34px !important;
-    margin:0 !important;
-    padding:3px 5px !important;
-    box-sizing:border-box !important;
-    font-size:12px !important;
-  }
+#dimensions.dimensions > .dim > .tier {
+  display:none !important;
+}
+#dimensions.dimensions > .dim > div:nth-child(2) {
+  display:contents !important;
+}
+#dimensions.dimensions > .dim .dim-name {
+  grid-column:1 !important;
+  grid-row:1 !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  white-space:nowrap !important;
+  text-overflow:ellipsis !important;
+  font-size:13px !important;
+  line-height:17px !important;
+}
+#dimensions.dimensions > .dim .dim-info {
+  grid-column:1 !important;
+  grid-row:2 !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  white-space:nowrap !important;
+  font-size:10px !important;
+  line-height:13px !important;
+}
+#dimensions.dimensions > .dim .dim-amount {
+  grid-column:2 !important;
+  grid-row:1 / span 2 !important;
+  justify-self:stretch !important;
+  align-self:center !important;
+  width:100% !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:visible !important;
+  white-space:nowrap !important;
+  text-overflow:clip !important;
+  text-align:center !important;
+  font-size:16px !important;
+  line-height:1.1 !important;
+}
+#dimensions.dimensions > .dim > .buy {
+  grid-column:3 !important;
+  grid-row:1 / span 2 !important;
+  justify-self:stretch !important;
+  align-self:center !important;
+  width:100% !important;
+  min-width:0 !important;
+  height:31px !important;
+  min-height:31px !important;
+  max-height:31px !important;
+  margin:0 !important;
+  padding:3px 5px !important;
+  box-sizing:border-box !important;
+  font-size:12px !important;
+  line-height:1.1 !important;
 }
 </style>
 
