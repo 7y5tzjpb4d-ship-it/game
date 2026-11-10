@@ -1410,80 +1410,6 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
 
 
 
-<script id="dimension-affordability-video-colors-logic">
-(function () {
-  function progressPercent(amount, cost) {
-    try {
-      const a = BigNumber.from(amount);
-      const c = BigNumber.from(cost);
-      if (c.compare(0) <= 0) return 100;
-      if (a.compare(c) >= 0) return 100;
-      if (a.compare(0) <= 0) return 0;
-      const delta = a.log10() - c.log10();
-      return Math.max(0, Math.min(100, Math.pow(10, delta) * 100));
-    } catch (_) {
-      const a = Number(amount) || 0;
-      const c = Number(cost) || 0;
-      return c > 0 ? Math.max(0, Math.min(100, a / c * 100)) : 100;
-    }
-  }
-
-  function updateDimensionButtonColors() {
-    if (document.body.dataset.screen !== "main") return;
-    const root = document.getElementById("dimensions");
-    if (!root || !window.state || typeof BigNumber === "undefined") return;
-
-    root.querySelectorAll(".dim").forEach((row, i) => {
-      const button = row.querySelector(".buy");
-      if (!button) return;
-
-      const isUnlocked = typeof unlocked === "function"
-        ? unlocked(i) && !(typeof challengeRuleActive === "function" && challengeRuleActive(10) && i >= 6)
-        : !row.classList.contains("locked");
-
-      if (!isUnlocked) {
-        row.classList.remove("dim-can-afford");
-        row.classList.add("dim-cannot-afford");
-        button.style.setProperty("--dim-afford-progress", "0%");
-        return;
-      }
-
-      const cost = typeof costBigNumber === "function" ? costBigNumber(i) : 0;
-      const affordable = state.buyMax && typeof maxAffordable === "function"
-        ? maxAffordable(i).count > 0
-        : typeof canAffordDimension === "function" && canAffordDimension(i, cost);
-
-      row.classList.toggle("dim-can-afford", affordable);
-      row.classList.toggle("dim-cannot-afford", !affordable);
-      const amount = typeof matterBigNumber === "function"
-        ? matterBigNumber()
-        : (state.matterBN || state.matter || 0);
-      const pct = progressPercent(amount, cost);
-      button.style.setProperty("--dim-afford-progress", pct.toFixed(2) + "%");
-      button.setAttribute("aria-label",
-        (i + 1) + "th Dimension, " + (affordable ? "購入可能" : "購入不可") +
-        ", コスト " + button.textContent.trim());
-    });
-  }
-
-  const originalRender = window.render;
-  if (typeof originalRender === "function") {
-    window.render = function () {
-      const result = originalRender.apply(this, arguments);
-      updateDimensionButtonColors();
-      return result;
-    };
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", updateDimensionButtonColors);
-  } else {
-    updateDimensionButtonColors();
-  }
-  setInterval(updateDimensionButtonColors, 250);
-})();
-</script>
-
-
 <style id="dimension-buy-progress-correction">
 @media (max-width:700px) {
   body[data-screen="main"] #dimensions .dim .buy {
@@ -1512,81 +1438,6 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
   }
 }
 </style>
-<script id="dimension-buy-progress-correction-logic">
-(function () {
-  function asBN(value) {
-    return BigNumber.from(value);
-  }
-
-  function updateDimensionPurchaseColors() {
-    if (document.body.dataset.screen !== "main") return;
-    const root = document.getElementById("dimensions");
-    if (!root || typeof state === "undefined") return;
-
-    root.querySelectorAll(".dim").forEach((row, index) => {
-      const button = row.querySelector(".buy");
-      if (!button) return;
-
-      const isUnlocked = typeof unlocked === "function"
-        ? unlocked(index)
-        : !row.classList.contains("locked");
-
-      if (!isUnlocked) {
-        row.classList.remove("dim-can-afford");
-        row.classList.add("dim-cannot-afford");
-        button.style.setProperty("--dim-bought-progress", "0%");
-        button.style.setProperty("--dim-afford-progress", "0%");
-        button.style.setProperty("border-color", "#555", "important");
-        button.dataset.affordableCount = "0";
-        return;
-      }
-
-      const boughtProgress = Math.max(0, Math.min(10, Number(state.bought[index] || 0) % 10));
-      const affordableCount = typeof maxAffordable === "function"
-        ? Math.max(0, Math.min(10 - boughtProgress, Number(maxAffordable(index, true).count) || 0))
-        : 0;
-
-      // The button's disabled state is assigned by the actual render/purchase logic.
-      // Use it as the authoritative affordability result, not a duplicate condition.
-      const canBuy = !button.disabled;
-      const visibleAffordableCount = canBuy ? Math.max(1, affordableCount) : 0;
-
-      button.style.setProperty("--dim-bought-progress", (boughtProgress * 10) + "%");
-      button.style.setProperty("--dim-afford-progress", (visibleAffordableCount * 10) + "%");
-      button.style.setProperty(
-        "border-color",
-        canBuy ? "#008b28" : "#a33b50",
-        "important"
-      );
-      button.dataset.affordableCount = String(visibleAffordableCount);
-
-      row.classList.toggle("dim-can-afford", canBuy);
-      row.classList.toggle("dim-cannot-afford", !canBuy);
-      button.dataset.affordable = canBuy ? "true" : "false";
-    });
-  }
-
-  // Rendering can happen through a lexical global function rather than window.render,
-  // so refresh independently at a modest interval and immediately after DOM changes.
-  function start() {
-    updateDimensionPurchaseColors();
-    const target = document.getElementById("dimensions");
-    if (target) {
-      new MutationObserver(updateDimensionPurchaseColors).observe(target, {
-        childList: true, subtree: true, characterData: true
-      });
-    }
-    setInterval(updateDimensionPurchaseColors, 100);
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", start, { once: true });
-  } else {
-    start();
-  }
-})();
-</script>
-
-
 <style id="dimension-purchased-and-affordable-segments">
 @media (max-width:700px) {
   body[data-screen="main"] #dimensions .dim .buy {
@@ -1664,77 +1515,6 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
   }
 }
 </style>
-<script id="dimension-progress-final-fix-logic">
-(function () {
-  function update() {
-    if (document.body.dataset.screen !== "main") return;
-    const root = document.getElementById("dimensions");
-    if (!root || typeof state === "undefined") return;
-
-    root.querySelectorAll(".dim").forEach((row, i) => {
-      const button = row.querySelector(".buy");
-      if (!button) return;
-
-      const isUnlocked = typeof unlocked === "function"
-        ? unlocked(i)
-        : !row.classList.contains("locked");
-
-      if (!isUnlocked) {
-        button.style.setProperty("--dim-bought-progress", "0%");
-        button.style.setProperty("--dim-afford-progress", "0%");
-        button.style.setProperty("border-color", "#555", "important");
-        row.classList.remove("dim-can-afford");
-        row.classList.add("dim-cannot-afford");
-        return;
-      }
-
-      // The dark-green segment represents the amount currently owned
-      // (e.g. 3 dimensions = 30%), not the number of purchase actions.
-      let owned = 0;
-      try {
-        const amount = typeof dimensionAmountBig === "function"
-          ? dimensionAmountBig(i)
-          : BigNumber.from(state.amount[i] || 0);
-        const numeric = amount.toNumber();
-        owned = Number.isFinite(numeric)
-          ? ((numeric % 10) + 10) % 10
-          : 10;
-      } catch (_) {
-        owned = Math.max(0, Number(state.amount[i] || 0) % 10);
-      }
-
-      // The brighter segment starts immediately after the owned segment.
-      // Each additional purchasable unit contributes exactly 10%.
-      const canBuy = !button.disabled;
-      let affordable = 0;
-      if (canBuy && typeof maxAffordable === "function") {
-        affordable = Math.max(1, Number(maxAffordable(i, true).count) || 0);
-      }
-      affordable = Math.min(10 - owned, affordable);
-
-      button.style.setProperty("--dim-bought-progress", (owned * 10) + "%");
-      button.style.setProperty("--dim-afford-progress", (affordable * 10) + "%");
-      button.style.setProperty(
-        "border-color",
-        canBuy ? "#008b28" : "#a33b50",
-        "important"
-      );
-
-      row.classList.toggle("dim-can-afford", canBuy);
-      row.classList.toggle("dim-cannot-afford", !canBuy);
-    });
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", update, { once:true });
-  } else {
-    update();
-  }
-  setInterval(update, 100);
-})();
-</script>
-
-
 <style id="dimension-row-neutral-state-fix">
 @media (max-width:700px) {
   body[data-screen="main"] #dimensions .dim,
@@ -1748,6 +1528,91 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
   }
 }
 </style>
+
+<style id="nd-stable-gauge-and-row-state">
+@media (max-width:700px) {
+  body[data-screen="main"] #dimensions .dim,
+  body[data-screen="main"] #dimensions .dim.dim-can-afford,
+  body[data-screen="main"] #dimensions .dim.dim-cannot-afford {
+    background:transparent !important;
+    animation:none !important;
+    transition:none !important;
+    box-shadow:none !important;
+  }
+  body[data-screen="main"] #dimensions .dim .buy {
+    animation:none !important;
+    transition:none !important;
+    background-image:linear-gradient(
+      to right,
+      #123b20 0%,
+      #123b20 var(--dim-bought-progress, 0%),
+      #24552f var(--dim-bought-progress, 0%),
+      #24552f calc(var(--dim-bought-progress, 0%) + var(--dim-afford-progress, 0%)),
+      #19191c calc(var(--dim-bought-progress, 0%) + var(--dim-afford-progress, 0%)),
+      #19191c 100%
+    ) !important;
+  }
+}
+</style>
+<script id="nd-stable-gauge-logic">
+(function () {
+  function updateNDGauges() {
+    if (document.body.dataset.screen !== "main") return;
+    const root = document.getElementById("dimensions");
+    if (!root || typeof state === "undefined" || typeof maxAffordable !== "function") return;
+
+    root.querySelectorAll(".dim").forEach((row, i) => {
+      const button = row.querySelector(".buy");
+      if (!button) return;
+
+      const isUnlocked = typeof unlocked === "function"
+        ? unlocked(i)
+        : !row.classList.contains("locked");
+
+      if (!isUnlocked) {
+        button.style.setProperty("--dim-bought-progress", "0%");
+        button.style.setProperty("--dim-afford-progress", "0%");
+        button.style.setProperty("border-color", "#555", "important");
+        return;
+      }
+
+      // Bought count is discrete and changes only on a purchase.
+      // Do NOT use produced Dimension amount here: it rises continuously and
+      // makes the gauge appear to pulse/flicker while production is running.
+      const bought = Math.max(0, Number(state.bought[i]) || 0);
+      const boughtInCurrentTen = bought % 10;
+
+      // The available count is calculated by the game's own affordability
+      // routine, capped at the next ten-purchase boundary.
+      const affordable = Math.max(
+        0,
+        Math.min(10 - boughtInCurrentTen, Number(maxAffordable(i, true).count) || 0)
+      );
+
+      const canBuy = affordable > 0;
+      button.style.setProperty("--dim-bought-progress", (boughtInCurrentTen * 10) + "%");
+      button.style.setProperty("--dim-afford-progress", (affordable * 10) + "%");
+      button.style.setProperty(
+        "border-color",
+        canBuy ? "#008b28" : "#a33b50",
+        "important"
+      );
+    });
+  }
+
+  function start() {
+    updateNDGauges();
+    // One updater only; no overlapping legacy timers or MutationObservers.
+    window.setInterval(updateNDGauges, 250);
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start, { once: true });
+  } else {
+    start();
+  }
+})();
+</script>
+
 </head>
 <body><main>
 <div class="sticky-tools">
