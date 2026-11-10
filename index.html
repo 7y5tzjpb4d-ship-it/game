@@ -4816,5 +4816,33 @@ html #dimensions.dimensions > .dim > button.buy {
   }
 }
 </style>
+
+<style id="nd-amount-left-button-flush-right">
+@media (max-width: 900px) {
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked),
+  html #dimensions.dimensions > .dim:not(.locked) {
+    grid-template-columns:minmax(0,42fr) minmax(0,8fr) minmax(118px,38fr) !important;
+    column-gap:5px !important;
+    padding-right:0 !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim > .dim-amount,
+  html #dimensions.dimensions > .dim > .dim-amount {
+    grid-column:2 !important;
+    justify-self:center !important;
+    text-align:center !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim > .buy,
+  html #dimensions.dimensions > .dim > .buy {
+    grid-column:3 !important;
+    justify-self:end !important;
+    width:100% !important;
+    margin-right:0 !important;
+  }
+}
+</style>
+
 </body>
 </html>
