@@ -4589,5 +4589,82 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
 }
 </style>
 
+
+<style id="nd-layout-unconditional-fix">
+@media (max-width:700px) {
+  /* Do not depend on body[data-screen]; the app does not set it reliably. */
+  #dimensions {
+    display:flex !important;
+    flex-direction:column !important;
+    gap:0 !important;
+    row-gap:0 !important;
+    padding:0 5px !important;
+    margin:0 !important;
+  }
+  #dimensions .dim {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 104px minmax(118px,38%) !important;
+    grid-template-rows:18px 14px !important;
+    column-gap:6px !important;
+    row-gap:0 !important;
+    align-items:center !important;
+    height:58px !important;
+    min-height:58px !important;
+    max-height:58px !important;
+    margin:0 !important;
+    padding:2px 3px !important;
+    box-sizing:border-box !important;
+    overflow:visible !important;
+  }
+  #dimensions .dim .tier { display:none !important; }
+  #dimensions .dim > div:not(.tier) { display:contents !important; }
+  #dimensions .dim .dim-name {
+    grid-column:1 !important;
+    grid-row:1 !important;
+    margin:0 !important;
+    padding:0 !important;
+    font-size:13px !important;
+    line-height:18px !important;
+    white-space:nowrap !important;
+  }
+  #dimensions .dim .dim-info {
+    grid-column:1 !important;
+    grid-row:2 !important;
+    margin:0 !important;
+    padding:0 !important;
+    font-size:10px !important;
+    line-height:14px !important;
+    white-space:nowrap !important;
+  }
+  #dimensions .dim .dim-amount {
+    grid-column:2 !important;
+    grid-row:1 / span 2 !important;
+    justify-self:stretch !important;
+    align-self:center !important;
+    width:100% !important;
+    margin:0 !important;
+    padding:0 !important;
+    text-align:center !important;
+    font-size:16px !important;
+    line-height:1.1 !important;
+    white-space:nowrap !important;
+  }
+  #dimensions .dim .buy {
+    grid-column:3 !important;
+    grid-row:1 / span 2 !important;
+    align-self:center !important;
+    width:100% !important;
+    min-width:0 !important;
+    height:34px !important;
+    min-height:34px !important;
+    max-height:34px !important;
+    margin:0 !important;
+    padding:3px 5px !important;
+    box-sizing:border-box !important;
+    font-size:12px !important;
+  }
+}
+</style>
+
 </body>
 </html>
