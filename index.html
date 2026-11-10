@@ -4621,5 +4621,73 @@ html #dimensions.dimensions > .dim > button.buy {
 }
 </style>
 
+
+<style id="nd-compact-zero-spacing-final">
+/* ND rows: compact official-style density, with no gaps between dimensions. */
+@media (max-width:700px) {
+  html body[data-screen="main"] #dimensions.dimensions,
+  html #dimensions.dimensions {
+    display:flex !important;
+    flex-direction:column !important;
+    gap:0 !important;
+    row-gap:0 !important;
+    margin:0 !important;
+    padding:0 5px !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked),
+  html #dimensions.dimensions > .dim:not(.locked) {
+    height:44px !important;
+    min-height:44px !important;
+    max-height:44px !important;
+    margin:0 !important;
+    padding:1px 3px !important;
+    column-gap:4px !important;
+    row-gap:0 !important;
+    border:0 !important;
+    border-radius:0 !important;
+    background:transparent !important;
+    box-sizing:border-box !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim > .dim-label,
+  html #dimensions.dimensions > .dim > .dim-label {
+    gap:0 !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim > .dim-label > .dim-name,
+  html #dimensions.dimensions > .dim > .dim-label > .dim-name {
+    font-size:15px !important;
+    line-height:18px !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim > .dim-label > .dim-info,
+  html #dimensions.dimensions > .dim > .dim-label > .dim-info {
+    font-size:11px !important;
+    line-height:13px !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim > .dim-amount,
+  html #dimensions.dimensions > .dim > .dim-amount {
+    font-size:20px !important;
+    line-height:1 !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim > button.buy,
+  html #dimensions.dimensions > .dim > button.buy {
+    height:34px !important;
+    min-height:34px !important;
+    max-height:34px !important;
+    padding:2px 4px !important;
+    font-size:13px !important;
+    line-height:1.05 !important;
+    border-width:2px !important;
+    border-radius:6px !important;
+  }
+}
+@media (orientation:landscape) and (max-width:700px) {
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked),
+  html #dimensions.dimensions > .dim:not(.locked) {
+    height:44px !important;
+    min-height:44px !important;
+    max-height:44px !important;
+  }
+}
+</style>
+
 </body>
 </html>
