@@ -4492,5 +4492,32 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
 })();
 </script>
 
+
+<style id="nd-amount-center-final">
+@media (max-width:700px) {
+  body[data-screen="main"] #dimensions .dim {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(118px,38%) !important;
+    column-gap:6px !important;
+  }
+  body[data-screen="main"] #dimensions .dim .dim-amount {
+    grid-column:2 !important;
+    grid-row:1 / span 2 !important;
+    justify-self:stretch !important;
+    width:100% !important;
+    text-align:center !important;
+    margin:0 !important;
+  }
+  body[data-screen="main"] #dimensions .dim .buy {
+    grid-column:3 !important;
+    grid-row:1 / span 2 !important;
+  }
+  body[data-screen="main"] #dimensions .dim .dim-name,
+  body[data-screen="main"] #dimensions .dim .dim-info {
+    grid-column:1 !important;
+  }
+}
+</style>
+
 </body>
 </html>
