@@ -4689,5 +4689,100 @@ html #dimensions.dimensions > .dim > button.buy {
 }
 </style>
 
+
+<style id="nd-row-size-and-amount-fix">
+/* Compact ND rows while reserving enough width for the owned amount. */
+@media (max-width: 900px) {
+  #dimensions.dimensions {
+    display:flex !important;
+    flex-direction:column !important;
+    gap:0 !important;
+    row-gap:0 !important;
+    padding:0 5px !important;
+  }
+  #dimensions.dimensions > .dim {
+    display:grid !important;
+    grid-template-columns:minmax(0, 1fr) minmax(76px, 0.34fr) minmax(0, 0.92fr) !important;
+    grid-template-rows:36px !important;
+    align-items:center !important;
+    column-gap:5px !important;
+    row-gap:0 !important;
+    height:38px !important;
+    min-height:38px !important;
+    max-height:38px !important;
+    margin:0 !important;
+    padding:0 3px !important;
+    box-sizing:border-box !important;
+    border-radius:0 !important;
+  }
+  #dimensions.dimensions > .dim > .dim-label {
+    grid-column:1 !important;
+    grid-row:1 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    justify-content:center !important;
+    align-items:flex-start !important;
+    min-width:0 !important;
+    width:100% !important;
+    gap:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+  #dimensions.dimensions > .dim .dim-name {
+    font-size:14px !important;
+    line-height:16px !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+  }
+  #dimensions.dimensions > .dim .dim-info {
+    font-size:10px !important;
+    line-height:12px !important;
+    margin:0 !important;
+    white-space:nowrap !important;
+  }
+  #dimensions.dimensions > .dim > .dim-amount {
+    grid-column:2 !important;
+    grid-row:1 !important;
+    justify-self:center !important;
+    width:100% !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    font-size:16px !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+    text-align:center !important;
+  }
+  #dimensions.dimensions > .dim > .buy {
+    grid-column:3 !important;
+    grid-row:1 !important;
+    width:100% !important;
+    height:30px !important;
+    min-height:30px !important;
+    max-height:30px !important;
+    min-width:0 !important;
+    padding:1px 3px !important;
+    font-size:12px !important;
+    line-height:1.05 !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:clip !important;
+    box-sizing:border-box !important;
+  }
+}
+@media (max-width:380px) {
+  #dimensions.dimensions > .dim {
+    grid-template-columns:minmax(0, 1fr) minmax(64px, 0.32fr) minmax(0, 0.9fr) !important;
+    column-gap:3px !important;
+  }
+  #dimensions.dimensions > .dim .dim-name { font-size:13px !important; }
+  #dimensions.dimensions > .dim > .dim-amount { font-size:15px !important; }
+  #dimensions.dimensions > .dim > .buy { font-size:11px !important; }
+}
+</style>
+
 </body>
 </html>
