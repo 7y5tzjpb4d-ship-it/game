@@ -56,14 +56,14 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 140px;max-width:560p
 @media(max-width:540px){.sacrifice-panel{padding:4px 5px!important;margin-bottom:5px!important}.sacrifice-panel .section-title{font-size:11px!important}.sacrifice-panel p{font-size:9px!important}.sacrifice-buy{width:156px!important;min-width:156px!important;height:30px!important;min-height:30px!important;font-size:9px!important}}
 
 /* Achievement notification: compact yellow banner at the bottom, matching the reference video. */
-.achievement-toast-container{position:fixed;left:0;right:0;bottom:calc(66px + env(safe-area-inset-bottom) + 12px);z-index:2000;display:flex;flex-direction:column-reverse;align-items:stretch;gap:4px;pointer-events:none;width:100%;max-height:35vh;overflow:hidden}
-.achievement-toast{box-sizing:border-box;width:100%;min-height:32px;display:flex;align-items:center;justify-content:center;padding:7px 12px;background:#f0c400;border:0;border-radius:0;color:#171717;box-shadow:0 2px 8px #0005;text-align:center;font-size:12px;font-weight:700;line-height:1.25;animation:achievementToastIn .18s ease-out}
+.achievement-toast-container{position:fixed;left:50%;right:auto;bottom:calc(183px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:2000;display:flex;flex-direction:column-reverse;align-items:stretch;gap:6px;pointer-events:none;width:min(88vw,520px);max-height:30vh;overflow:hidden}
+.achievement-toast{box-sizing:border-box;width:100%;min-height:58px;display:flex;align-items:center;justify-content:center;padding:14px 18px;background:#f0c400;border:2px solid #ffe45c;border-radius:9px;color:#171717;box-shadow:0 4px 16px #0008;text-align:center;font-size:18px;font-weight:800;line-height:1.3;animation:achievementToastIn .18s ease-out}
 .achievement-toast-title,.achievement-toast-desc{display:none}
-.achievement-toast-name{font-size:12px;font-weight:700;margin:0;color:#171717}
+.achievement-toast-name{font-size:18px;font-weight:800;margin:0;color:#171717}
 .content-unlock-toast{background:#263b2d;border:1px solid #43865f;color:#b9f0c9}
 .content-unlock-toast .achievement-toast-name{color:#b9f0c9}
 @keyframes achievementToastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-@media(min-width:701px){.achievement-toast-container{bottom:24px;left:50%;right:auto;transform:translateX(-50%);width:min(560px,calc(100vw - 32px))}.achievement-toast{border-radius:3px}}
+@media(min-width:701px){.achievement-toast-container{bottom:24px;left:50%;right:auto;transform:translateX(-50%);width:min(560px,calc(100vw - 32px))}.achievement-toast{border-radius:8px}}
 
 
 /* Time Studies: Eternity purple skill tree */
@@ -2451,7 +2451,19 @@ function sacrificeGain(){return sacrificeGainBigNumber().toNumber();}
 function canSacrificeNow(){return state.boosts>=5&&!challengeRuleActive(10)&&state.amount[state.activeChallenge===12?5:7]>=1&&state.amount[0]>0&&sacrificeGainBigNumber().compare(1.01)>=0;}
 function unlocked(i){if(Number(state.eternities)>=30)return !(challengeRuleActive(10)&&i>=6);if(challengeRuleActive(10)&&i>=6)return false;if(i>0&&dimensionAmountBig(i-1).compare(0)<=0)return false;return i<4||state.boosts>=i-3;}
 function productionRate(){return productionRateBigNumber().toNumber();}
-function boostRequirement(){const n=state.boosts+1;let base=20;if(challengeRuleActive(10))base+=20*Math.max(0,n-3);else if(n>5)base+=15*(n-5);const tsReduction=(tsOwned(211)?5:0)+(tsOwned(222)?2:0);return Math.max(1,base-tsReduction-(hasInfinityUpgrade('resetBoost')?9:0)-(infinityChallengeEffectActive(5)?1:0));}
+function boostRequirement(){
+ const currentBoosts=Math.max(0,Math.floor(Number(state.boosts)||0));
+ const increment=Math.max(0,15-(tsOwned(211)?5:0)-(tsOwned(222)?2:0));
+ const challenge10=challengeRuleActive(10);
+ let amount=20+increment*Math.max(0,currentBoosts-(challenge10?2:4));
+ // Eternity Challenge 5 adds (DimBoost - 1)^3 + (DimBoost - 1).
+ if(Number(state.activeEternityChallenge)===5){
+  amount+=Math.pow(currentBoosts,3)+currentBoosts;
+ }
+ amount-=hasInfinityUpgrade('resetBoost')?9:0;
+ amount-=infinityChallengeEffectActive(5)?1:0;
+ return Math.max(1,Math.floor(amount));
+}
 function boostRequirementTier(){const n=state.boosts+1;return challengeRuleActive(10)?Math.min(6,n+3):(n<=5?n+3:8);}
 function canBoost(){if(state.activeInfinityChallenge===1&&state.boosts>=2)return false;if(state.activeChallenge===8&&state.boosts>=5)return false;const tier=boostRequirementTier();return dimensionAmountBig(tier-1).compare(boostRequirement())>=0;}
 function galaxyRequirement(){let g=Math.max(0,Number(state.galaxies)||0);let effectiveG=g;if(tsOwned(223))effectiveG=Math.max(0,effectiveG-7);if(tsOwned(224))effectiveG=Math.max(0,effectiveG-Math.floor(Math.max(0,Number(state.boosts)||0)/200));let base;if(challengeRuleActive(10)){base=99+90*effectiveG;}else{const linear=80+(tsOwned(42)?52:60)*effectiveG;/* Distant Galaxies: after 100 normal Galaxies, the requirement increment rises by 2 for each additional Galaxy. */const distant=Math.max(0,effectiveG-100);base=linear+distant*(distant+1);}return Math.max(1,base-(hasInfinityUpgrade('resetBoost')?9:0)-(infinityChallengeEffectActive(5)?1:0));}
@@ -2715,37 +2727,11 @@ function infinityChallengeQuickReset(){
  state.infinityCrunchReady=false;
  autobuyerElapsed.fill(0);buildRows();render();save();
 }
-function boost(silent=false){
- if(!canBoost())return;
- // The original resets the relevant autobuyers' lastTick timestamp on prestige;
- // with elapsed timers this makes dimensions and tickspeed immediately eligible.
- for(let i=0;i<9;i++)autobuyerElapsed[i]=autobuyerInterval()[i];
- autobuyerElapsed[9]=0;
- state.boosts++;if(state.activeChallenge===9){state.challenge9CostSteps=Array(8).fill(0);state.challenge9TickspeedCostBumps=0;}checkAchievements();if(challengeRuleActive(3))state.challenge3TimeMult=1;if(challengeRuleActive(11))state.challenge11Matter=1;if(state.activeInfinityChallenge===4)state.icLastBoughtDimension=-1;if(!hasAchievement(111)){setMatterBigNumber(state.activeInfinityChallenge===5?infinityStartingAntimatter():startingAntimatter());state.amount=Array(8).fill(0);state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));state.bought=Array(8).fill(0);state.tickspeed=0;}state.sacrificeMult=1;state.sacrificeMultBN={mantissa:1,exponent:0};state.sacrificedFirst=0;state.sacrificedFirstBN={mantissa:0,exponent:0};if(state.activeInfinityChallenge===5)state.ic5CostSteps=Array(8).fill(0);if(!silent){render();save();}
-}
-function bulkBoostAutobuy(silent=false){
- // Bulk DimBoost: 現在所持している各TierのDimension数から、連続して実行可能なBoost数を算出し、リセットを1回にまとめる。
- if(!breakInfinityUpgradeBought('bulkBoost')||!canBoost())return false;
- const originalBoosts=state.boosts;
- const rawLimit=state.autobuyers?.boostLimit;
- const configuredLimit=typeof rawLimit==='string'&&/^[0-9]+$/.test(rawLimit)?Number(rawLimit):Infinity;
- const maxCount=Math.max(0,Math.min(100000,configuredLimit-originalBoosts));
- let count=0;
- while(count<maxCount){
-  state.boosts=originalBoosts+count;
-  if(!canBoost())break;
-  count++;
+function applyDimensionBoostReset(){
+ // Achievement 111 preserves Antimatter only; Dimensions still reset as in the official game.
+ if(!hasAchievement(111)){
+  setMatterBigNumber(state.activeInfinityChallenge===5?infinityStartingAntimatter():startingAntimatter());
  }
- state.boosts=originalBoosts;
- if(count<=0)return false;
- state.autobuyers && (autobuyerElapsed[9]=0);
- state.boosts+=count;if(count>=750)unlockAchievement(117);
- for(let i=0;i<9;i++)autobuyerElapsed[i]=autobuyerInterval()[i];
- autobuyerElapsed[9]=0;
- checkAchievements();
- if(challengeRuleActive(3))state.challenge3TimeMult=1;
- if(challengeRuleActive(11))state.challenge11Matter=1;
- setMatterBigNumber(state.activeInfinityChallenge===5?infinityStartingAntimatter():startingAntimatter());
  state.amount=Array(8).fill(0);
  state.amountBN=Array(8).fill(null).map(()=>({mantissa:0,exponent:0}));
  state.bought=Array(8).fill(0);
@@ -2755,7 +2741,46 @@ function bulkBoostAutobuy(silent=false){
  state.sacrificedFirst=0;
  state.sacrificedFirstBN={mantissa:0,exponent:0};
  if(state.activeInfinityChallenge===5)state.ic5CostSteps=Array(8).fill(0);
+}
+function finishDimensionBoostReset(count,silent=false){
+ state.boosts+=count;
+ if(state.activeChallenge===9){state.challenge9CostSteps=Array(8).fill(0);state.challenge9TickspeedCostBumps=0;}
+ checkAchievements();
+ if(challengeRuleActive(3))state.challenge3TimeMult=1;
+ if(challengeRuleActive(11))state.challenge11Matter=1;
+ if(state.activeInfinityChallenge===4)state.icLastBoughtDimension=-1;
+ if(count>=750)unlockAchievement(117);
+ applyDimensionBoostReset();
+ for(let i=0;i<9;i++)autobuyerElapsed[i]=autobuyerInterval()[i];
+ autobuyerElapsed[9]=0;
  if(!silent){render();save();}
+}
+function boost(silent=false){
+ if(!canBoost())return false;
+ finishDimensionBoostReset(1,silent);
+ return true;
+}
+function bulkBoostAutobuy(silent=false){
+ if(!breakInfinityUpgradeBought('bulkBoost')||!canBoost())return false;
+ const originalBoosts=state.boosts;
+ const rawLimit=state.autobuyers?.boostLimit;
+ const configuredLimit=typeof rawLimit==='string'&&/^[0-9]+$/.test(rawLimit)?Number(rawLimit):Infinity;
+ const maxDimensionsUnlockable=challengeRuleActive(10)?6:8;
+ // Official bulk mode buys unlock-granting boosts one at a time.
+ if(originalBoosts+4<maxDimensionsUnlockable){
+  if(configuredLimit<=originalBoosts)return false;
+  return boost(silent);
+ }
+ const maxCount=Math.max(0,Math.min(100000,configuredLimit-originalBoosts));
+ let count=0;
+ while(count<maxCount){
+  state.boosts=originalBoosts+count;
+  if(!canBoost())break;
+  count++;
+ }
+ state.boosts=originalBoosts;
+ if(count<=0)return false;
+ finishDimensionBoostReset(count,silent);
  return true;
 }
 function sacrifice(silent=false){
