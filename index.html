@@ -1734,6 +1734,20 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
 })();
 </script>
 
+
+<style id="dimension-row-neutral-state-fix">
+@media (max-width:700px) {
+  body[data-screen="main"] #dimensions .dim,
+  body[data-screen="main"] #dimensions .dim.dim-can-afford,
+  body[data-screen="main"] #dimensions .dim.dim-cannot-afford {
+    background:transparent !important; animation:none !important; transition:none !important; box-shadow:none !important;
+  }
+  body[data-screen="main"] #dimensions .dim::before,
+  body[data-screen="main"] #dimensions .dim::after {
+    animation:none !important; background:transparent !important; box-shadow:none !important;
+  }
+}
+</style>
 </head>
 <body><main>
 <div class="sticky-tools">
@@ -2603,7 +2617,7 @@ function render(){
   const max=state.buyMax?maxAffordable(i):null;
   const costText=costBigNumber(i).toDisplayString(2);
   b.disabled=!open||(state.buyMax?max.count===0:!canAffordDimension(i,c));
-  setText(b,!open?'ロック中':(state.buyMax?('購入×'+fmt(max.count)+' コスト'+(max.count>0?max.spent:costText)):('購入×1 コスト'+costText)));
+  setText(b,!open?'ロック中':(state.buyMax?('コスト'+(max.count>0?max.spent:costText)):('コスト'+costText)));
  }
  const n=state.boosts+1,req=boostRequirement(),tier=boostRequirementTier(),can=canBoost();
  $('boostBtn').disabled=!can;
