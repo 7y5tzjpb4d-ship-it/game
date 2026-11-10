@@ -1613,6 +1613,68 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
 })();
 </script>
 
+
+<style id="mobile-side-drawer-video-style">
+@media (max-width:700px) {
+  .mobile-game-drawer-backdrop {
+    position:fixed; inset:0; z-index:998;
+    background:rgba(0,0,0,.58);
+    opacity:0; visibility:hidden; transition:opacity .18s ease,visibility .18s ease;
+  }
+  .mobile-game-drawer {
+    position:fixed; z-index:999; top:0; bottom:0; left:0;
+    width:min(72vw,290px); max-width:290px;
+    overflow-y:auto; overscroll-behavior:contain;
+    background:#19191d; color:#bdbdc2;
+    transform:translateX(-102%); transition:transform .2s ease;
+    box-shadow:8px 0 24px rgba(0,0,0,.38);
+    padding:18px 0 calc(24px + env(safe-area-inset-bottom));
+    box-sizing:border-box;
+  }
+  body.mobile-drawer-open .mobile-game-drawer-backdrop {
+    opacity:1; visibility:visible;
+  }
+  body.mobile-drawer-open .mobile-game-drawer { transform:translateX(0); }
+  body.mobile-drawer-open { overflow:hidden; }
+  .mobile-game-drawer .drawer-brand {
+    text-align:center; padding:18px 12px 22px;
+    font-size:14px; font-weight:700; color:#ddd;
+    border-bottom:1px solid #303036;
+  }
+  .mobile-game-drawer .drawer-brand-mark {
+    display:block; font-size:34px; line-height:1.2; margin-bottom:8px;
+    color:#36c4b5;
+  }
+  .mobile-game-drawer .drawer-group { border-bottom:1px solid #29292f; }
+  .mobile-game-drawer .drawer-category,
+  .mobile-game-drawer .drawer-leaf {
+    width:100%; min-height:42px; box-sizing:border-box;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 14px; border:0; border-radius:0;
+    background:transparent; color:#bdbdc2; text-align:left;
+    font-size:13px; font-weight:600;
+  }
+  .mobile-game-drawer .drawer-category.active {
+    border-left:3px solid #d41469; padding-left:11px;
+    background:#24242a;
+  }
+  .mobile-game-drawer .drawer-leaf {
+    min-height:38px; padding-left:28px; font-size:12px; font-weight:500;
+  }
+  .mobile-game-drawer .drawer-leaf.active {
+    color:#fff; background:#292930; border-left:2px solid #d41469;
+  }
+  .mobile-game-drawer .drawer-leaf:after { content:""; }
+  .mobile-game-drawer .drawer-submenu { display:none; padding:2px 0 7px; }
+  .mobile-game-drawer .drawer-group.expanded .drawer-submenu { display:block; }
+  .mobile-game-drawer .drawer-chevron { color:#888; font-size:11px; }
+  body[data-screen="main"] #screenTabs { display:none!important; }
+}
+@media(min-width:701px) {
+  .mobile-game-drawer,.mobile-game-drawer-backdrop { display:none!important; }
+}
+</style>
+
 </head>
 <body><main>
 <div class="sticky-tools">
@@ -4158,6 +4220,114 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
  const observer=new MutationObserver(()=>updateInitialMainUI());
  observer.observe(document.body,{attributes:true,attributeFilter:['data-screen']});
  setInterval(updateInitialMainUI,500);
+})();
+</script>
+
+
+<script id="mobile-side-drawer-video-behavior">
+(function () {
+  function initDrawer() {
+    if (document.querySelector(".mobile-game-drawer")) return;
+    const backdrop = document.createElement("div");
+    backdrop.className = "mobile-game-drawer-backdrop";
+    const drawer = document.createElement("aside");
+    drawer.className = "mobile-game-drawer";
+    drawer.setAttribute("aria-label", "ゲームメニュー");
+    drawer.innerHTML = `
+      <div class="drawer-brand"><span class="drawer-brand-mark">✺</span>Antimatter Dimensions</div>
+      <div class="drawer-items"></div>`;
+    document.body.append(backdrop, drawer);
+
+    const groups = [
+      { id:"dimensions", label:"Dimensions", icon:"⬡", children:[
+        ["Antimatter Dimensions","main"],
+        ["Infinity","infinity"]
+      ]},
+      { id:"achievements", label:"Achievements", icon:"🏆", children:[
+        ["Normal Achievements","achievements"],
+        ["Secret Achievements","achievements"]
+      ]},
+      { id:"statistics", label:"Statistics", icon:"▤", children:[
+        ["Statistics","statistics"]
+      ]},
+      { id:"options", label:"Options", icon:"☷", children:[
+        ["Options","options"]
+      ]},
+      { id:"shop", label:"Shop", icon:"＄", children:[
+        ["Shop","shop"]
+      ]},
+      { id:"info", label:"Info", icon:"ⓘ", children:[
+        ["Info","info"]
+      ]}
+    ];
+    const list = drawer.querySelector(".drawer-items");
+
+    function currentScreen() {
+      return document.body.dataset.screen || "main";
+    }
+    function activate(screen) {
+      if (screen === "infinity" && !(Number(state.infinities) > 0)) return;
+      const target = document.querySelector('#screenTabs [data-screen="' + screen + '"]');
+      if (target && getComputedStyle(target).display !== "none") target.click();
+      close();
+    }
+    function render() {
+      const active = currentScreen();
+      list.innerHTML = "";
+      groups.forEach(group => {
+        const usable = group.children.filter(child => {
+          if (child[1] === "infinity") return Number(state.infinities) > 0;
+          return !!document.querySelector('#screenTabs [data-screen="' + child[1] + '"]');
+        });
+        if (!usable.length) return;
+        const section = document.createElement("section");
+        section.className = "drawer-group" + (usable.some(x => x[1] === active) ? " expanded" : "");
+        const category = document.createElement("button");
+        category.className = "drawer-category" + (usable.some(x => x[1] === active) ? " active" : "");
+        category.innerHTML = `<span>${group.icon}　${group.label}</span><span class="drawer-chevron">›</span>`;
+        const submenu = document.createElement("div");
+        submenu.className = "drawer-submenu";
+        usable.forEach(([label, screen]) => {
+          const leaf = document.createElement("button");
+          leaf.className = "drawer-leaf" + (screen === active ? " active" : "");
+          leaf.textContent = label;
+          leaf.addEventListener("click", () => activate(screen));
+          submenu.appendChild(leaf);
+        });
+        category.addEventListener("click", () => {
+          section.classList.toggle("expanded");
+        });
+        section.append(category, submenu);
+        list.appendChild(section);
+      });
+    }
+    function open() {
+      render();
+      document.body.classList.add("mobile-drawer-open");
+      document.body.classList.add("initial-menu-open");
+    }
+    function close() {
+      document.body.classList.remove("mobile-drawer-open","initial-menu-open");
+    }
+    backdrop.addEventListener("click", close);
+    const menuButton = document.querySelector(".initial-menu-button");
+    if (menuButton) {
+      menuButton.addEventListener("click", event => {
+        event.stopImmediatePropagation();
+        if (document.body.classList.contains("mobile-drawer-open")) close();
+        else open();
+      }, true);
+    }
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") close();
+    });
+    const observer = new MutationObserver(() => {
+      if (document.body.classList.contains("mobile-drawer-open")) render();
+    });
+    observer.observe(document.body, { attributes:true, attributeFilter:["data-screen"] });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initDrawer, {once:true});
+  else initDrawer();
 })();
 </script>
 
