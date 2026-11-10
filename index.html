@@ -2413,7 +2413,7 @@ function render(){
  document.querySelectorAll('[data-passive-ip-minute]').forEach(el=>{el.textContent='1分あたりの獲得量：'+(state.fastestInfinity>0?fmtBig(passiveIPRateBigNumber().multiply(60))+' IP':'最速Infinity記録後に表示');});document.querySelectorAll('[data-bi-generation-time]').forEach(el=>{el.textContent='生産時間：'+(state.fastestInfinity>0?Math.max(0.1,state.fastestInfinity*2).toFixed(1)+'秒':'未記録');});document.querySelectorAll('[data-ip-offline-minute]').forEach(el=>{el.textContent='オフライン時：'+fmtBig(bestIPPerMinuteBigNumber().multiply(0.5))+' IP/分（最高IP/分の50%）';});
  setText($('matter'),matterDisplayBig().toDisplayString(2));if(state.activeChallenge===11||state.activeInfinityChallenge===6){const el=$('matter');if(el)el.title='Matter: '+fmtMatter(state.activeInfinityChallenge===6?state.icMatter:state.challenge11Matter);}
  const nc11MatterPanel=$('challenge11MatterPanel');if(nc11MatterPanel)nc11MatterPanel.style.display=(state.activeChallenge===11||state.activeInfinityChallenge===6)?'block':'none';setText($('challenge11MatterLabel'),state.activeInfinityChallenge===6?'インフィニティチャレンジ6':'チャレンジ11');setText($('challenge11MatterDisplay'),fmtMatter(state.activeInfinityChallenge===6?state.icMatter:state.challenge11Matter));
- const eternityTab=document.querySelector('.screen-tabs button[data-screen="eternity"]');if(eternityTab)eternityTab.style.display=state.eternities>0?'':'none';const infinityTab=document.querySelector('.screen-tabs button[data-screen="infinity"]');if(infinityTab)infinityTab.style.display=state.infinities>0?'':'none';
+ const eternityTab=document.querySelector('.screen-tabs button[data-screen="eternity"]');if(eternityTab)eternityTab.style.display=state.eternities>0?'':'none';const infinityTab=document.querySelector('.screen-tabs button[data-screen="infinity"]');if(infinityTab)infinityTab.style.display=state.infinities>0?'':'none';const infinityFooterTab=document.querySelector('.initial-footer-icons [data-nav-screen="infinity"]');if(infinityFooterTab)infinityFooterTab.style.display=state.infinities>0?'':'none';
  updateAutobuyerUnlockAlert();
  notifyNewContentUnlocks();
  const productionRateBN=productionRateBigNumber();
@@ -4108,12 +4108,12 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
   header.innerHTML='<button class="initial-menu-button" type="button" aria-label="メニュー"></button>';
   document.body.insertBefore(header,document.body.firstChild);
   const footer=document.createElement('footer');footer.className='initial-main-footer';
-  footer.innerHTML='<div class="initial-footer-icons"><button data-nav-screen="main" class="active" aria-label="Antimatter">⬡</button><button data-nav-screen="achievements" aria-label="Achievements">🏆</button><button data-nav-screen="challenges" aria-label="Challenges">▤</button><button data-nav-screen="autobuyers" aria-label="Autobuyers">☷</button><button data-nav-screen="infinity" aria-label="Infinity">∞</button><button data-nav-screen="statistics" aria-label="Statistics">ⓘ</button></div><div class="initial-footer-title">Antimatter</div>';
+  footer.innerHTML='<div class="initial-footer-icons"><button data-nav-screen="main" class="active" aria-label="Antimatter">⬡</button><button data-nav-screen="achievements" aria-label="Achievements">🏆</button><button data-nav-screen="challenges" aria-label="Challenges">▤</button><button data-nav-screen="autobuyers" aria-label="Autobuyers">☷</button><button data-nav-screen="infinity" aria-label="Infinity" style="display:none">∞</button><button data-nav-screen="statistics" aria-label="Statistics">ⓘ</button></div><div class="initial-footer-title">Antimatter</div>';
   document.body.appendChild(footer);
   const menu=header.querySelector('button');
   menu.addEventListener('click',()=>{document.body.classList.toggle('initial-menu-open');});
   footer.querySelectorAll('[data-nav-screen]').forEach(btn=>btn.addEventListener('click',()=>{
-   const target=document.querySelector('#screenTabs [data-screen="'+btn.dataset.navScreen+'"]');
+   if(btn.dataset.navScreen==='infinity'&&!(Number(state.infinities)>0))return;const target=document.querySelector('#screenTabs [data-screen="'+btn.dataset.navScreen+'"]');
    if(target)target.click();
    document.body.classList.remove('initial-menu-open');
    footer.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
