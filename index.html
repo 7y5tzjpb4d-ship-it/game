@@ -4690,35 +4690,47 @@ html #dimensions.dimensions > .dim > button.buy {
 </style>
 
 
-<style id="nd-row-size-and-amount-fix">
-/* Compact ND rows while reserving enough width for the owned amount. */
-@media (max-width: 900px) {
-  #dimensions.dimensions {
+
+
+<style id="nd-row-size-verified-override">
+@media screen and (max-width: 700px) {
+  html body[data-screen="main"] #dimensions.dimensions {
     display:flex !important;
     flex-direction:column !important;
+    align-items:stretch !important;
     gap:0 !important;
     row-gap:0 !important;
+    width:100% !important;
     padding:0 5px !important;
+    margin:0 !important;
+    box-sizing:border-box !important;
   }
-  #dimensions.dimensions > .dim {
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) {
     display:grid !important;
-    grid-template-columns:minmax(0, 1fr) minmax(76px, 0.34fr) minmax(0, 0.92fr) !important;
-    grid-template-rows:36px !important;
+    grid-template-columns:minmax(0,1fr) 88px minmax(0,38%) !important;
+    grid-template-rows:40px !important;
+    grid-auto-flow:row !important;
     align-items:center !important;
     column-gap:5px !important;
     row-gap:0 !important;
-    height:38px !important;
-    min-height:38px !important;
-    max-height:38px !important;
+    width:100% !important;
+    height:42px !important;
+    min-height:42px !important;
+    max-height:42px !important;
     margin:0 !important;
-    padding:0 3px !important;
-    box-sizing:border-box !important;
+    padding:1px 3px !important;
+    border:0 !important;
     border-radius:0 !important;
+    background:transparent !important;
+    box-sizing:border-box !important;
+    overflow:visible !important;
+    animation:none !important;
+    transition:none !important;
   }
-  #dimensions.dimensions > .dim > .dim-label {
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) > .dim-label {
+    display:flex !important;
     grid-column:1 !important;
     grid-row:1 !important;
-    display:flex !important;
     flex-direction:column !important;
     justify-content:center !important;
     align-items:flex-start !important;
@@ -4727,62 +4739,82 @@ html #dimensions.dimensions > .dim > button.buy {
     gap:0 !important;
     margin:0 !important;
     padding:0 !important;
+    overflow:visible !important;
   }
-  #dimensions.dimensions > .dim .dim-name {
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) > .dim-label > .dim-name {
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:0 !important;
     font-size:14px !important;
     line-height:16px !important;
     white-space:nowrap !important;
     overflow:visible !important;
     text-overflow:clip !important;
   }
-  #dimensions.dimensions > .dim .dim-info {
-    font-size:10px !important;
-    line-height:12px !important;
-    margin:0 !important;
-    white-space:nowrap !important;
-  }
-  #dimensions.dimensions > .dim > .dim-amount {
-    grid-column:2 !important;
-    grid-row:1 !important;
-    justify-self:center !important;
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) > .dim-label > .dim-info {
+    display:block !important;
     width:100% !important;
     min-width:0 !important;
     margin:0 !important;
     padding:0 !important;
-    font-size:16px !important;
-    line-height:1 !important;
+    font-size:10px !important;
+    line-height:12px !important;
     white-space:nowrap !important;
     overflow:visible !important;
     text-overflow:clip !important;
-    text-align:center !important;
   }
-  #dimensions.dimensions > .dim > .buy {
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) > .dim-amount {
+    display:block !important;
+    grid-column:2 !important;
+    grid-row:1 !important;
+    justify-self:stretch !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    margin:0 !important;
+    padding:0 !important;
+    font-size:16px !important;
+    line-height:1 !important;
+    font-weight:700 !important;
+    text-align:center !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) > button.buy {
+    display:block !important;
     grid-column:3 !important;
     grid-row:1 !important;
+    justify-self:stretch !important;
     width:100% !important;
-    height:30px !important;
-    min-height:30px !important;
-    max-height:30px !important;
     min-width:0 !important;
-    padding:1px 3px !important;
+    height:31px !important;
+    min-height:31px !important;
+    max-height:31px !important;
+    margin:0 !important;
+    padding:2px 3px !important;
+    box-sizing:border-box !important;
     font-size:12px !important;
     line-height:1.05 !important;
     white-space:nowrap !important;
     overflow:hidden !important;
     text-overflow:clip !important;
-    box-sizing:border-box !important;
   }
 }
-@media (max-width:380px) {
-  #dimensions.dimensions > .dim {
-    grid-template-columns:minmax(0, 1fr) minmax(64px, 0.32fr) minmax(0, 0.9fr) !important;
+@media screen and (max-width:380px) {
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) {
+    grid-template-columns:minmax(0,1fr) 78px minmax(0,38%) !important;
     column-gap:3px !important;
   }
-  #dimensions.dimensions > .dim .dim-name { font-size:13px !important; }
-  #dimensions.dimensions > .dim > .dim-amount { font-size:15px !important; }
-  #dimensions.dimensions > .dim > .buy { font-size:11px !important; }
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) > .dim-amount {
+    font-size:14px !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) > .dim-label > .dim-name {
+    font-size:13px !important;
+  }
 }
 </style>
-
 </body>
 </html>
