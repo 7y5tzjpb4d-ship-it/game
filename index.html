@@ -1806,16 +1806,17 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
 
 
 <style id="nd2-tickspeed-ui">
-.nd2-tickspeed{width:100%;box-sizing:border-box;text-align:center;margin:0 auto;padding:0 8px;color:#888;font-weight:400}
+.nd2-tickspeed{width:100%;height:58px;min-height:58px;box-sizing:border-box;text-align:center;margin:0 auto;padding:0 8px;color:#888;font-weight:400;display:block;overflow:hidden}
 .nd2-tickspeed-heading{font-size:13px;line-height:18px;margin:0 0 4px;color:#888}
 .nd2-tickspeed-actions{display:flex;justify-content:center;gap:4px;width:100%;max-width:210px;margin:0 auto}
-.nd2-tickspeed-actions button{height:30px;min-height:30px;box-sizing:border-box;border:1px solid #287b31;border-radius:5px;background:#171717;color:#bbb;font-size:11px;font-weight:400;padding:2px 4px;white-space:nowrap}
+.nd2-tickspeed-actions button{height:30px;min-height:30px;box-sizing:border-box;border:2px solid #a33b50;border-radius:5px;background:#171717;color:#bbb;font-size:11px;font-weight:400;padding:2px 4px;white-space:nowrap;opacity:1}
 #nd2TickspeedBuy{flex:1 1 0;max-width:180px}
 #nd2TickspeedMax{flex:0 0 86px}
-.nd2-tickspeed-actions button:disabled{opacity:.45}
+.nd2-tickspeed-actions button:not(:disabled){border-color:#008b28}
+.nd2-tickspeed-actions button:disabled{border-color:#a33b50;opacity:1}
 .nd2-tickspeed-rate{font-size:13px;line-height:18px;margin:3px 0 0;color:#888}
 @media(max-width:700px){
- body[data-screen="main"] .nd2-tickspeed{margin-top:0;padding:0 8px}
+ body[data-screen="main"] .nd2-tickspeed{height:58px;min-height:58px;margin-top:0;padding:0 8px}
  body[data-screen="main"] .nd2-tickspeed-heading{font-size:13px;line-height:18px}
  body[data-screen="main"] .nd2-tickspeed-actions{max-width:210px;gap:4px}
  body[data-screen="main"] .nd2-tickspeed-actions button{height:30px;min-height:30px;font-size:11px}
@@ -1836,7 +1837,7 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
  <div class="stat" id="ipStat" style="display:none"><small>所持IP</small><strong id="topIpCount">0</strong></div>
  <div class="stat" id="epStat" style="display:none"><small>所持EP</small><strong id="topEpCount">0</strong></div>
 </section>
-<section class="nd2-tickspeed" id="nd2TickspeedPanel" aria-label="Tickspeed" style="display:none">
+<section class="nd2-tickspeed" id="nd2TickspeedPanel" aria-label="Tickspeed">
   <div class="nd2-tickspeed-heading" id="nd2TickspeedHeading">Increase Tickspeed by ×1.125</div>
   <div class="nd2-tickspeed-actions">
     <button type="button" id="nd2TickspeedBuy" class="nd2-tickspeed-buy">Cost: 1 K</button>
@@ -2707,7 +2708,9 @@ function render(){
  const nd2TickspeedPanel=$('nd2TickspeedPanel');
  if(nd2TickspeedPanel){
   const showND2Tickspeed=dimensionAmountBig(1).compare(1)>=0 && document.body.dataset.screen==='main';
-  nd2TickspeedPanel.style.display=showND2Tickspeed?'block':'none';
+  nd2TickspeedPanel.style.display='block';
+  nd2TickspeedPanel.style.visibility=showND2Tickspeed?'visible':'hidden';
+  nd2TickspeedPanel.style.pointerEvents=showND2Tickspeed?'auto':'none';
   setText($('nd2TickspeedHeading'),'Increase Tickspeed by ×'+tickspeedBase().toFixed(3));
   const nd2Cost=tickspeedCostBigNumber();
   const nd2CostText=nd2Cost.toDisplayString(0);
