@@ -792,7 +792,8 @@ body[data-screen="statistics"] #tabContent{background:#1b1b20;border:0;border-ra
  body[data-screen="main"] .initial-infinity-progress span{position:relative}
  body[data-screen="main"] .initial-main-footer{position:fixed;z-index:100;bottom:0;left:0;right:0;height:105px;background:#000;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
  body[data-screen="main"] .initial-footer-icons{height:62px;display:flex;align-items:center;justify-content:space-around}
- body[data-screen="main"] .initial-footer-icons button{width:16.66%;height:60px;background:none;border:0;color:#aaa;font-size:27px}
+ body[data-screen="main"] .initial-footer-icons button[hidden]{display:none!important}
+body[data-screen="main"] .initial-footer-icons button{width:16.66%;height:60px;background:none;border:0;color:#aaa;font-size:27px}
  body[data-screen="main"] .initial-footer-icons button.active{color:#b76a7d;border-bottom:4px solid #d41469}
  body[data-screen="main"] .initial-footer-title{height:43px;display:flex;align-items:center;justify-content:center;border-bottom:4px solid #d41469;color:#fff;font-size:21px;font-weight:700}
  body[data-screen="main"] .mobile-reset-actions,body[data-screen="main"] .actions,body[data-screen="main"] .bottom,body[data-screen="main"] .notice{display:none!important}
@@ -4386,7 +4387,7 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
   header.innerHTML='<button class="initial-menu-button" type="button" aria-label="メニュー"></button>';
   document.body.insertBefore(header,document.body.firstChild);
   const footer=document.createElement('footer');footer.className='initial-main-footer';
-  footer.innerHTML='<div class="initial-footer-icons"><button data-nav-screen="main" class="active" aria-label="Antimatter">⬡</button><button data-nav-screen="achievements" aria-label="Achievements">🏆</button><button data-nav-screen="challenges" aria-label="Challenges">▤</button><button data-nav-screen="autobuyers" aria-label="Autobuyers">☷</button><button data-nav-screen="infinity" aria-label="Infinity" style="display:none">∞</button><button data-nav-screen="statistics" aria-label="Statistics">ⓘ</button></div><div class="initial-footer-title">Antimatter</div>';
+  footer.innerHTML='<div class="initial-footer-icons"><button data-nav-screen="main" class="active" aria-label="Antimatter">⬡</button><button data-nav-screen="achievements" aria-label="Achievements">🏆</button><button data-nav-screen="challenges" aria-label="Challenges">▤</button><button data-nav-screen="autobuyers" aria-label="Autobuyers" hidden>⚙</button><button data-nav-screen="infinity" aria-label="Infinity" style="display:none">∞</button><button data-nav-screen="statistics" aria-label="Statistics">ⓘ</button></div><div class="initial-footer-title">Antimatter</div>';
   document.body.appendChild(footer);
   const menu=header.querySelector('button');
   menu.addEventListener('click',()=>{document.body.classList.toggle('initial-menu-open');});
@@ -4411,8 +4412,12 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
  }
  function updateInitialMainUI(){
   const screen=document.body.dataset.screen||'main';
-  if(screen!=='main')return;
   const stateObj=(typeof state!=='undefined'?state:null);
+  const autobuyerTab=document.querySelector('.initial-footer-icons [data-nav-screen="autobuyers"]');
+  let autobuyerUnlocked=false;
+  if(stateObj){const mbn=stateObj.matterBN; if(mbn&&Number(mbn.mantissa)>0){const log=Number(mbn.exponent)+Math.log10(Number(mbn.mantissa));autobuyerUnlocked=log>=40;}else{autobuyerUnlocked=Number(stateObj.matter)>=1e40;}}
+  if(autobuyerTab){autobuyerTab.hidden=!autobuyerUnlocked;if(!autobuyerUnlocked&&screen==='autobuyers')switchScreen('main');}
+  if(screen!=='main')return;
   const boost=document.getElementById('initial-boost-count'),galaxy=document.getElementById('initial-galaxy-count');
   const boostCard=document.getElementById('initial-boost-card');if(boostCard&&stateObj)boostCard.classList.toggle('can-execute',canBoost());
   const galaxyCard=document.getElementById('initial-galaxy-card');if(galaxyCard&&stateObj)galaxyCard.classList.toggle('can-execute',canGalaxy());
