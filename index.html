@@ -4502,7 +4502,7 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
     const drawer = document.createElement("aside");
     drawer.className = "mobile-game-drawer";
     drawer.setAttribute("aria-label", "ゲームメニュー");
-    drawer.innerHTML = '<div class="drawer-brand"><span class="drawer-brand-mark">✺</span>Antimatter Dimensions</div><nav class="drawer-items" aria-label="ゲーム画面"></nav>';
+    drawer.innerHTML = '<div class="drawer-brand">Antimatter Dimensions</div><nav class="drawer-items" aria-label="ゲーム画面"></nav>';
     document.body.append(backdrop, drawer);
     // These SVGs are shared with the five bottom-navigation icons.
     const icons = {
@@ -4568,7 +4568,12 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
     document.addEventListener("keydown",event=>{if(event.key==="Escape")close();});
     const observer=new MutationObserver(()=>{if(document.body.classList.contains("mobile-drawer-open"))render();});
     observer.observe(document.body,{attributes:true,attributeFilter:["data-screen"]});
-    setInterval(()=>{if(document.body.classList.contains("mobile-drawer-open"))render();},500);
+    let lastAutoState=autoUnlocked();
+    setInterval(()=>{
+      if(document.body.classList.contains("mobile-drawer-open")&&lastAutoState!==autoUnlocked()){
+        lastAutoState=autoUnlocked();render();
+      }
+    },500);
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",initDrawer,{once:true});else initDrawer();
 })();
@@ -5154,4 +5159,104 @@ html #dimensions.dimensions > .dim > button.buy {
  body[data-screen="main"] .initial-footer-title{display:none!important}
 }
 @media(min-width:701px){body[data-screen="main"] .initial-footer-icons button svg{width:32px;height:32px}}
+</style>
+
+
+<style id="mobile-drawer-compact-header-fix">
+@media (max-width:700px) {
+  .mobile-game-drawer-backdrop {
+    position:fixed!important; inset:0!important; z-index:10000!important;
+    background:rgba(0,0,0,.62)!important;
+    opacity:0!important; visibility:hidden!important;
+    transition:opacity .18s ease,visibility .18s ease!important;
+  }
+  .mobile-game-drawer {
+    position:fixed!important; z-index:10001!important;
+    top:0!important; bottom:0!important; left:0!important;
+    width:72vw!important; max-width:none!important;
+    box-sizing:border-box!important; overflow-y:auto!important;
+    overscroll-behavior:contain!important;
+    padding:0 0 calc(16px + env(safe-area-inset-bottom))!important;
+    background:#19191d!important;
+    transform:translateX(-105%)!important;
+    transition:transform .2s ease!important;
+    box-shadow:8px 0 28px rgba(0,0,0,.28)!important;
+  }
+  body.mobile-drawer-open .mobile-game-drawer-backdrop {
+    opacity:1!important; visibility:visible!important;
+  }
+  body.mobile-drawer-open .mobile-game-drawer {
+    transform:translateX(0)!important;
+  }
+  body.mobile-drawer-open {overflow:hidden!important}
+  .mobile-game-drawer .drawer-brand {
+    display:flex!important; align-items:center!important; justify-content:center!important;
+    height:112px!important; min-height:112px!important;
+    box-sizing:border-box!important; padding:12px 10px!important;
+    margin:0!important; text-align:center!important;
+    font-size:18px!important; line-height:1.2!important; font-weight:700!important;
+    color:#dedee2!important; background:#19191d!important;
+    border-bottom:1px solid #303036!important;
+  }
+  .mobile-game-drawer .drawer-brand-mark {display:none!important}
+  .mobile-game-drawer .drawer-items {display:block!important; padding:0!important; margin:0!important}
+  .mobile-game-drawer .drawer-main-group {display:block!important; border-bottom:1px solid #303036!important}
+  .mobile-game-drawer .drawer-item {
+    position:relative!important; width:100%!important;
+    height:58px!important; min-height:58px!important;
+    box-sizing:border-box!important; display:flex!important;
+    align-items:center!important; gap:14px!important;
+    padding:0 16px 0 28px!important; margin:0!important;
+    border:0!important; border-radius:0!important;
+    background:transparent!important; color:#bdbdc2!important;
+    text-align:left!important; font-size:16px!important; font-weight:600!important;
+  }
+  .mobile-game-drawer .drawer-main-category {border-bottom:1px solid #303036!important}
+  .mobile-game-drawer .drawer-main-group.active .drawer-main-category {
+    background:#24242a!important; color:#bd7187!important;
+  }
+  .mobile-game-drawer .drawer-item.active {
+    background:#24242a!important; color:#bd7187!important;
+  }
+  .mobile-game-drawer .drawer-item.active:before {
+    content:""!important; position:absolute!important; left:0!important;
+    top:0!important; bottom:0!important; width:4px!important;
+    background:#d41469!important;
+  }
+  .mobile-game-drawer .drawer-item-icon {
+    width:26px!important; height:28px!important; flex:0 0 26px!important;
+    display:flex!important; align-items:center!important; justify-content:center!important;
+    color:inherit!important;
+  }
+  .mobile-game-drawer .drawer-item-icon svg {
+    display:block!important; width:24px!important; height:24px!important;
+    fill:none!important; stroke:currentColor!important; stroke-width:3.1!important;
+    stroke-linecap:round!important; stroke-linejoin:round!important;
+  }
+  .mobile-game-drawer .drawer-item-label {flex:1!important}
+  .mobile-game-drawer .drawer-chevron {color:#888!important; font-size:20px!important; line-height:1!important}
+  .mobile-game-drawer .drawer-submenu {
+    display:block!important; padding:0!important; margin:0!important;
+    background:#24242a!important;
+  }
+  .mobile-game-drawer .drawer-main-group:not(.expanded) .drawer-submenu {display:none!important}
+  .mobile-game-drawer .drawer-leaf {
+    width:100%!important; height:44px!important; min-height:44px!important;
+    display:flex!important; align-items:center!important; justify-content:space-between!important;
+    box-sizing:border-box!important; padding:0 18px 0 54px!important;
+    border:0!important; border-left:4px solid transparent!important;
+    border-radius:0!important; background:#24242a!important;
+    color:#eee!important; text-align:left!important;
+    font-size:14px!important; font-weight:500!important;
+  }
+  .mobile-game-drawer .drawer-leaf.active {
+    border-left-color:#d41469!important; color:#fff!important;
+  }
+  .mobile-game-drawer .drawer-leaf-label {flex:1!important}
+  .mobile-game-drawer .drawer-leaf-symbol {font-size:17px!important; font-weight:700!important}
+  body[data-screen="main"] #screenTabs {display:none!important}
+}
+@media (min-width:701px) {
+  .mobile-game-drawer,.mobile-game-drawer-backdrop {display:none!important}
+}
 </style>
