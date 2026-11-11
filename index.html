@@ -785,7 +785,7 @@ body[data-screen="statistics"] #tabContent{background:#1b1b20;border:0;border-ra
  body[data-screen="main"] .initial-reset-card{min-width:0;text-align:center}
  body[data-screen="main"] .initial-reset-card h3{font-size:22px;line-height:1.25;margin:0 0 4px;color:#bdbdc2}
  body[data-screen="main"] .initial-reset-card p{font-size:18px;font-weight:700;line-height:1.3;margin:0 0 8px;color:#bdbdc2}
- body[data-screen="main"] .initial-reset-card .initial-reset-description{min-height:108px;display:flex;align-items:center;justify-content:center;padding:10px 7px;border:2px solid #bd3555;border-radius:9px;background:#202024;font-size:19px;font-weight:700;line-height:1.3}
+ body[data-screen="main"] .initial-reset-card .initial-reset-description{min-height:108px;display:flex;align-items:center;justify-content:center;padding:10px 7px;border:2px solid #bd3555;border-radius:9px;background:#202024;font-size:17px;font-weight:700;line-height:1.25;white-space:normal}
  body[data-screen="main"] .initial-reset-card button{display:none!important}
  body[data-screen="main"] .initial-infinity-progress{margin:10px 0 0;border-radius:15px;background:#39393b;color:#bdbdc2;font-size:27px;font-weight:700;text-align:center;padding:13px 6px;position:relative;overflow:hidden}
  body[data-screen="main"] .initial-infinity-progress:before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--progress,0%);background:#176b35;opacity:.35}
@@ -2747,9 +2747,9 @@ function render(){
  setText($('quickTickspeedBtn'),state.buyMax?'購入: 最大個':'購入: 1個ずつ');
  $('quickMaxAllBtn').disabled=!canBuyAnything();
  setText($('quickBuyModeBtn'),'最大購入');
- $('mobileBoostBtn').disabled=!can;setText($('mobileBoostBtn'),'Reset your Dimensions\nto unlock the 5th Dimension\nand give a ×2.0 multiplier\nto the 1st Dimension');
+ $('mobileBoostBtn').disabled=!can;setText($('mobileBoostBtn'),`Reset your Dimensions to\nunlock the ${tier+1}th Dimension and\ngive a ×2.0 multiplier to\nDimensions 1–${n}`);
  const canQuickReset=state.activeChallenge===9;const canICReset=state.activeInfinityChallenge===4||state.activeInfinityChallenge===5;const mobileResetActions=document.querySelector('.mobile-reset-actions');if(mobileResetActions)mobileResetActions.classList.toggle('challenge9-active',canQuickReset||canICReset);['challenge9ResetBtn','mobileChallenge9ResetBtn'].forEach(id=>{const el=$(id);if(el){el.style.display=canQuickReset?'block':'none';el.disabled=!canQuickReset;el.textContent=state.boosts>0?'Boostを1つ消費してリセット':'消費なしでリセット';}});['icResetBtn','mobileICResetBtn'].forEach(id=>{const el=$(id);if(el){el.style.display=canICReset?'block':'none';el.disabled=!canICReset;el.textContent=state.boosts>0?'Boostを1つ消費してリセット':'消費なしでリセット';}});
- $('mobileGalaxyBtn').disabled=!canGalaxy();setText($('mobileGalaxyBtn'),'Reset your Dimensions\nand Dimension Boosts\nto increase the power of\nTickspeed upgrades');
+ $('mobileGalaxyBtn').disabled=!canGalaxy();setText($('mobileGalaxyBtn'),'Reset your Dimensions and\nDimension Boosts to increase\nthe power of Tickspeed\nupgrades');
  $('mobileTickspeedBtn').disabled=false;setText($('mobileTickspeedBtn'),state.buyMax?'購入: 最大個':'購入: 1個ずつ');
  setText($('mobileBuyModeBtn'),'最大購入');
  const effect=n===1?'第1次元の倍率が2倍になります。':(n<=6?'第'+n+'次元以下の倍率が2倍になります。':'全ての次元の倍率が2倍になります。');
@@ -4428,7 +4428,15 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
    percent.textContent=value.toFixed(2)+'%';bar.style.setProperty('--progress',value+'%');
   }
   const req=document.getElementById('initial-boost-requirement');
-  if(req&&stateObj)req.textContent='Requires: '+(20+Math.max(0,Number(stateObj.boosts)||0)*15)+' 4th D';
+  const boostDesc=document.querySelector('#initial-boost-card .initial-reset-description');
+  if(req&&stateObj){
+   const boosts=Math.max(0,Math.floor(Number(stateObj.boosts)||0));
+   const tier=typeof boostRequirementTier==='function'?boostRequirementTier():Math.min(8,boosts+4);
+   const amount=typeof boostRequirement==='function'?boostRequirement():20+15*Math.max(0,boosts-4);
+   const next=boosts+1;
+   req.textContent='Requires: '+amount+' '+tier+'th D';
+   if(boostDesc)boostDesc.textContent=`Reset your Dimensions to unlock the ${tier+1}th Dimension and give a ×2.0 multiplier to Dimensions 1–${next}`;
+  }
   const greq=document.getElementById('initial-galaxy-requirement');
   if(greq&&stateObj)greq.textContent='Requires: '+(80+Math.max(0,Number(stateObj.galaxies)||0)*60)+' 8th D';
  }
