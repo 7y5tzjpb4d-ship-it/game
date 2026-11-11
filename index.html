@@ -1361,7 +1361,8 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
       const label = document.createElement("div");
       label.className = "initial-buy-ten-label";
       label.textContent = "Buy ten multiplier: ×2.00";
-      stats.after(label);
+      const tickPanel = document.getElementById("nd2TickspeedPanel");
+      (tickPanel || stats).after(label);
     }
   }
   if (document.readyState === "loading") {
@@ -1803,6 +1804,28 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
 }
 </style>
 
+
+<style id="nd2-tickspeed-ui">
+.nd2-tickspeed{width:100%;box-sizing:border-box;text-align:center;margin:0 auto;padding:0 8px;color:#888;font-weight:400}
+.nd2-tickspeed-heading{font-size:13px;line-height:18px;margin:0 0 4px;color:#888}
+.nd2-tickspeed-actions{display:flex;justify-content:center;gap:4px;width:100%;max-width:210px;margin:0 auto}
+.nd2-tickspeed-actions button{height:30px;min-height:30px;box-sizing:border-box;border:1px solid #287b31;border-radius:5px;background:#171717;color:#bbb;font-size:11px;font-weight:400;padding:2px 4px;white-space:nowrap}
+#nd2TickspeedBuy{flex:1 1 0;max-width:180px}
+#nd2TickspeedMax{flex:0 0 86px}
+.nd2-tickspeed-actions button:disabled{opacity:.45}
+.nd2-tickspeed-rate{font-size:13px;line-height:18px;margin:3px 0 0;color:#888}
+@media(max-width:700px){
+ body[data-screen="main"] .nd2-tickspeed{margin-top:0;padding:0 8px}
+ body[data-screen="main"] .nd2-tickspeed-heading{font-size:13px;line-height:18px}
+ body[data-screen="main"] .nd2-tickspeed-actions{max-width:210px;gap:4px}
+ body[data-screen="main"] .nd2-tickspeed-actions button{height:30px;min-height:30px;font-size:11px}
+ body[data-screen="main"] #nd2TickspeedBuy{max-width:180px}
+ body[data-screen="main"] #nd2TickspeedMax{flex-basis:86px}
+ body[data-screen="main"] .nd2-tickspeed-rate{font-size:13px;line-height:18px}
+ body[data-screen="main"] .initial-buy-ten-label{margin-top:8px!important}
+}
+</style>
+
 </head>
 <body><main>
 <div class="sticky-tools">
@@ -1812,6 +1835,14 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
  <div class="stat"><small>毎秒の生産量</small><strong id="rate">0</strong></div>
  <div class="stat" id="ipStat" style="display:none"><small>所持IP</small><strong id="topIpCount">0</strong></div>
  <div class="stat" id="epStat" style="display:none"><small>所持EP</small><strong id="topEpCount">0</strong></div>
+</section>
+<section class="nd2-tickspeed" id="nd2TickspeedPanel" aria-label="Tickspeed" style="display:none">
+  <div class="nd2-tickspeed-heading" id="nd2TickspeedHeading">Increase Tickspeed by ×1.125</div>
+  <div class="nd2-tickspeed-actions">
+    <button type="button" id="nd2TickspeedBuy" class="nd2-tickspeed-buy">Cost: 1 K</button>
+    <button type="button" id="nd2TickspeedMax" class="nd2-tickspeed-max">Buy max</button>
+  </div>
+  <div class="nd2-tickspeed-rate" id="nd2TickspeedRate">Tickspeed: 1.000 / sec</div>
 </section>
 <section class="panel infinity-panel" id="infinityPanel"><p hidden>反物質がInfinityに到達しました。<br>Infinity Point: <strong id="ipCount">0</strong> · Infinities: <strong id="infinityCount">0</strong></p></section>
 <div class="quick-actions"><button type="button" id="quickMaxAllBtn" class="quick-maxall">Max All</button><button type="button" id="quickBoostBtn" class="quick-boost">次元ブースト</button><button type="button" id="quickTickspeedBtn">Tickspeed購入</button><button type="button" id="quickBuyModeBtn">購入: 1個ずつ</button></div>
@@ -2670,9 +2701,21 @@ function render(){
  setText($('sacrificeBtn'),$('sacrificeBtn').disabled?'ロック中':'Sacrifice ×'+gain.toDisplayString(2));
  const tsCost=tickspeedCost();
  $('tickspeedBtn').disabled=matterBigNumber().compare(tickspeedCostBigNumber())<0;
- setText($('tickspeedBtn'),'購入 · '+tickspeedCostBigNumber().toDisplayString(2));
+ setText($('tickspeedBtn'),'購入 · '+tickspeedCostBigNumber().toDisplayString(0));
  $('tickspeedMaxBtn').disabled=matterBigNumber().compare(tickspeedCostBigNumber())<0;
  setText($('tickspeedMaxBtn'),'Buy Max');
+ const nd2TickspeedPanel=$('nd2TickspeedPanel');
+ if(nd2TickspeedPanel){
+  const showND2Tickspeed=dimensionAmountBig(1).compare(1)>=0 && document.body.dataset.screen==='main';
+  nd2TickspeedPanel.style.display=showND2Tickspeed?'block':'none';
+  setText($('nd2TickspeedHeading'),'Increase Tickspeed by ×'+tickspeedBase().toFixed(3));
+  const nd2Cost=tickspeedCostBigNumber();
+  const nd2CostText=nd2Cost.toDisplayString(0);
+  setText($('nd2TickspeedBuy'),'Cost: '+nd2CostText);
+  $('nd2TickspeedBuy').disabled=!canAffordTickspeed();
+  $('nd2TickspeedMax').disabled=!canAffordTickspeed();
+  setText($('nd2TickspeedRate'),'Tickspeed: '+tickspeedMultiplierBigNumber().toDisplayString(3)+' / sec');
+ }
  if(rows.length!==8||$('dimensions').children.length!==8)buildRows();
  for(let i=0;i<8;i++){
   const {d,det,amt,b}=rows[i],open=unlocked(i)&&!(challengeRuleActive(10)&&i>=6),c=costBigNumber(i);
@@ -2681,9 +2724,9 @@ function render(){
   setText(det,open?'×'+dimensionMultiplierBigNumber(i).toDisplayString(2):lockedReason);
   setText(amt,BigNumber.from(state.amountBN?.[i]||state.amount[i]).toDisplayString(2));
   const max=state.buyMax?maxAffordable(i):null;
-  const costText=costBigNumber(i).toDisplayString(2);
+  const costText=costBigNumber(i).toDisplayString(0);
   b.disabled=!open||(state.buyMax?max.count===0:!canAffordDimension(i,c));
-  setText(b,!open?'ロック中':(state.buyMax?('コスト'+(max.count>0?max.spent:costText)):('コスト'+costText)));
+  setText(b,!open?'ロック中':(state.buyMax?('コスト'+(max.count>0?BigNumber.from(max.spent).toDisplayString(0):costText)):('コスト'+costText)));
  }
  const n=state.boosts+1,req=boostRequirement(),tier=boostRequirementTier(),can=canBoost();
  $('boostBtn').disabled=!can;
@@ -3263,6 +3306,8 @@ $('quickTickspeedBtn').onclick=()=>{state.buyMax=!state.buyMax;render();save();}
 $('quickBuyModeBtn').onclick=()=>{state.buyMax=!state.buyMax;render();save();};
 $('tickspeedBtn').onclick=()=>{const c=tickspeedCost();if(!canAffordTickspeed(c))return;spendTickspeed(c);state.tickspeed++;onICTickspeedPurchased(c);if(challengeRuleActive(2))challengePurchaseReset();if(state.activeChallenge===9)applyChallenge9CostStep(c,-1,true);render();save();};
 $('tickspeedMaxBtn').onclick=()=>{let guard=0;while(guard<10000){const c=tickspeedCost();if(!canAffordTickspeed(c))break;spendTickspeed(c);state.tickspeed++;onICTickspeedPurchased(c);if(challengeRuleActive(2))challengePurchaseReset();if(state.activeChallenge===9)applyChallenge9CostStep(c,-1,true);guard++;}render();save();};
+$('nd2TickspeedBuy').onclick=()=>$('tickspeedBtn').click();
+$('nd2TickspeedMax').onclick=()=>$('tickspeedMaxBtn').click();
 $('buyModeBtn').onclick=()=>{state.buyMax=true;render();save();};
 $('saveBtn').onclick=()=>{save();$('status').textContent='セーブしました';};
 $('resetBtn').onclick=()=>{if(!confirm('すべての進行状況・実績・アップグレード・設定を削除し、完全に最初からやり直しますか？'))return;hardResetInProgress=true;try{localStorage.removeItem('antimatterFirstSteps');localStorage.removeItem('antimatterFirstStepsLastSeen');localStorage.removeItem('antimatterEternityTestSetupApplied');}catch(e){}window.location.reload();};
