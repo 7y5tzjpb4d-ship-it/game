@@ -4877,6 +4877,14 @@ html #dimensions.dimensions > .dim > button.buy {
 }
 </style>
 
+<style id="normal-dimension-even-row-red">
+@media screen and (max-width:700px) {
+  html body[data-screen="main"] #dimensions.dimensions > .dim:nth-child(even) {
+    background:#5b292c !important;
+  }
+}
+</style>
+
 <style id="reset-button-text-slightly-smaller-final">
 @media screen and (max-width:540px) {
   html body[data-screen="main"] .initial-reset-card .initial-reset-description {
@@ -4990,5 +4998,19 @@ html #dimensions.dimensions > .dim > button.buy {
   min-height:84px!important;padding:7px 5px!important;font-size:11px!important;line-height:1.2!important;
   text-align:center!important;overflow-wrap:anywhere!important;
  }
+}
+</style>
+
+<style id="nd-buy-button-independent-color">
+@media screen and (max-width:700px) {
+  html body[data-screen="main"] #dimensions.dimensions > .dim > button.buy {
+    background-color:#262626 !important;
+    background-image:linear-gradient(to right, rgba(28,92,48,.78) var(--buy-progress, 0%), transparent var(--buy-progress, 0%)) !important;
+    border-color:#b34f69 !important;
+    color:#d0d0d0 !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim:nth-child(even) > button.buy {
+    background-color:#262626 !important;
+  }
 }
 </style>
