@@ -4470,101 +4470,54 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
     const drawer = document.createElement("aside");
     drawer.className = "mobile-game-drawer";
     drawer.setAttribute("aria-label", "ゲームメニュー");
-    drawer.innerHTML = `
-      <div class="drawer-brand"><span class="drawer-brand-mark">✺</span>Antimatter Dimensions</div>
-      <div class="drawer-items"></div>`;
+    drawer.innerHTML = '<div class="drawer-brand"><span class="drawer-brand-mark">✺</span>Antimatter Dimensions</div><nav class="drawer-items" aria-label="ゲーム画面"></nav>';
     document.body.append(backdrop, drawer);
-
-    const groups = [
-      { id:"dimensions", label:"Dimensions", icon:"⬡", children:[
-        ["Antimatter Dimensions","main"],
-        ["Infinity","infinity"]
-      ]},
-      { id:"achievements", label:"Achievements", icon:"🏆", children:[
-        ["Normal Achievements","achievements"],
-        ["Secret Achievements","achievements"]
-      ]},
-      { id:"statistics", label:"Statistics", icon:"▤", children:[
-        ["Statistics","statistics"]
-      ]},
-      { id:"options", label:"Options", icon:"☷", children:[
-        ["Options","options"]
-      ]},
-      { id:"shop", label:"Shop", icon:"＄", children:[
-        ["Shop","shop"]
-      ]},
-      { id:"info", label:"Info", icon:"ⓘ", children:[
-        ["Info","info"]
-      ]}
+    // SVG markup is intentionally identical to the five bottom-navigation icons.
+    const items = [
+      {screen:"main",label:"メイン",icon:'<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 43 11v26L24 44 5 37V11L24 4Z"/><path d="m5 11 19 8 19-8M24 19v25"/></svg>'},
+      {screen:"autobuyers",label:"自動化",auto:true,icon:'<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M18 5v5m0 28v5M5 18h5m16 0h5M8.8 8.8l3.5 3.5m11.4 11.4 3.5 3.5m0-18.4-3.5 3.5M12.3 24.3l-3.5 3.5"/><circle cx="18" cy="18" r="8"/><path d="M35 22v4m0 16v2m-8-10h4m8 0h4m-13.7-5.7 2.8 2.8m5.8 5.8 2.8 2.8m0-11.4-2.8 2.8m-5.8 5.8-2.8 2.8"/><circle cx="35" cy="34" r="6"/></svg>'},
+      {screen:"achievements",label:"実績",icon:'<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 6h20v8c0 10-4 16-10 16s-10-6-10-16V6Z"/><path d="M14 10H6v4c0 7 4 11 11 11M34 10h8v4c0 7-4 11-11 11M24 30v8m-9 4h18m-15-4h12"/></svg>'},
+      {screen:"statistics",label:"統計",icon:'<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="9" y="8" width="30" height="36" rx="4"/><path d="M18 8V5h12v3M16 19h2m5 0h10M16 28h2m5 0h10M16 37h2m5 0h10"/></svg>'},
+      {screen:"options",label:"設定",icon:'<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M5 12h38M5 24h38M5 36h38"/><circle cx="17" cy="12" r="4"/><circle cx="31" cy="24" r="4"/><circle cx="20" cy="36" r="4"/></svg>'}
     ];
-    const list = drawer.querySelector(".drawer-items");
-
-    function currentScreen() {
-      return document.body.dataset.screen || "main";
+    const list=drawer.querySelector(".drawer-items");
+    function currentScreen(){return document.body.dataset.screen||"main";}
+    function autoUnlocked(){
+      const s=typeof state!=="undefined"?state:null;if(!s)return false;
+      const bn=s.matterBN;
+      if(bn&&Number(bn.mantissa)>0)return Number(bn.exponent)+Math.log10(Number(bn.mantissa))>=40;
+      return Number(s.matter)>=1e40;
     }
-    function activate(screen) {
-      if (screen === "infinity" && !(Number(state.infinities) > 0)) return;
-      const target = document.querySelector('#screenTabs [data-screen="' + screen + '"]');
-      if (target && getComputedStyle(target).display !== "none") target.click();
+    function close(){document.body.classList.remove("mobile-drawer-open","initial-menu-open");}
+    function activate(screen){
+      const target=document.querySelector('#screenTabs [data-screen="'+screen+'"]');
+      if(target&&getComputedStyle(target).display!=="none")target.click();
       close();
     }
-    function render() {
-      const active = currentScreen();
-      list.innerHTML = "";
-      groups.forEach(group => {
-        const usable = group.children.filter(child => {
-          if (child[1] === "infinity") return Number(state.infinities) > 0;
-          return !!document.querySelector('#screenTabs [data-screen="' + child[1] + '"]');
-        });
-        if (!usable.length) return;
-        const section = document.createElement("section");
-        section.className = "drawer-group" + (usable.some(x => x[1] === active) ? " expanded" : "");
-        const category = document.createElement("button");
-        category.className = "drawer-category" + (usable.some(x => x[1] === active) ? " active" : "");
-        category.innerHTML = `<span>${group.icon}　${group.label}</span><span class="drawer-chevron">›</span>`;
-        const submenu = document.createElement("div");
-        submenu.className = "drawer-submenu";
-        usable.forEach(([label, screen]) => {
-          const leaf = document.createElement("button");
-          leaf.className = "drawer-leaf" + (screen === active ? " active" : "");
-          leaf.textContent = label;
-          leaf.addEventListener("click", () => activate(screen));
-          submenu.appendChild(leaf);
-        });
-        category.addEventListener("click", () => {
-          section.classList.toggle("expanded");
-        });
-        section.append(category, submenu);
-        list.appendChild(section);
+    function render(){
+      const active=currentScreen();list.innerHTML="";
+      items.forEach(item=>{
+        if(item.auto&&!autoUnlocked())return;
+        const target=document.querySelector('#screenTabs [data-screen="'+item.screen+'"]');if(!target)return;
+        const button=document.createElement("button");button.type="button";
+        button.className="drawer-item"+(item.screen===active?" active":"");button.dataset.screen=item.screen;
+        button.innerHTML='<span class="drawer-item-icon">'+item.icon+'</span><span class="drawer-item-label">'+item.label+'</span><span class="drawer-chevron">›</span>';
+        button.addEventListener("click",()=>activate(item.screen));list.appendChild(button);
       });
     }
-    function open() {
-      render();
-      document.body.classList.add("mobile-drawer-open");
-      document.body.classList.add("initial-menu-open");
-    }
-    function close() {
-      document.body.classList.remove("mobile-drawer-open","initial-menu-open");
-    }
-    backdrop.addEventListener("click", close);
-    const menuButton = document.querySelector(".initial-menu-button");
-    if (menuButton) {
-      menuButton.addEventListener("click", event => {
-        event.stopImmediatePropagation();
-        if (document.body.classList.contains("mobile-drawer-open")) close();
-        else open();
-      }, true);
-    }
-    document.addEventListener("keydown", event => {
-      if (event.key === "Escape") close();
-    });
-    const observer = new MutationObserver(() => {
-      if (document.body.classList.contains("mobile-drawer-open")) render();
-    });
-    observer.observe(document.body, { attributes:true, attributeFilter:["data-screen"] });
+    function open(){render();document.body.classList.add("mobile-drawer-open","initial-menu-open");}
+    backdrop.addEventListener("click",close);
+    const menuButton=document.querySelector(".initial-menu-button");
+    if(menuButton)menuButton.addEventListener("click",event=>{
+      event.stopImmediatePropagation();
+      if(document.body.classList.contains("mobile-drawer-open"))close();else open();
+    },true);
+    document.addEventListener("keydown",event=>{if(event.key==="Escape")close();});
+    const observer=new MutationObserver(()=>{if(document.body.classList.contains("mobile-drawer-open"))render();});
+    observer.observe(document.body,{attributes:true,attributeFilter:["data-screen"]});
+    setInterval(()=>{if(document.body.classList.contains("mobile-drawer-open"))render();},500);
   }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initDrawer, {once:true});
-  else initDrawer();
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",initDrawer,{once:true});else initDrawer();
 })();
 </script>
 
@@ -5055,6 +5008,25 @@ html #dimensions.dimensions > .dim > button.buy {
     overflow-wrap:normal !important;
     word-break:normal !important;
   }
+}
+</style>
+
+<style id="five-tab-matching-drawer-style">
+@media(max-width:700px){
+ .mobile-game-drawer{width:72vw!important;max-width:none!important;padding:18px 0 calc(24px + env(safe-area-inset-bottom))!important;background:#19191d!important}
+ .mobile-game-drawer .drawer-brand{height:150px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 12px 22px!important;font-size:19px!important;font-weight:700;color:#ddd;border-bottom:1px solid #303036}
+ .mobile-game-drawer .drawer-brand-mark{font-size:42px!important;line-height:1.2;margin-bottom:18px!important;color:#36c4b5}
+ .mobile-game-drawer .drawer-items{display:block}
+ .mobile-game-drawer .drawer-item{position:relative;width:100%;height:74px;min-height:74px;box-sizing:border-box;display:flex;align-items:center;gap:20px;padding:0 18px 0 42px;border:0;border-bottom:1px solid #303036;border-radius:0;background:transparent;color:#bdbdc2;text-align:left;font-size:19px;font-weight:600}
+ .mobile-game-drawer .drawer-item.active{background:#24242a;color:#fff}
+ .mobile-game-drawer .drawer-item.active:before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:#d41469}
+ .mobile-game-drawer .drawer-item-icon{width:34px;height:42px;flex:0 0 34px;display:flex;align-items:center;justify-content:center;color:#bdbdc2}
+ .mobile-game-drawer .drawer-item.active .drawer-item-icon{color:#bd7187}
+ .mobile-game-drawer .drawer-item-icon svg{display:block;width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:3.1;stroke-linecap:round;stroke-linejoin:round}
+ .mobile-game-drawer .drawer-item[data-screen="main"] .drawer-item-icon svg{fill:rgba(189,113,135,.16)}
+ .mobile-game-drawer .drawer-item-label{flex:1}
+ .mobile-game-drawer .drawer-chevron{font-size:25px;color:#888;line-height:1}
+ .mobile-game-drawer .drawer-group,.mobile-game-drawer .drawer-category,.mobile-game-drawer .drawer-leaf,.mobile-game-drawer .drawer-submenu{display:none!important}
 }
 </style>
 </body>
