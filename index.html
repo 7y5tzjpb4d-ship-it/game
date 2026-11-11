@@ -2693,9 +2693,9 @@ function render(){
  setText($('quickTickspeedBtn'),state.buyMax?'購入: 最大個':'購入: 1個ずつ');
  $('quickMaxAllBtn').disabled=!canBuyAnything();
  setText($('quickBuyModeBtn'),'最大購入');
- $('mobileBoostBtn').disabled=!can;setText($('mobileBoostBtn'),'Dimension Boost '+fmt(state.boosts)+'\n第'+tier+'次元 '+fmt(req)+'個');
+ $('mobileBoostBtn').disabled=!can;setText($('mobileBoostBtn'),'Reset your Dimensions\nto unlock the 5th Dimension\nand give a ×2.0 multiplier\nto the 1st Dimension');
  const canQuickReset=state.activeChallenge===9;const canICReset=state.activeInfinityChallenge===4||state.activeInfinityChallenge===5;const mobileResetActions=document.querySelector('.mobile-reset-actions');if(mobileResetActions)mobileResetActions.classList.toggle('challenge9-active',canQuickReset||canICReset);['challenge9ResetBtn','mobileChallenge9ResetBtn'].forEach(id=>{const el=$(id);if(el){el.style.display=canQuickReset?'block':'none';el.disabled=!canQuickReset;el.textContent=state.boosts>0?'Boostを1つ消費してリセット':'消費なしでリセット';}});['icResetBtn','mobileICResetBtn'].forEach(id=>{const el=$(id);if(el){el.style.display=canICReset?'block':'none';el.disabled=!canICReset;el.textContent=state.boosts>0?'Boostを1つ消費してリセット':'消費なしでリセット';}});
- $('mobileGalaxyBtn').disabled=!canGalaxy();setText($('mobileGalaxyBtn'),'Antimatter Galaxy '+state.galaxies+'\n第'+(state.activeChallenge===10?6:8)+'次元 '+fmt(galaxyRequirement())+'個');
+ $('mobileGalaxyBtn').disabled=!canGalaxy();setText($('mobileGalaxyBtn'),'Reset your Dimensions\nand Dimension Boosts\nto increase the power of\nTickspeed upgrades');
  $('mobileTickspeedBtn').disabled=false;setText($('mobileTickspeedBtn'),state.buyMax?'購入: 最大個':'購入: 1個ずつ');
  setText($('mobileBuyModeBtn'),'最大購入');
  const effect=n===1?'第1次元の倍率が2倍になります。':(n<=6?'第'+n+'次元以下の倍率が2倍になります。':'全ての次元の倍率が2倍になります。');
@@ -4817,32 +4817,178 @@ html #dimensions.dimensions > .dim > button.buy {
 }
 </style>
 
-<style id="nd-amount-left-button-flush-right">
-@media (max-width: 900px) {
-  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked),
-  html #dimensions.dimensions > .dim:not(.locked) {
-    grid-template-columns:minmax(0,42fr) minmax(0,8fr) minmax(118px,38fr) !important;
-    column-gap:5px !important;
-    padding-right:0 !important;
-  }
-  html body[data-screen="main"] #dimensions.dimensions > .dim > .dim-amount,
-  html #dimensions.dimensions > .dim > .dim-amount {
-    grid-column:2 !important;
-    justify-self:center !important;
-    text-align:center !important;
-    white-space:nowrap !important;
-    overflow:visible !important;
-    text-overflow:clip !important;
-  }
-  html body[data-screen="main"] #dimensions.dimensions > .dim > .buy,
-  html #dimensions.dimensions > .dim > .buy {
-    grid-column:3 !important;
-    justify-self:end !important;
+<style id="nd-right-edge-final-fix">
+@media screen and (max-width:700px) {
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) {
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+    gap:0 !important;
+    padding:1px 0 1px 3px !important;
+    box-sizing:border-box !important;
     width:100% !important;
-    margin-right:0 !important;
+    overflow:visible !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) > .dim-label {
+    display:flex !important; flex:0 0 35% !important; width:35% !important;
+    min-width:0 !important; margin:0 !important; padding:0 !important;
+    flex-direction:column !important; justify-content:center !important; gap:0 !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) > .dim-amount {
+    display:block !important; flex:0 0 20% !important; width:20% !important;
+    min-width:0 !important; max-width:none !important; margin:0 !important; padding:0 !important;
+    text-align:center !important; white-space:nowrap !important; overflow:visible !important;
+    font-size:16px !important; line-height:1 !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) > button.buy {
+    display:block !important; flex:0 0 118px !important; width:118px !important;
+    min-width:118px !important; max-width:118px !important;
+    height:28px !important; min-height:28px !important; max-height:28px !important;
+    margin:0 0 0 auto !important; padding:2px 3px !important;
+    box-sizing:border-box !important; font-size:12px !important; line-height:1.05 !important;
   }
 }
 </style>
 
+
+<style id="nd-font-and-boost-three-lines">
+@media screen and (max-width:700px) {
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) > .dim-label > .dim-name {
+    font-size:11px !important; line-height:13px !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) > .dim-label > .dim-info {
+    font-size:8px !important; line-height:10px !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) > .dim-amount {
+    font-size:13px !important; line-height:1 !important;
+  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim:not(.locked) > button.buy {
+    font-size:10px !important;
+  }
+  html body[data-screen="main"] .initial-reset-card .initial-reset-description {
+    font-size:13px !important; line-height:1.2 !important;
+    min-height:84px !important; padding:7px 4px !important;
+    white-space:normal !important;
+  }
+  .mobile-reset-actions #mobileBoostBtn {
+    white-space:pre-line !important; line-height:1.2 !important;
+    font-size:11px !important; padding:3px 2px !important;
+  }
+}
+</style>
+
+<style id="reset-button-text-slightly-smaller-final">
+@media screen and (max-width:540px) {
+  html body[data-screen="main"] .initial-reset-card .initial-reset-description {
+    font-size:10px !important;
+    line-height:1.2 !important;
+  }
+  html body[data-screen="main"] .mobile-reset-actions button {
+    font-size:9px !important;
+  }
+}
+</style>
+
+<style id="reset-card-button-size-reduction">
+@media screen and (max-width:540px) {
+  html body[data-screen="main"] .initial-reset-card .initial-reset-description {
+    width:90% !important;
+    min-height:68px !important;
+    height:68px !important;
+    margin:0 auto !important;
+    padding:5px 4px !important;
+    box-sizing:border-box !important;
+    font-size:10px !important;
+    line-height:1.2 !important;
+  }
+}
+</style>
+
+
+<style id="reset-card-actual-size-final">
+@media screen and (max-width:540px) {
+  html body[data-screen="main"] .initial-reset-grid {
+    column-gap:10px !important;
+  }
+  html body[data-screen="main"] .initial-reset-card .initial-reset-description {
+    width:78% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    height:54px !important;
+    min-height:54px !important;
+    max-height:54px !important;
+    margin:0 auto !important;
+    padding:4px 5px !important;
+    box-sizing:border-box !important;
+    font-size:10px !important;
+    line-height:1.18 !important;
+  }
+}
+</style>
+
+<style id="reset-cards-match-reference-exact">
+@media screen and (max-width:540px) {
+  html body[data-screen="main"] .initial-reset-grid {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    column-gap:22px !important;
+    row-gap:0 !important;
+    margin:5px 16px 0 !important;
+    position:relative !important;
+    left:-5px !important;
+    width:calc(100vw - 32px) !important;
+    max-width:370px !important;
+    box-sizing:border-box !important;
+  }
+  html body[data-screen="main"] .initial-reset-card {
+    min-width:0 !important;
+    width:100% !important;
+  }
+  html body[data-screen="main"] .initial-reset-card .initial-reset-description {
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:55px !important;
+    min-height:55px !important;
+    max-height:55px !important;
+    margin:0 !important;
+    padding:5px 4px !important;
+    box-sizing:border-box !important;
+    border:1px solid #bd526d !important;
+    border-radius:5px !important;
+    background:#202024 !important;
+    color:#d0cdd0 !important;
+    font-family:Arial,sans-serif !important;
+    font-size:9px !important;
+    font-weight:700 !important;
+    line-height:1.2 !important;
+    text-align:center !important;
+    white-space:normal !important;
+    overflow-wrap:normal !important;
+    word-break:normal !important;
+  }
+}
+</style>
 </body>
 </html>
+
+<style id="reset-buttons-reference-copy">
+@media(max-width:540px){
+ .mobile-reset-actions{grid-template-columns:1fr 1fr!important;gap:8px!important;align-items:stretch!important}
+ .mobile-reset-actions button{height:82px!important;min-height:82px!important;padding:6px 5px!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;white-space:pre-line!important;overflow-wrap:anywhere!important;font-size:10px!important;font-weight:750!important;line-height:1.22!important;border-width:2px!important;border-radius:5px!important}
+ .mobile-reset-actions .mobile-boost{background:#292326!important;border-color:#a94b65!important;color:#e6dce0!important}
+ .mobile-reset-actions .mobile-galaxy{background:#292326!important;border-color:#a94b65!important;color:#e6dce0!important}
+}
+</style>
+
+<style id="initial-reset-reference-text-final">
+@media(max-width:540px){
+ body[data-screen="main"] .initial-reset-card .initial-reset-description{
+  min-height:84px!important;padding:7px 5px!important;font-size:11px!important;line-height:1.2!important;
+  text-align:center!important;overflow-wrap:anywhere!important;
+ }
+}
+</style>
