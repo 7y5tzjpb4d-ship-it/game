@@ -5049,13 +5049,24 @@ html #dimensions.dimensions > .dim > button.buy {
 <style id="nd-buy-button-independent-color">
 @media screen and (max-width:700px) {
   html body[data-screen="main"] #dimensions.dimensions > .dim > button.buy {
+    position:relative !important;
+    overflow:hidden !important;
+    isolation:isolate !important;
     background-color:#262626 !important;
-    background-image:linear-gradient(to right, rgba(28,92,48,.78) var(--dim-afford-progress, 0%), transparent var(--dim-afford-progress, 0%)) !important;
+    background-image:linear-gradient(
+      to right,
+      #123b20 0%,
+      #123b20 var(--dim-bought-progress, 0%),
+      #24552f var(--dim-bought-progress, 0%),
+      #24552f calc(var(--dim-bought-progress, 0%) + var(--dim-afford-progress, 0%)),
+      #262626 calc(var(--dim-bought-progress, 0%) + var(--dim-afford-progress, 0%)),
+      #262626 100%
+    ) !important;
     border-color:#b34f69 !important;
     color:#d0d0d0 !important;
   }
-  html body[data-screen="main"] #dimensions.dimensions > .dim:nth-child(even) > button.buy {
-    background-color:#262626 !important;
-  }
+  html body[data-screen="main"] #dimensions.dimensions > .dim.dim-can-afford > button.buy { border-color:#008b28 !important; }
+  html body[data-screen="main"] #dimensions.dimensions > .dim:nth-child(even) { background:rgba(125,35,45,.34) !important; }
+  html body[data-screen="main"] #dimensions.dimensions > .dim:nth-child(odd) { background:transparent !important; }
 }
 </style>
