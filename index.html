@@ -5458,3 +5458,29 @@ body[data-screen="autobuyers"] .ab-crunch-card{display:none!important}
   body[data-screen="autobuyers"] main {padding-top:42px!important;padding-bottom:125px!important;}
 }
 </style>
+
+<style id="match-autobuyers-controls-exactly-to-main">
+@media(max-width:700px){
+  body[data-screen="autobuyers"] .initial-footer-icons button svg{
+    width:28px!important;height:28px!important;
+    max-width:28px!important;max-height:28px!important;
+  }
+  body[data-screen="autobuyers"] .initial-footer-icons button{
+    flex:1 1 0!important;width:16.666%!important;height:60px!important;
+    min-height:60px!important;align-items:center!important;justify-content:center!important;
+  }
+  /* Same floating Max All geometry as Main: identical anchor and circle size. */
+  body[data-screen="autobuyers"] .mobile-bottom-actions{
+    position:fixed!important;left:auto!important;right:5px!important;
+    bottom:111px!important;width:58px!important;height:58px!important;
+    z-index:110!important;margin:0!important;padding:0!important;
+  }
+  body[data-screen="autobuyers"] #mobileMaxAllBtn{
+    position:absolute!important;right:0!important;bottom:0!important;
+    width:58px!important;height:58px!important;min-height:58px!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    padding:0!important;border:0!important;border-radius:50%!important;
+    font-size:15px!important;font-weight:700!important;
+  }
+}
+</style>
