@@ -5484,3 +5484,36 @@ body[data-screen="autobuyers"] .ab-crunch-card{display:none!important}
   }
 }
 </style>
+
+<style id="unified-main-autobuyers-footer-icons">
+@media (max-width:700px) {
+  /* Main画面を基準に、Main/Autobuyersでアイコン列を同一寸法・同一配置に統一 */
+  body[data-screen="main"] .initial-footer-icons,
+  body[data-screen="autobuyers"] .initial-footer-icons {
+    display:flex!important;width:100%!important;height:62px!important;min-height:62px!important;
+    flex:0 0 62px!important;align-items:center!important;justify-content:space-around!important;
+    box-sizing:border-box!important;margin:0!important;padding:0!important;
+  }
+  body[data-screen="main"] .initial-footer-icons button,
+  body[data-screen="autobuyers"] .initial-footer-icons button {
+    display:flex!important;flex:1 1 0!important;width:20%!important;min-width:0!important;
+    height:60px!important;min-height:60px!important;box-sizing:border-box!important;
+    align-items:center!important;justify-content:center!important;margin:0!important;padding:0!important;
+    border:0!important;border-bottom:4px solid transparent!important;border-radius:0!important;
+    background:none!important;font-size:0!important;line-height:1!important;
+  }
+  body[data-screen="main"] .initial-footer-icons button svg,
+  body[data-screen="autobuyers"] .initial-footer-icons button svg {
+    display:block!important;width:28px!important;height:28px!important;min-width:28px!important;
+    min-height:28px!important;max-width:28px!important;max-height:28px!important;
+    box-sizing:content-box!important;fill:none!important;stroke:currentColor!important;
+    stroke-width:3.1!important;stroke-linecap:round!important;stroke-linejoin:round!important;
+  }
+  body[data-screen="main"] .initial-footer-icons button.active,
+  body[data-screen="autobuyers"] .initial-footer-icons button.active {
+    border-bottom:4px solid #d41469!important;
+  }
+  body[data-screen="main"] .initial-footer-icons button[hidden],
+  body[data-screen="autobuyers"] .initial-footer-icons button[hidden] {display:none!important;}
+}
+</style>
