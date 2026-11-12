@@ -5369,3 +5369,42 @@ body[data-screen="autobuyers"] .ab-crunch-card{display:none!important}
  body[data-screen="autobuyers"] .mobile-reset-actions{bottom:120px!important;}
 }
 </style>
+
+<style id="restore-main-screen-footer-navigation-final">
+@media(max-width:700px){
+  /* Autobuyers専用の表示調整がMain画面へ波及しないよう、Mainのヘッダーと下部タブを復元 */
+  body[data-screen="main"] .initial-game-header,
+  body[data-screen="main"] .initial-main-footer{
+    display:flex!important;
+  }
+  body[data-screen="main"] .initial-main-footer{
+    position:fixed!important;left:0!important;right:0!important;bottom:0!important;
+    z-index:100!important;min-height:105px!important;height:105px!important;
+    flex-direction:column!important;background:#000!important;
+  }
+  body[data-screen="main"] .initial-footer-icons{
+    display:flex!important;visibility:visible!important;opacity:1!important;
+    height:62px!important;min-height:62px!important;align-items:center!important;
+    justify-content:space-around!important;
+  }
+  body[data-screen="main"] .initial-footer-icons button{
+    display:flex!important;visibility:visible!important;opacity:1!important;
+    flex:1 1 0!important;width:16.666%!important;height:60px!important;
+    align-items:center!important;justify-content:center!important;
+  }
+  body[data-screen="main"] .initial-footer-title{display:flex!important;visibility:visible!important;}
+  body[data-screen="main"] main{padding-bottom:125px!important;}
+}
+</style>
+<style id="restore-main-footer-icons-final">
+@media(max-width:700px){
+ body[data-screen="main"] .initial-footer-icons button svg{
+   display:block!important;visibility:visible!important;opacity:1!important;
+   width:28px!important;height:28px!important;max-width:28px!important;max-height:28px!important;
+   fill:none!important;stroke:currentColor!important;stroke-width:3.1!important;
+   stroke-linecap:round!important;stroke-linejoin:round!important;
+ }
+ body[data-screen="main"] .initial-footer-icons button{color:#aaa!important;}
+ body[data-screen="main"] .initial-footer-icons button.active{color:#bd7187!important;border-bottom:4px solid #d41469!important;}
+}
+</style>
