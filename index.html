@@ -4537,28 +4537,52 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
       button.addEventListener("click",()=>activate(screen));return button;
     }
     function render(){
-      const active=currentScreen();list.innerHTML="";
-      const mainGroup=document.createElement("section");
-      mainGroup.className="drawer-main-group expanded"+(active==="main"?" active":"");
-      const mainButton=document.createElement("button");mainButton.type="button";
-      mainButton.className="drawer-item drawer-main-category"+(active==="main"?" active":"");
-      mainButton.setAttribute("aria-expanded","true");
-      mainButton.innerHTML='<span class="drawer-item-icon">'+icons.main+'</span><span class="drawer-item-label">Dimensions</span><span class="drawer-chevron">⌄</span>';
-      mainButton.addEventListener("click",()=>{const expanded=mainGroup.classList.toggle("expanded");mainButton.setAttribute("aria-expanded",String(expanded));});
-      mainGroup.appendChild(mainButton);
-      const sub=document.createElement("div");sub.className="drawer-submenu";
-      const leaf=document.createElement("button");leaf.type="button";leaf.className="drawer-leaf"+(active==="main"?" active":"");
-      leaf.innerHTML='<span class="drawer-leaf-label">Antimatter Dimensions</span><span class="drawer-leaf-symbol">Ω</span>';
-      leaf.addEventListener("click",()=>activate("main"));sub.appendChild(leaf);mainGroup.appendChild(sub);list.appendChild(mainGroup);
+      const active=currentScreen();
+      list.innerHTML="";
+      function makeGroup(key,label,icon,leafLabel,expanded){
+        const group=document.createElement("section");
+        group.className="drawer-group"+(expanded?" expanded":"")+(active===key?" active":"");
+        const category=document.createElement("button");
+        category.type="button";
+        category.className="drawer-category"+(active===key?" active":"");
+        category.setAttribute("aria-expanded",String(!!expanded));
+        category.innerHTML='<span class="drawer-item-icon">'+icon+'</span><span class="drawer-item-label">'+label+'</span><span class="drawer-chevron">'+(expanded?"⌄":"›")+'</span>';
+        category.addEventListener("click",()=>{
+          const isExpanded=group.classList.toggle("expanded");
+          category.setAttribute("aria-expanded",String(isExpanded));
+          const chevron=category.querySelector(".drawer-chevron");
+          if(chevron)chevron.textContent=isExpanded?"⌄":"›";
+        });
+        group.appendChild(category);
+        const submenu=document.createElement("div");
+        submenu.className="drawer-submenu";
+        const leaf=document.createElement("button");
+        leaf.type="button";
+        leaf.className="drawer-leaf"+(active===key?" active":"");
+        leaf.innerHTML='<span class="drawer-leaf-label">'+leafLabel+'</span><span class="drawer-leaf-symbol">'+(key==="main"?"Ω":"⚙")+'</span>';
+        leaf.addEventListener("click",()=>activate(key));
+        submenu.appendChild(leaf);
+        group.appendChild(submenu);
+        list.appendChild(group);
+      }
+
+      // Match the reference drawer: Dimensions and Automation are expandable
+      // categories; navigation occurs only after selecting their child item.
+      makeGroup("main","Dimensions",icons.main,"Antimatter Dimensions",active==="main");
+      if(autoUnlocked()){
+        makeGroup("autobuyers","Automation",icons.autobuyers,"Autobuyers",active==="autobuyers");
+      }
+
       const rows=[
-        {screen:"autobuyers",label:"Automation",icon:icons.autobuyers,auto:true},
         {screen:"achievements",label:"Achievements",icon:icons.achievements},
         {screen:"statistics",label:"Statistics",icon:icons.statistics},
-        {screen:"options",label:"Options",icon:icons.options}
+        {screen:"options",label:"Options",icon:icons.options},
+        {screen:"shop",label:"Shop",icon:"<span class='drawer-text-icon'>$</span>"},
+        {screen:"info",label:"Info",icon:"<span class='drawer-text-icon'>ⓘ</span>"}
       ];
       rows.forEach(item=>{
-        if(item.auto&&!autoUnlocked())return;
-        const target=document.querySelector('#screenTabs [data-screen="'+item.screen+'"]');if(!target)return;
+        const target=document.querySelector('#screenTabs [data-screen="'+item.screen+'"]');
+        if(!target)return;
         list.appendChild(makeItem(item.screen,item.label,item.icon,item.screen===active));
       });
     }
@@ -5515,5 +5539,65 @@ body[data-screen="autobuyers"] .ab-crunch-card{display:none!important}
   }
   body[data-screen="main"] .initial-footer-icons button[hidden],
   body[data-screen="autobuyers"] .initial-footer-icons button[hidden] {display:none!important;}
+}
+</style>
+
+
+<style id="drawer-video-menu-categories">
+@media(max-width:700px){
+ .mobile-game-drawer .drawer-group{border-bottom:1px solid #29292f}
+ .mobile-game-drawer .drawer-category{
+   width:100%;min-height:42px;box-sizing:border-box;display:flex;
+   align-items:center;justify-content:space-between;padding:0 14px;
+   border:0;border-radius:0;background:transparent;color:#bdbdc2;
+   text-align:left;font-size:13px;font-weight:600;
+ }
+ .mobile-game-drawer .drawer-category.active{
+   border-left:3px solid #d41469;padding-left:11px;background:#24242a;
+ }
+ .mobile-game-drawer .drawer-category .drawer-item-icon,
+ .mobile-game-drawer .drawer-item .drawer-item-icon{
+   display:flex;align-items:center;justify-content:center;width:18px;height:18px;flex:0 0 18px;
+ }
+ .mobile-game-drawer .drawer-category svg,
+ .mobile-game-drawer .drawer-item svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+ .mobile-game-drawer .drawer-category .drawer-item-label,
+ .mobile-game-drawer .drawer-item .drawer-item-label{flex:1;text-align:left;margin-left:8px}
+ .mobile-game-drawer .drawer-submenu{display:none;padding:2px 0 7px}
+ .mobile-game-drawer .drawer-group.expanded .drawer-submenu{display:block}
+ .mobile-game-drawer .drawer-leaf{
+   width:100%;min-height:38px;display:flex;align-items:center;justify-content:space-between;
+   padding:0 14px 0 28px;border:0;border-radius:0;background:transparent;
+   color:#bdbdc2;text-align:left;font-size:12px;font-weight:500;
+ }
+ .mobile-game-drawer .drawer-leaf.active{color:#fff;background:#292930;border-left:2px solid #d41469}
+ .mobile-game-drawer .drawer-leaf-symbol{color:#888;font-size:12px}
+ .mobile-game-drawer .drawer-item{
+   width:100%;min-height:42px;display:flex;align-items:center;justify-content:space-between;
+   padding:0 14px;border:0;border-radius:0;background:transparent;color:#bdbdc2;
+   text-align:left;font-size:13px;font-weight:600;
+ }
+ .mobile-game-drawer .drawer-item.active{border-left:3px solid #d41469;padding-left:11px;background:#24242a}
+ .mobile-game-drawer .drawer-chevron{color:#888;font-size:11px}
+ .mobile-game-drawer .drawer-text-icon{font-size:14px;font-weight:700}
+}
+</style>
+
+
+<style id="drawer-category-visibility-final">
+@media(max-width:700px){
+ .mobile-game-drawer .drawer-group{display:block!important}
+ .mobile-game-drawer .drawer-category{display:flex!important}
+ .mobile-game-drawer .drawer-leaf{display:flex!important}
+ .mobile-game-drawer .drawer-submenu{display:none!important}
+ .mobile-game-drawer .drawer-group.expanded .drawer-submenu{display:block!important}
+ .mobile-game-drawer .drawer-brand{
+   height:104px!important;min-height:104px!important;display:flex!important;
+   flex-direction:column!important;align-items:center!important;justify-content:center!important;
+   padding:8px 10px!important;font-size:12px!important;line-height:1.25!important;
+ }
+ .mobile-game-drawer .drawer-brand:before{
+   content:"✺";display:block;font-size:30px;line-height:1;margin-bottom:7px;color:#36c4b5;
+ }
 }
 </style>
