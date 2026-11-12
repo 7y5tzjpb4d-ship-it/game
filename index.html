@@ -4109,7 +4109,7 @@ function statisticsView(){
  else {const vals=(state.lastTenIPPerMinBN||[]).map(v=>Math.max(0,Math.min(100,BigNumber.from(v).log10()/2500*100)));body=`<h2>Graphs</h2><section class="stat-section"><p class="stat-line">Recent Infinity IP/min trend</p><div class="stat-bars">${vals.map(v=>`<i style="height:${Math.max(3,v)}%"></i>`).join('')||'<span>データなし</span>'}</div></section>`;}
  return body+nav;
 }
-const tabViews={test:()=>testToolsView(),eternity:()=>eternitySubpage==='studies'?timeStudyView():eternitySubpage==='milestones'?eternityMilestonesView():eternityUpgradesView(),autobuyers:()=>`<h2>Autobuyers</h2><button type="button" id="abToggleAll" style="margin:0 0 12px">${(Number(state.eternities)<1||state.autobuyers.ipMult)&&(Number(state.eternities)<3||state.autobuyers.replicantiGalaxy)&&state.autobuyers.dims.every(Boolean)&&state.autobuyers.tickspeed&&state.autobuyers.boost&&state.autobuyers.galaxy&&state.autobuyers.crunch&&(!state.completedInfinityChallenges.includes(2)||state.autobuyers.sacrifice)?'全AutobuyerをOFF':'全AutobuyerをON'}</button><div class="ab-grid"><section class="ab-dimension-group"><div class="ab-dimension-group-title"><strong>Antimatter Dimensions</strong><small>各次元の自動購入設定</small></div><div class="ab-dimension-grid">${names.map((n,i)=>`<div class="ab-card"><div><strong>${n}</strong><small>${!dimAutobuyerUnlocked(i)?`ロック中：反物質 ${fmtMatter(Math.pow(10,40+i*10))} が必要`:`解禁済み · 間隔：${autobuyerInterval()[i].toFixed(2)}秒 · Bulk Buy：×${dimAutobuyerBulk(i)===Infinity?'∞':dimAutobuyerBulk(i)}`}</small><button type="button" class="ab-mode-button" data-ab-dim-mode-toggle="${i}">購入モード：${(state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10')==='10'?'次の10個購入ボーナスまで':'1個ずつ'} ↻</button>${dimBulkLevels()[i]>=9?'':`<button type="button" data-ab-upgrade="${i}" ${!autobuyerUpgradeUnlocked(i)|| (autobuyerInterval()[i]>0.1000001?!hasIPAtLeast(autobuyerIntervalUpgradeCost(i)):(!dimAutobuyerUnlocked(i)||!hasIPAtLeast(dimBulkUpgradeCost(i))))?'disabled':''}>${!autobuyerUpgradeUnlocked(i)?'ロック中':autobuyerInterval()[i]>0.1000001?`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(i))}）`:`Bulk ×${dimAutobuyerBulk(i)} → ×${dimAutobuyerBulk(i)*2}（IP ${fmt(dimBulkUpgradeCost(i))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab-dim="${i}" ${state.autobuyers.dims[i]?'checked':''} ${!dimAutobuyerUnlocked(i)&&!state.autobuyers.dims[i]?'disabled':''}> ON</label></div>`).join('')}</div></section>${Number(state.eternities)>=100?`<div class="ab-card ab-eternity-card"><div><strong>Eternity</strong><small>EM100で解放 · 設定したEP獲得量に達したら自動Eternity</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">目標EP<input type="text" inputmode="text" autocomplete="off" spellcheck="false" id="abEternityTarget" value="${fmtBig(BigNumber.from(state.eternityAutobuyerTargetBN||1))}" placeholder="例：0 または 1e100" style="width:120px;max-width:100%;box-sizing:border-box;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px"></label></div><label class="ab-toggle"><input type="checkbox" data-ab="eternity" ${state.eternityAutobuyer?'checked':''}> ON</label></div>`:''}${Number(state.eternities)>=1?`<div class="ab-card"><div><strong>IP Multiplier</strong><small>1 Eternityで解放 · IP倍率アップグレードを購入可能な限り一括購入</small></div><label class="ab-toggle"><input type="checkbox" data-ab="ipMult" ${state.autobuyers.ipMult?'checked':''}> ON</label></div>`:''}${Number(state.eternities)>=3?`<div class="ab-card"><div><strong>Replicanti Galaxy（RG）</strong><small>3 Eternitiesで解放 · Replicantiが上限に達したらGalaxyを自動購入</small></div><label class="ab-toggle"><input type="checkbox" data-ab="replicantiGalaxy" ${state.autobuyers.replicantiGalaxy?'checked':''}> ON</label></div>`:''}${Number(state.eternities)>=11?`<section class="ab-dimension-group id-autobuyer-group"><div class="ab-dimension-group-title"><strong>Infinity Dimension Autobuyers</strong><small>EM11～18で各段階を個別に解放</small></div><div class="ab-dimension-grid id-autobuyer-options">${Array.from({length:8},(_,i)=>`<div class="ab-card"><div><strong>${i+1}th ID</strong><small>${Number(state.eternities)>=11+i?'解禁済み':`ロック中：${11+i} Eternities`}</small></div><label class="ab-toggle"><input type="checkbox" data-ab-id="${i}" ${state.autobuyers.infinityDims?.[i]?'checked':''} ${Number(state.eternities)<11+i?'disabled':''}> ON</label></div>`).join('')}</div></section>`:''}${Number(state.eternities)>=50?`<section class="replicanti-autobuyer-group"><div class="replicanti-autobuyer-heading"><div><strong>Replicanti</strong><small>Current interval: ${(state.replicantiInterval/1000).toFixed(3)} second</small></div></div><div class="replicanti-autobuyer-options"><div class="replicanti-autobuyer-option"><strong>Chance</strong><label class="ab-toggle"><input type="checkbox" data-ab="replicantiChance" ${state.autobuyers.replicantiChance?'checked':''} ${Number(state.eternities)<50?'disabled':''}> ON</label><small>${Number(state.eternities)>=50?'解禁済み':'ロック中：50 Eternities'}</small></div><div class="replicanti-autobuyer-option"><strong>Interval</strong><label class="ab-toggle"><input type="checkbox" data-ab="replicantiInterval" ${state.autobuyers.replicantiInterval?'checked':''} ${Number(state.eternities)<60?'disabled':''}> ON</label><small>${Number(state.eternities)>=60?'解禁済み':'ロック中：60 Eternities'}</small></div><div class="replicanti-autobuyer-option"><strong>Max RGs</strong><label class="ab-toggle"><input type="checkbox" data-ab="replicantiMaxGalaxies" ${state.autobuyers.replicantiMaxGalaxies?'checked':''} ${Number(state.eternities)<80?'disabled':''}> ON</label><small>${Number(state.eternities)>=80?'解禁済み':'ロック中：80 Eternities'}</small></div></div></section>`:''}<div class="ab-card"><div><strong>Tickspeed</strong><small>${!tickspeedAutobuyerUnlocked()?`ロック中：反物質 1e140 が必要`:`解禁済み · 間隔：${autobuyerInterval()[8].toFixed(2)}秒 · 購入モード：${challengeCompleted(9)&&state.autobuyers.tickspeedMode==='max'?'最大まで購入':'1個ずつ'}`}</small>${challengeCompleted(9)?`<button type="button" class="ab-mode-button" data-ab-tickspeed-mode-toggle>購入モード：${state.autobuyers.tickspeedMode==='max'?'最大まで購入':'1個ずつ'} ↻</button>`:''}${autobuyerInterval()[8]<=0.1000001?'':`<button type="button" data-ab-upgrade="8" ${!autobuyerUpgradeUnlocked(8)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(8))?'disabled':''}>${!autobuyerUpgradeUnlocked(8)?'NC9クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(8))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="tickspeed" ${state.autobuyers.tickspeed?'checked':''} ${!tickspeedAutobuyerUnlocked()&&!state.autobuyers.tickspeed?'disabled':''}> ON</label></div><div class="ab-card"><div><strong>Dimension Boost</strong><small>${challengeCompleted(10)?`解放済み · 間隔：${autobuyerInterval()[9].toFixed(2)}秒`:'NC10クリアで解放'}</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">購入上限 <input type="text" inputmode="numeric" autocomplete="off" id="abBoostLimit" placeholder="無制限" value="${state.autobuyers.boostLimit??''}" style="width:90px;max-width:100%;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px" ${!challengeCompleted(10)?'disabled':''}></label>${autobuyerInterval()[9]<=0.1000001?'':`<button type="button" data-ab-upgrade="9" ${!autobuyerUpgradeUnlocked(9)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(9))||autobuyerInterval()[9]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(9)?'NC10クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(9))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="boost" ${state.autobuyers.boost?'checked':''} ${!challengeCompleted(10)&&!state.autobuyers.boost?'disabled':''}> ON</label></div><div class="ab-card"><div><strong>Antimatter Galaxy</strong><small>${challengeCompleted(11)?`解放済み · 間隔：${autobuyerInterval()[10].toFixed(2)}秒${Number(state.eternities)>=9?' · EM9：購入可能数を一括購入':''}`:'NC11クリアで解放'}</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">購入上限 <input type="text" inputmode="numeric" autocomplete="off" id="abGalaxyLimit" placeholder="無制限" value="${state.autobuyers.galaxyLimit??''}" style="width:90px;max-width:100%;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px" ${!challengeCompleted(11)?'disabled':''}></label>${autobuyerInterval()[10]<=0.1000001?'':`<button type="button" data-ab-upgrade="10" ${!autobuyerUpgradeUnlocked(10)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(10))||autobuyerInterval()[10]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(10)?'NC11クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(10))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="galaxy" ${state.autobuyers.galaxy?'checked':''} ${!challengeCompleted(11)&&!state.autobuyers.galaxy?'disabled':''}> ON</label></div><div class="ab-card ab-crunch-card"><div><strong>Big Crunch</strong><small>${challengeCompleted(12)?`解放済み · 間隔：${autobuyerInterval()[11].toFixed(2)}秒`:'NC12クリアで解放'}</small><div class="ab-crunch-settings" style="display:grid;gap:14px;margin-top:18px">${Number(state.eternities)>=5?`<button type="button" class="ab-mode-button" id="abCrunchModeToggle">設定：${state.autobuyers.crunchMode==='relative'?'前回IPのX倍':'秒数間隔'}</button>`:''}<label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px"><span id="abCrunchValueLabel">${Number(state.eternities)>=5?(state.autobuyers.crunchMode==='relative'?'倍率 X':'秒数'):'目標IP'}</span><input type="text" inputmode="text" autocomplete="off" spellcheck="false" id="abCrunchValue" value="${Number(state.eternities)>=5?(state.autobuyers.crunchValue??1):(state.autobuyers.crunchIPTarget||'1')}" placeholder="${Number(state.eternities)>=5?(state.autobuyers.crunchMode==='relative'?'例：1e100':'秒数'):'例：1e100'}" style="width:90px;max-width:100%;box-sizing:border-box;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px;font-size:11px"></label><small id="abCrunchRelativeHelp" style="font-size:14px;line-height:1.6;color:var(--muted);${Number(state.eternities)>=5&&state.autobuyers.crunchMode==='relative'?'':'display:none'}">前回CrunchのIP獲得量 × 設定倍率で自動Crunch（前回：${lastCrunchIPGainBigNumber().toDisplayString(4)} IP）</small></div>${autobuyerInterval()[11]<=0.1000001?'':`<button type="button" data-ab-upgrade="11" ${!autobuyerUpgradeUnlocked(11)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(11))||autobuyerInterval()[11]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(11)?'NC12クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(11))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="crunch" ${state.autobuyers.crunch?'checked':''} ${!challengeCompleted(12)&&!state.autobuyers.crunch?'disabled':''}> ON</label></div>${state.completedInfinityChallenges.includes(2)?`<div class="ab-card"><div><strong>自動Sacrifice</strong><small>倍率増加が設定値以上になったら自動Sacrifice</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">Sacrifice倍率<input type="text" inputmode="decimal" autocomplete="off" id="abSacrificeValue" value="${Number.isFinite(Number(state.autobuyers.sacrificeValue))&&Number(state.autobuyers.sacrificeValue)>1?state.autobuyers.sacrificeValue:2}" style="width:90px;max-width:100%;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px"></label></div><label class="ab-toggle"><input type="checkbox" data-ab="sacrifice" ${state.autobuyers.sacrifice?'checked':''}> ON</label></div>`:''}</div>`,challenges:()=>challengeSubpage==='infinity'?infinityChallengeView():`<h2>Challenges</h2><p style="color:var(--muted);font-size:12px;margin:0">Normal Challenges — 目標：1.8e308に到達</p>${state.activeChallenge?`<div class="challenge-description"><strong>挑戦中：NC${state.activeChallenge} — ${challengeData[state.activeChallenge-1].name}</strong><p>${challengeData[state.activeChallenge-1].desc}</p><p>現在の反物質：${matterBigNumber().toDisplayString(3)} / 目標：1.8e308</p>${state.activeChallenge===11?`<p>Normal Matter：${fmtMatter(state.challenge11Matter)}</p>`:''}<div class="challenge-controls">${atInfinity()?`<button type="button" data-challenge-complete>Infinity到達・クリア</button>`:''}<button type="button" data-challenge-exit>中断して通常プレイへ戻る</button></div></div>`:''}<div class="challenge-grid">${challengeData.map(c=>{const done=challengeCompleted(c.id),active=challengeActive(c.id),unlocked=challengeUnlocked(c.id),canStart=unlocked&&!active&&c.id!==1;return `<div class="challenge-card ${done?'completed':''} ${active?'active':''}"><strong>NC${c.id}: ${c.name}</strong><p>${c.desc}</p><p><small>報酬：${c.reward}</small></p>${Number.isFinite(Number(state.challengeTimes?.[String(c.id)]))&&Number(state.challengeTimes[String(c.id)])>=0&&state.challengeTimes[String(c.id)]!==undefined?`<p><small>最速記録：${formatChallengeClearTime(state.challengeTimes[String(c.id)])}</small></p>`:''}<span class="challenge-status">${challengeCardStatus(c.id)}</span>${active?`<button type="button" data-challenge-exit>中断</button>`:canStart?`<button type="button" data-challenge-start="${c.id}">開始</button>`:c.id===1?`<button type="button" disabled>初回Infinity済み</button>`:`<button type="button" disabled>${done?'クリア済み':unlocked?'挑戦不可':'16 Infinityで解放'}</button>`}</div>`}).join('')}</div>`,infinity:()=>`<div class="ep-subnav infinity-subnav"><button class="${infinitySubpage==='upgrades'?'active':''}" data-infinity-page="upgrades">Upgrades</button><button class="${infinitySubpage==='break'?'active':''}" data-infinity-page="break">Break Infinity</button><button class="${infinitySubpage==='replicanti'?'active':''}" data-infinity-page="replicanti">Replicanti</button></div>`+(infinitySubpage==='break'?breakInfinityView():infinitySubpage==='replicanti'?replicantiView():infinityUpgradeView()),achievements:()=>`<h2>実績</h2><p>実績による生産倍率：×${achievementMultiplier().toFixed(3)}</p><div class="achievement-grid">${[
+const tabViews={test:()=>testToolsView(),eternity:()=>eternitySubpage==='studies'?timeStudyView():eternitySubpage==='milestones'?eternityMilestonesView():eternityUpgradesView(),autobuyers:()=>`<h2>Autobuyers</h2><button type="button" id="abToggleAll" style="margin:0 0 12px">${(Number(state.eternities)<1||state.autobuyers.ipMult)&&(Number(state.eternities)<3||state.autobuyers.replicantiGalaxy)&&state.autobuyers.dims.every(Boolean)&&state.autobuyers.tickspeed&&state.autobuyers.boost&&state.autobuyers.galaxy&&state.autobuyers.crunch&&(!state.completedInfinityChallenges.includes(2)||state.autobuyers.sacrifice)?'全AutobuyerをOFF':'全AutobuyerをON'}</button><button type="button" id="abToggleBuyUntil10" class="ab-top-control">Toggle buy until 10</button><div class="ab-grid"><section class="ab-dimension-group"><div class="ab-dimension-group-title"><strong>Antimatter Dimensions</strong><small>各次元の自動購入設定</small></div><div class="ab-dimension-grid">${names.map((n,i)=>{const available=dimAutobuyerUnlocked(i),unlocked=!!state.autobuyers.dims[i];return `<div class="ab-card ab-dimension-card ${available?'ab-available':''} ${unlocked?'ab-unlocked':''}"><div class="ab-card-heading"><strong>${['1st Dimension','2nd Dimension','3rd Dimension','4th Dimension','5th Dimension','6th Dimension','7th Dimension','8th Dimension'][i]} Autobuyer</strong><small>Requirement: 1e${40+i*10} total antimatter</small></div>${available&&!unlocked?`<button type="button" class="ab-unlock-button" data-ab-dim-unlock="${i}">🔓 Unlock</button>`:unlocked?`<div class="ab-unlocked-controls"><div class="ab-dim-status">Interval: ${autobuyerInterval()[i].toFixed(2)}s · Bulk: ×${dimAutobuyerBulk(i)===Infinity?'∞':dimAutobuyerBulk(i)}</div><button type="button" class="ab-mode-button" data-ab-dim-mode-toggle="${i}">購入モード：${(state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10')==='10'?'次の10個購入ボーナスまで':'1個ずつ'} ↻</button>${dimBulkLevels()[i]>=9?'':`<button type="button" data-ab-upgrade="${i}" ${!autobuyerUpgradeUnlocked(i)||(autobuyerInterval()[i]>0.1000001?!hasIPAtLeast(autobuyerIntervalUpgradeCost(i)):!hasIPAtLeast(dimBulkUpgradeCost(i)))?'disabled':''}>${autobuyerInterval()[i]>0.1000001?`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(i))}）`:`Bulk ×${dimAutobuyerBulk(i)} → ×${dimAutobuyerBulk(i)*2}（IP ${fmt(dimBulkUpgradeCost(i))}）`}</button>`}<label class="ab-toggle"><input type="checkbox" data-ab-dim="${i}" ${state.autobuyers.dims[i]?'checked':''}> ON</label></div>`:''}</div>`;}).join('')}</div></section>${Number(state.eternities)>=100?`<div class="ab-card ab-eternity-card"><div><strong>Eternity</strong><small>EM100で解放 · 設定したEP獲得量に達したら自動Eternity</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">目標EP<input type="text" inputmode="text" autocomplete="off" spellcheck="false" id="abEternityTarget" value="${fmtBig(BigNumber.from(state.eternityAutobuyerTargetBN||1))}" placeholder="例：0 または 1e100" style="width:120px;max-width:100%;box-sizing:border-box;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px"></label></div><label class="ab-toggle"><input type="checkbox" data-ab="eternity" ${state.eternityAutobuyer?'checked':''}> ON</label></div>`:''}${Number(state.eternities)>=1?`<div class="ab-card"><div><strong>IP Multiplier</strong><small>1 Eternityで解放 · IP倍率アップグレードを購入可能な限り一括購入</small></div><label class="ab-toggle"><input type="checkbox" data-ab="ipMult" ${state.autobuyers.ipMult?'checked':''}> ON</label></div>`:''}${Number(state.eternities)>=3?`<div class="ab-card"><div><strong>Replicanti Galaxy（RG）</strong><small>3 Eternitiesで解放 · Replicantiが上限に達したらGalaxyを自動購入</small></div><label class="ab-toggle"><input type="checkbox" data-ab="replicantiGalaxy" ${state.autobuyers.replicantiGalaxy?'checked':''}> ON</label></div>`:''}${Number(state.eternities)>=11?`<section class="ab-dimension-group id-autobuyer-group"><div class="ab-dimension-group-title"><strong>Infinity Dimension Autobuyers</strong><small>EM11～18で各段階を個別に解放</small></div><div class="ab-dimension-grid id-autobuyer-options">${Array.from({length:8},(_,i)=>`<div class="ab-card"><div><strong>${i+1}th ID</strong><small>${Number(state.eternities)>=11+i?'解禁済み':`ロック中：${11+i} Eternities`}</small></div><label class="ab-toggle"><input type="checkbox" data-ab-id="${i}" ${state.autobuyers.infinityDims?.[i]?'checked':''} ${Number(state.eternities)<11+i?'disabled':''}> ON</label></div>`).join('')}</div></section>`:''}${Number(state.eternities)>=50?`<section class="replicanti-autobuyer-group"><div class="replicanti-autobuyer-heading"><div><strong>Replicanti</strong><small>Current interval: ${(state.replicantiInterval/1000).toFixed(3)} second</small></div></div><div class="replicanti-autobuyer-options"><div class="replicanti-autobuyer-option"><strong>Chance</strong><label class="ab-toggle"><input type="checkbox" data-ab="replicantiChance" ${state.autobuyers.replicantiChance?'checked':''} ${Number(state.eternities)<50?'disabled':''}> ON</label><small>${Number(state.eternities)>=50?'解禁済み':'ロック中：50 Eternities'}</small></div><div class="replicanti-autobuyer-option"><strong>Interval</strong><label class="ab-toggle"><input type="checkbox" data-ab="replicantiInterval" ${state.autobuyers.replicantiInterval?'checked':''} ${Number(state.eternities)<60?'disabled':''}> ON</label><small>${Number(state.eternities)>=60?'解禁済み':'ロック中：60 Eternities'}</small></div><div class="replicanti-autobuyer-option"><strong>Max RGs</strong><label class="ab-toggle"><input type="checkbox" data-ab="replicantiMaxGalaxies" ${state.autobuyers.replicantiMaxGalaxies?'checked':''} ${Number(state.eternities)<80?'disabled':''}> ON</label><small>${Number(state.eternities)>=80?'解禁済み':'ロック中：80 Eternities'}</small></div></div></section>`:''}<div class="ab-card ab-tickspeed-card ${tickspeedAutobuyerUnlocked()?'ab-ts-unlocked':'ab-ts-locked'}"><div><strong>Tickspeed Autobuyer</strong><small>${!tickspeedAutobuyerUnlocked()?`Requirement: 1e140 total antimatter`:`解禁済み · 間隔：${autobuyerInterval()[8].toFixed(2)}秒 · 購入モード：${challengeCompleted(9)&&state.autobuyers.tickspeedMode==='max'?'最大まで購入':'1個ずつ'}`}</small>${challengeCompleted(9)?`<button type="button" class="ab-mode-button" data-ab-tickspeed-mode-toggle>購入モード：${state.autobuyers.tickspeedMode==='max'?'最大まで購入':'1個ずつ'} ↻</button>`:''}${autobuyerInterval()[8]<=0.1000001?'':`<button type="button" data-ab-upgrade="8" ${!autobuyerUpgradeUnlocked(8)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(8))?'disabled':''}>${!autobuyerUpgradeUnlocked(8)?'NC9クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(8))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="tickspeed" ${state.autobuyers.tickspeed?'checked':''} ${!tickspeedAutobuyerUnlocked()&&!state.autobuyers.tickspeed?'disabled':''}> ON</label></div><div class="ab-card ab-boost-card"><div><strong>Dimension Boost</strong><small>${challengeCompleted(10)?`解放済み · 間隔：${autobuyerInterval()[9].toFixed(2)}秒`:'NC10クリアで解放'}</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">購入上限 <input type="text" inputmode="numeric" autocomplete="off" id="abBoostLimit" placeholder="無制限" value="${state.autobuyers.boostLimit??''}" style="width:90px;max-width:100%;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px" ${!challengeCompleted(10)?'disabled':''}></label>${autobuyerInterval()[9]<=0.1000001?'':`<button type="button" data-ab-upgrade="9" ${!autobuyerUpgradeUnlocked(9)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(9))||autobuyerInterval()[9]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(9)?'NC10クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(9))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="boost" ${state.autobuyers.boost?'checked':''} ${!challengeCompleted(10)&&!state.autobuyers.boost?'disabled':''}> ON</label></div><div class="ab-card ab-galaxy-card"><div><strong>Antimatter Galaxy</strong><small>${challengeCompleted(11)?`解放済み · 間隔：${autobuyerInterval()[10].toFixed(2)}秒${Number(state.eternities)>=9?' · EM9：購入可能数を一括購入':''}`:'NC11クリアで解放'}</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">購入上限 <input type="text" inputmode="numeric" autocomplete="off" id="abGalaxyLimit" placeholder="無制限" value="${state.autobuyers.galaxyLimit??''}" style="width:90px;max-width:100%;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px" ${!challengeCompleted(11)?'disabled':''}></label>${autobuyerInterval()[10]<=0.1000001?'':`<button type="button" data-ab-upgrade="10" ${!autobuyerUpgradeUnlocked(10)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(10))||autobuyerInterval()[10]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(10)?'NC11クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(10))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="galaxy" ${state.autobuyers.galaxy?'checked':''} ${!challengeCompleted(11)&&!state.autobuyers.galaxy?'disabled':''}> ON</label></div><div class="ab-card ab-crunch-card"><div><strong>Big Crunch</strong><small>${challengeCompleted(12)?`解放済み · 間隔：${autobuyerInterval()[11].toFixed(2)}秒`:'NC12クリアで解放'}</small><div class="ab-crunch-settings" style="display:grid;gap:14px;margin-top:18px">${Number(state.eternities)>=5?`<button type="button" class="ab-mode-button" id="abCrunchModeToggle">設定：${state.autobuyers.crunchMode==='relative'?'前回IPのX倍':'秒数間隔'}</button>`:''}<label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px"><span id="abCrunchValueLabel">${Number(state.eternities)>=5?(state.autobuyers.crunchMode==='relative'?'倍率 X':'秒数'):'目標IP'}</span><input type="text" inputmode="text" autocomplete="off" spellcheck="false" id="abCrunchValue" value="${Number(state.eternities)>=5?(state.autobuyers.crunchValue??1):(state.autobuyers.crunchIPTarget||'1')}" placeholder="${Number(state.eternities)>=5?(state.autobuyers.crunchMode==='relative'?'例：1e100':'秒数'):'例：1e100'}" style="width:90px;max-width:100%;box-sizing:border-box;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px;font-size:11px"></label><small id="abCrunchRelativeHelp" style="font-size:14px;line-height:1.6;color:var(--muted);${Number(state.eternities)>=5&&state.autobuyers.crunchMode==='relative'?'':'display:none'}">前回CrunchのIP獲得量 × 設定倍率で自動Crunch（前回：${lastCrunchIPGainBigNumber().toDisplayString(4)} IP）</small></div>${autobuyerInterval()[11]<=0.1000001?'':`<button type="button" data-ab-upgrade="11" ${!autobuyerUpgradeUnlocked(11)||!hasIPAtLeast(autobuyerIntervalUpgradeCost(11))||autobuyerInterval()[11]<=0.1?'disabled':''}>${!autobuyerUpgradeUnlocked(11)?'NC12クリアで解放':`間隔短縮（IP ${fmt(autobuyerIntervalUpgradeCost(11))}）`}</button>`}</div><label class="ab-toggle"><input type="checkbox" data-ab="crunch" ${state.autobuyers.crunch?'checked':''} ${!challengeCompleted(12)&&!state.autobuyers.crunch?'disabled':''}> ON</label></div>${state.completedInfinityChallenges.includes(2)?`<div class="ab-card"><div><strong>自動Sacrifice</strong><small>倍率増加が設定値以上になったら自動Sacrifice</small><label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px">Sacrifice倍率<input type="text" inputmode="decimal" autocomplete="off" id="abSacrificeValue" value="${Number.isFinite(Number(state.autobuyers.sacrificeValue))&&Number(state.autobuyers.sacrificeValue)>1?state.autobuyers.sacrificeValue:2}" style="width:90px;max-width:100%;background:#292932;color:#fff;border:1px solid #555;border-radius:3px;padding:5px"></label></div><label class="ab-toggle"><input type="checkbox" data-ab="sacrifice" ${state.autobuyers.sacrifice?'checked':''}> ON</label></div>`:''}</div>`,challenges:()=>challengeSubpage==='infinity'?infinityChallengeView():`<h2>Challenges</h2><p style="color:var(--muted);font-size:12px;margin:0">Normal Challenges — 目標：1.8e308に到達</p>${state.activeChallenge?`<div class="challenge-description"><strong>挑戦中：NC${state.activeChallenge} — ${challengeData[state.activeChallenge-1].name}</strong><p>${challengeData[state.activeChallenge-1].desc}</p><p>現在の反物質：${matterBigNumber().toDisplayString(3)} / 目標：1.8e308</p>${state.activeChallenge===11?`<p>Normal Matter：${fmtMatter(state.challenge11Matter)}</p>`:''}<div class="challenge-controls">${atInfinity()?`<button type="button" data-challenge-complete>Infinity到達・クリア</button>`:''}<button type="button" data-challenge-exit>中断して通常プレイへ戻る</button></div></div>`:''}<div class="challenge-grid">${challengeData.map(c=>{const done=challengeCompleted(c.id),active=challengeActive(c.id),unlocked=challengeUnlocked(c.id),canStart=unlocked&&!active&&c.id!==1;return `<div class="challenge-card ${done?'completed':''} ${active?'active':''}"><strong>NC${c.id}: ${c.name}</strong><p>${c.desc}</p><p><small>報酬：${c.reward}</small></p>${Number.isFinite(Number(state.challengeTimes?.[String(c.id)]))&&Number(state.challengeTimes[String(c.id)])>=0&&state.challengeTimes[String(c.id)]!==undefined?`<p><small>最速記録：${formatChallengeClearTime(state.challengeTimes[String(c.id)])}</small></p>`:''}<span class="challenge-status">${challengeCardStatus(c.id)}</span>${active?`<button type="button" data-challenge-exit>中断</button>`:canStart?`<button type="button" data-challenge-start="${c.id}">開始</button>`:c.id===1?`<button type="button" disabled>初回Infinity済み</button>`:`<button type="button" disabled>${done?'クリア済み':unlocked?'挑戦不可':'16 Infinityで解放'}</button>`}</div>`}).join('')}</div>`,infinity:()=>`<div class="ep-subnav infinity-subnav"><button class="${infinitySubpage==='upgrades'?'active':''}" data-infinity-page="upgrades">Upgrades</button><button class="${infinitySubpage==='break'?'active':''}" data-infinity-page="break">Break Infinity</button><button class="${infinitySubpage==='replicanti'?'active':''}" data-infinity-page="replicanti">Replicanti</button></div>`+(infinitySubpage==='break'?breakInfinityView():infinitySubpage==='replicanti'?replicantiView():infinityUpgradeView()),achievements:()=>`<h2>実績</h2><p>実績による生産倍率：×${achievementMultiplier().toFixed(3)}</p><div class="achievement-grid">${[
 {id:11,name:'You gotta start somewhere',desc:'第1次元を購入する。'},{id:12,name:'100 antimatter is a lot',desc:'第2次元を購入する。'},{id:13,name:'Half life 3 CONFIRMED',desc:'第3次元を購入する。'},{id:14,name:'L4D: Left 4 Dimensions',desc:'第4次元を購入する。'},{id:15,name:'5 Dimension Antimatter Punch',desc:'第5次元を購入する。'},{id:16,name:"We couldn't afford 9",desc:'第6次元を購入する。'},{id:17,name:'Not a luck related achievement',desc:'第7次元を購入する。'},{id:18,name:'90 degrees to infinity',desc:'第8次元を購入する。'},{id:21,name:'To Infinity!',desc:'Big Crunchを実行する。報酬：Infinity後、反物質100から開始。'},{id:22,name:'Boosting the boost',desc:'Dimension Boostを初めて購入する。'},{id:23,name:'The 9th Dimension is a lie',desc:'第8次元をちょうど99個所持する。報酬：第8次元が10%強化される。'},{id:24,name:'Antimatter Apocalypse',desc:'反物質を1e80以上にする。'},{id:25,name:'Boosting to the max',desc:'Dimension Boostを10回購入する。'},{id:26,name:'You got past The Big Wall',desc:'Antimatter Galaxyを購入する。'},{id:27,name:'Double Galaxy',desc:'Antimatter Galaxyを2個購入する。'},{id:28,name:"There's no point in doing that...",desc:'第1次元を1e150個以上所持した状態で、さらに1個購入する。報酬：第1次元が10%強化される。'},
 {id:31,name:'I forgot to nerf that',desc:'いずれかのDimension倍率を1e31以上にする。報酬：第1次元が5%強化される。'},{id:32,name:'The Gods are pleased',desc:'Challenge 8以外でSacrifice倍率を600超にする。報酬：Sacrificeが強化される。'},{id:33,name:"That's a lot of infinites",desc:'Infinityを10回達成する。'},{id:34,name:"You didn't need it anyway",desc:'第8次元を所持せずInfinityする。報酬：第1〜第7次元が2%強化される。'},{id:35,name:"Don't you dare sleep",desc:'6時間を超えてオフラインになる。'},{id:36,name:'Claustrophobic',desc:'Galaxyをちょうど1個所持してInfinityする。報酬：Tickspeedが2%強化される。'},{id:37,name:"That's FAST!",desc:'2時間以内にInfinityする。報酬：Infinity後、反物質5000から開始。'},{id:38,name:"I don't believe in Gods",desc:'SacrificeせずにGalaxyを購入する。'},
 {id:41,name:'No DLC required',desc:'Infinity Upgradeを16個購入する。'},{id:42,name:'Super Sanic',desc:'反物質が1e63以上のとき、生産量/秒を反物質より大きくする。'},{id:43,name:'How the antitables have turned..',desc:'第8次元の倍率を最大、第7次元を2番目に高くする順序にする。報酬：次元ごとに1〜8%強化。'},{id:44,name:'Over in 30 Seconds',desc:'生産量/秒が反物質を30秒間連続で上回る。'},{id:45,name:'Faster than a potato',desc:'Tickspeed倍率を1e29以上にする。報酬：Tickspeedが2%強化される。'},{id:46,name:'Multidimensional',desc:'第1〜第7次元をそれぞれ1e12以上にする。'},{id:47,name:'Daredevil',desc:'Normal Challengeを3つクリアする。'},{id:48,name:'Antichallenged',desc:'Normal Challengeを12個すべてクリアする。報酬：全Dimensionが10%強化される。'},
@@ -4140,7 +4140,7 @@ const tabViews={test:()=>testToolsView(),eternity:()=>eternitySubpage==='studies
 /* Inlined from js/src/09-upgrades-and-navigation.js */
 function buyInfinityUpgrade(id){const index=infinityUpgradeData.findIndex(x=>x[0]===id);const u=infinityUpgradeData[index];if(!u||state.infinities<1||state.infinityUpgrades.includes(id)||!infinityUpgradePrerequisiteMet(index)||!hasIPAtLeast(u[3]))return;spendIPBigNumber(u[3]);state.infinityUpgrades.push(id);save();switchScreen('infinity');}
 function buyInfinityExtra(id){if(state.infinities<1||!state.achievements[achievementIndex(41)])return;if(id==='ipOffline'&&!state.ipOffline&&hasIPAtLeast(1000)){spendIPBigNumber(1000);state.ipOffline=true;}else if(id==='ipMult'){const cost=ipMultiplierCostBigNumber();if(hasIPAtLeast(cost)){spendIPBigNumber(cost);state.ipMultLevel++;}else return;}else return;save();switchScreen('infinity');}
-function switchScreen(name){if(name==='infinity'&&!(Number(state.infinities)>0)){name='main';}if(!document.body.classList.contains('crunch-ready'))lastRegularScreen=name;if(name!=='main'){document.body.classList.remove('id-screen-active');tabContent.hidden=false;}else if(mainSubpage==='infinityDimensions'){document.body.classList.add('id-screen-active');tabContent.hidden=false;tabContent.innerHTML=infinityDimensionView();lastInfinityDimensionRender=performance.now();tabContent.querySelectorAll('[data-buy-id]').forEach(el=>el.addEventListener('click',()=>{buyInfinityDimension(Number(el.dataset.buyId));switchScreen('main');}));const maxAllID=tabContent.querySelector('[data-maxall-id]');if(maxAllID)maxAllID.addEventListener('click',()=>{maxAllInfinityDimensions();switchScreen('main');});}else if(mainSubpage==='timeDimensions'){document.body.classList.add('id-screen-active');tabContent.hidden=false;tabContent.innerHTML=timeDimensionView();tabContent.querySelectorAll('[data-buy-td]').forEach(el=>el.addEventListener('click',()=>{buyTimeDimension(Number(el.dataset.buyTd));switchScreen('main');}));const maxAllTD=tabContent.querySelector('[data-maxall-td]');if(maxAllTD)maxAllTD.addEventListener('click',()=>{maxAllTimeDimensions();switchScreen('main');});}else{document.body.classList.remove('id-screen-active');tabContent.hidden=true;tabContent.innerHTML='';}if(name==='autobuyers'){autobuyerUnlockAlert=false;const alertTab=document.querySelector('.screen-tabs button[data-screen="autobuyers"]');if(alertTab)alertTab.classList.remove('unlock-alert');}document.body.dataset.screen=name;document.querySelectorAll('.screen-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));if(name!=='main'){tabContent.innerHTML=tabViews[name]();tabContent.querySelectorAll('[data-stat-page]').forEach(el=>el.addEventListener('click',()=>{statisticsSubpage=el.dataset.statPage;switchScreen('statistics');}));tabContent.querySelectorAll('.achievement-tile').forEach(tile=>tile.addEventListener('click',()=>{const modal=document.createElement('div');modal.className='achievement-modal';modal.innerHTML=`<div class="achievement-modal-box"><h3>${tile.dataset.achievementId}. ${tile.dataset.achievementName}</h3><p>${tile.dataset.achievementDesc.replace('報酬：','<br>報酬：')}</p><button type="button">閉じる</button></div>`;modal.addEventListener('click',e=>{if(e.target===modal||e.target.tagName==='BUTTON')modal.remove();});document.body.appendChild(modal);}));tabContent.querySelectorAll('[data-ab-dim]').forEach(el=>el.addEventListener('change',()=>{state.autobuyers.dims[Number(el.dataset.abDim)]=el.checked;save();}));tabContent.querySelectorAll('[data-ab-id]').forEach(el=>el.addEventListener('change',()=>{const i=Number(el.dataset.abId);state.autobuyers.infinityDims=Array.isArray(state.autobuyers.infinityDims)?state.autobuyers.infinityDims:Array(8).fill(false);state.autobuyers.infinityDims[i]=el.checked;save();}));tabContent.querySelectorAll('[data-ab-dim-mode-toggle]').forEach(el=>el.addEventListener('click',()=>{const i=Number(el.dataset.abDimModeToggle);state.autobuyers.dimModes=Array.isArray(state.autobuyers.dimModes)?state.autobuyers.dimModes:Array(8).fill(state.autobuyers.dimMode||'10');state.autobuyers.dimModes[i]=(state.autobuyers.dimModes[i]||state.autobuyers.dimMode||'10')==='10'?'1':'10';save();switchScreen('autobuyers');}));tabContent.querySelectorAll('[data-ab]').forEach(el=>el.addEventListener('change',()=>{const key=el.dataset.ab;if(key==='eternity')state.eternityAutobuyer=el.checked;else state.autobuyers[key]=el.checked;save();switchScreen('autobuyers');}));const tsModeToggle=tabContent.querySelector('[data-ab-tickspeed-mode-toggle]');if(tsModeToggle)tsModeToggle.addEventListener('click',()=>{state.autobuyers.tickspeedMode=state.autobuyers.tickspeedMode==='max'?'single':'max';save();switchScreen('autobuyers');});const toggleAll=tabContent.querySelector('#abToggleAll');if(toggleAll)toggleAll.addEventListener('click',()=>{const allOn=state.autobuyers.dims.every(Boolean)&&state.autobuyers.tickspeed&&state.autobuyers.boost&&state.autobuyers.galaxy&&state.autobuyers.crunch&&(!state.completedInfinityChallenges.includes(2)||state.autobuyers.sacrifice);const next=!allOn;if(Number(state.eternities)>=1)state.autobuyers.ipMult=next;if(Number(state.eternities)>=3)state.autobuyers.replicantiGalaxy=next;if(Number(state.eternities)>=50){state.autobuyers.replicantiChance=next;state.autobuyers.replicantiInterval=next&&Number(state.eternities)>=60;state.autobuyers.replicantiMaxGalaxies=next&&Number(state.eternities)>=80;}state.autobuyers.dims=state.autobuyers.dims.map((_,i)=>next&&dimAutobuyerUnlocked(i));state.autobuyers.tickspeed=next&&tickspeedAutobuyerUnlocked();state.autobuyers.boost=next&&autobuyerUpgradeUnlocked(9);state.autobuyers.galaxy=next&&autobuyerUpgradeUnlocked(10);state.autobuyers.crunch=next&&autobuyerUpgradeUnlocked(11);if(state.completedInfinityChallenges.includes(2))state.autobuyers.sacrifice=next;save();switchScreen('autobuyers');});tabContent.querySelectorAll('[data-ab-upgrade]').forEach(el=>el.addEventListener('click',()=>buyAutobuyerIntervalUpgrade(Number(el.dataset.abUpgrade))));tabContent.querySelectorAll('[data-ab-bulk-upgrade]').forEach(el=>el.addEventListener('click',()=>buyDimBulkUpgrade(Number(el.dataset.abBulkUpgrade))));tabContent.querySelectorAll('[data-challenge-page]').forEach(el=>el.addEventListener('click',()=>{challengeSubpage=el.dataset.challengePage==='infinity'?'infinity':'normal';switchScreen('challenges');}));tabContent.querySelectorAll('[data-challenge-start]').forEach(el=>el.addEventListener('click',()=>startChallenge(Number(el.dataset.challengeStart))));tabContent.querySelectorAll('[data-infinity-challenge-start]').forEach(el=>el.addEventListener('click',()=>startInfinityChallenge(Number(el.dataset.infinityChallengeStart))));tabContent.querySelectorAll('[data-infinity-challenge-exit]').forEach(el=>el.addEventListener('click',exitInfinityChallenge));tabContent.querySelectorAll('[data-challenge-exit]').forEach(el=>el.addEventListener('click',exitChallenge));tabContent.querySelectorAll('[data-challenge-complete]').forEach(el=>el.addEventListener('click',completeChallenge));tabContent.querySelectorAll('[data-ep-upgrade]').forEach(el=>el.addEventListener('click',()=>buyEternityUpgrade(Number(el.dataset.epUpgrade))));tabContent.querySelectorAll('[data-infinity-upgrade]').forEach(el=>el.addEventListener('click',()=>buyInfinityUpgrade(el.dataset.infinityUpgrade)));tabContent.querySelectorAll('[data-infinity-extra]').forEach(el=>el.addEventListener('click',()=>buyInfinityExtra(el.dataset.infinityExtra)));tabContent.querySelectorAll('[data-rep-action]').forEach(el=>el.addEventListener('click',()=>{const action=el.dataset.repAction;if(action==='unlock')unlockReplicanti();else if(action==='chance'||action==='interval'||action==='galaxy')buyReplicantiUpgrade(action);else if(action==='buyGalaxy')buyReplicantiGalaxy();}));
+function switchScreen(name){if(name==='infinity'&&!(Number(state.infinities)>0)){name='main';}if(!document.body.classList.contains('crunch-ready'))lastRegularScreen=name;if(name!=='main'){document.body.classList.remove('id-screen-active');tabContent.hidden=false;}else if(mainSubpage==='infinityDimensions'){document.body.classList.add('id-screen-active');tabContent.hidden=false;tabContent.innerHTML=infinityDimensionView();lastInfinityDimensionRender=performance.now();tabContent.querySelectorAll('[data-buy-id]').forEach(el=>el.addEventListener('click',()=>{buyInfinityDimension(Number(el.dataset.buyId));switchScreen('main');}));const maxAllID=tabContent.querySelector('[data-maxall-id]');if(maxAllID)maxAllID.addEventListener('click',()=>{maxAllInfinityDimensions();switchScreen('main');});}else if(mainSubpage==='timeDimensions'){document.body.classList.add('id-screen-active');tabContent.hidden=false;tabContent.innerHTML=timeDimensionView();tabContent.querySelectorAll('[data-buy-td]').forEach(el=>el.addEventListener('click',()=>{buyTimeDimension(Number(el.dataset.buyTd));switchScreen('main');}));const maxAllTD=tabContent.querySelector('[data-maxall-td]');if(maxAllTD)maxAllTD.addEventListener('click',()=>{maxAllTimeDimensions();switchScreen('main');});}else{document.body.classList.remove('id-screen-active');tabContent.hidden=true;tabContent.innerHTML='';}if(name==='autobuyers'){autobuyerUnlockAlert=false;const alertTab=document.querySelector('.screen-tabs button[data-screen="autobuyers"]');if(alertTab)alertTab.classList.remove('unlock-alert');}document.body.dataset.screen=name;document.querySelectorAll('.screen-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));if(name!=='main'){tabContent.innerHTML=tabViews[name]();if(name==='autobuyers'){const grid=tabContent.querySelector('.ab-grid'),ts=tabContent.querySelector('.ab-tickspeed-card'),all=tabContent.querySelector('#abToggleAll'),buy10=tabContent.querySelector('#abToggleBuyUntil10');if(grid&&ts){grid.insertBefore(ts,grid.firstChild);ts.style.setProperty('grid-column','1 / -1','important');ts.style.setProperty('grid-row','1','important');ts.style.setProperty('width','52%','important');ts.style.setProperty('justify-self','center','important');}if(all&&buy10){const bar=document.createElement('div');bar.className='ab-top-controls';const status=document.createElement('div');status.className='ab-top-status';status.textContent='Autobuyers enabled';all.textContent='Toggle all autobuyers';buy10.textContent='Toggle buy until 10';bar.append(status,all,buy10);tabContent.insertBefore(bar,grid);}}tabContent.querySelectorAll('[data-stat-page]').forEach(el=>el.addEventListener('click',()=>{statisticsSubpage=el.dataset.statPage;switchScreen('statistics');}));tabContent.querySelectorAll('.achievement-tile').forEach(tile=>tile.addEventListener('click',()=>{const modal=document.createElement('div');modal.className='achievement-modal';modal.innerHTML=`<div class="achievement-modal-box"><h3>${tile.dataset.achievementId}. ${tile.dataset.achievementName}</h3><p>${tile.dataset.achievementDesc.replace('報酬：','<br>報酬：')}</p><button type="button">閉じる</button></div>`;modal.addEventListener('click',e=>{if(e.target===modal||e.target.tagName==='BUTTON')modal.remove();});document.body.appendChild(modal);}));tabContent.querySelectorAll('[data-ab-dim-unlock]').forEach(el=>el.addEventListener('click',()=>{const i=Number(el.dataset.abDimUnlock);if(dimAutobuyerUnlocked(i)){state.autobuyers.dims[i]=true;save();switchScreen('autobuyers');}}));tabContent.querySelectorAll('[data-ab-dim]').forEach(el=>el.addEventListener('change',()=>{state.autobuyers.dims[Number(el.dataset.abDim)]=el.checked;save();}));tabContent.querySelectorAll('[data-ab-id]').forEach(el=>el.addEventListener('change',()=>{const i=Number(el.dataset.abId);state.autobuyers.infinityDims=Array.isArray(state.autobuyers.infinityDims)?state.autobuyers.infinityDims:Array(8).fill(false);state.autobuyers.infinityDims[i]=el.checked;save();}));tabContent.querySelectorAll('[data-ab-dim-mode-toggle]').forEach(el=>el.addEventListener('click',()=>{const i=Number(el.dataset.abDimModeToggle);state.autobuyers.dimModes=Array.isArray(state.autobuyers.dimModes)?state.autobuyers.dimModes:Array(8).fill(state.autobuyers.dimMode||'10');state.autobuyers.dimModes[i]=(state.autobuyers.dimModes[i]||state.autobuyers.dimMode||'10')==='10'?'1':'10';save();switchScreen('autobuyers');}));tabContent.querySelectorAll('[data-ab]').forEach(el=>el.addEventListener('change',()=>{const key=el.dataset.ab;if(key==='eternity')state.eternityAutobuyer=el.checked;else state.autobuyers[key]=el.checked;save();switchScreen('autobuyers');}));const tsModeToggle=tabContent.querySelector('[data-ab-tickspeed-mode-toggle]');if(tsModeToggle)tsModeToggle.addEventListener('click',()=>{state.autobuyers.tickspeedMode=state.autobuyers.tickspeedMode==='max'?'single':'max';save();switchScreen('autobuyers');});const toggleBuyUntil10=tabContent.querySelector('#abToggleBuyUntil10');if(toggleBuyUntil10)toggleBuyUntil10.addEventListener('click',()=>{const current=(state.autobuyers.dimModes?.[0]||state.autobuyers.dimMode||'10');const next=current==='10'?'1':'10';state.autobuyers.dimModes=Array.from({length:8},(_,i)=>state.autobuyers.dims[i]?next:(state.autobuyers.dimModes?.[i]||state.autobuyers.dimMode||'10'));state.autobuyers.dimMode=next;save();switchScreen('autobuyers');});const toggleAll=tabContent.querySelector('#abToggleAll');if(toggleAll)toggleAll.addEventListener('click',()=>{const allOn=state.autobuyers.dims.every(Boolean)&&state.autobuyers.tickspeed&&state.autobuyers.boost&&state.autobuyers.galaxy&&state.autobuyers.crunch&&(!state.completedInfinityChallenges.includes(2)||state.autobuyers.sacrifice);const next=!allOn;if(Number(state.eternities)>=1)state.autobuyers.ipMult=next;if(Number(state.eternities)>=3)state.autobuyers.replicantiGalaxy=next;if(Number(state.eternities)>=50){state.autobuyers.replicantiChance=next;state.autobuyers.replicantiInterval=next&&Number(state.eternities)>=60;state.autobuyers.replicantiMaxGalaxies=next&&Number(state.eternities)>=80;}state.autobuyers.dims=state.autobuyers.dims.map((_,i)=>next&&dimAutobuyerUnlocked(i));state.autobuyers.tickspeed=next&&tickspeedAutobuyerUnlocked();state.autobuyers.boost=next&&autobuyerUpgradeUnlocked(9);state.autobuyers.galaxy=next&&autobuyerUpgradeUnlocked(10);state.autobuyers.crunch=next&&autobuyerUpgradeUnlocked(11);if(state.completedInfinityChallenges.includes(2))state.autobuyers.sacrifice=next;save();switchScreen('autobuyers');});tabContent.querySelectorAll('[data-ab-upgrade]').forEach(el=>el.addEventListener('click',()=>buyAutobuyerIntervalUpgrade(Number(el.dataset.abUpgrade))));tabContent.querySelectorAll('[data-ab-bulk-upgrade]').forEach(el=>el.addEventListener('click',()=>buyDimBulkUpgrade(Number(el.dataset.abBulkUpgrade))));tabContent.querySelectorAll('[data-challenge-page]').forEach(el=>el.addEventListener('click',()=>{challengeSubpage=el.dataset.challengePage==='infinity'?'infinity':'normal';switchScreen('challenges');}));tabContent.querySelectorAll('[data-challenge-start]').forEach(el=>el.addEventListener('click',()=>startChallenge(Number(el.dataset.challengeStart))));tabContent.querySelectorAll('[data-infinity-challenge-start]').forEach(el=>el.addEventListener('click',()=>startInfinityChallenge(Number(el.dataset.infinityChallengeStart))));tabContent.querySelectorAll('[data-infinity-challenge-exit]').forEach(el=>el.addEventListener('click',exitInfinityChallenge));tabContent.querySelectorAll('[data-challenge-exit]').forEach(el=>el.addEventListener('click',exitChallenge));tabContent.querySelectorAll('[data-challenge-complete]').forEach(el=>el.addEventListener('click',completeChallenge));tabContent.querySelectorAll('[data-ep-upgrade]').forEach(el=>el.addEventListener('click',()=>buyEternityUpgrade(Number(el.dataset.epUpgrade))));tabContent.querySelectorAll('[data-infinity-upgrade]').forEach(el=>el.addEventListener('click',()=>buyInfinityUpgrade(el.dataset.infinityUpgrade)));tabContent.querySelectorAll('[data-infinity-extra]').forEach(el=>el.addEventListener('click',()=>buyInfinityExtra(el.dataset.infinityExtra)));tabContent.querySelectorAll('[data-rep-action]').forEach(el=>el.addEventListener('click',()=>{const action=el.dataset.repAction;if(action==='unlock')unlockReplicanti();else if(action==='chance'||action==='interval'||action==='galaxy')buyReplicantiUpgrade(action);else if(action==='buyGalaxy')buyReplicantiGalaxy();}));
 tabContent.querySelectorAll('[data-ep-page]').forEach(el=>el.addEventListener('click',()=>{eternitySubpage=el.dataset.epPage;switchScreen('eternity');}));tabContent.querySelectorAll('[data-infinity-page]').forEach(el=>el.addEventListener('click',()=>{infinitySubpage=el.dataset.infinityPage;switchScreen('infinity');}));tabContent.querySelectorAll('[data-test-action]').forEach(el=>el.addEventListener('click',()=>{try{const action=el.dataset.testAction;if(action==='apply-common')testApplyCommon();else if(action==='apply-unlocks')testApplyUnlocks();else if(action==='clear-studies'){state.timeStudies=[];save();render();switchScreen('test');}else if(action==='unlock-replicanti'){state.replicantiUnlocked=true;save();render();switchScreen('test');}else if(action==='unlock-break-infinity'){state.breakInfinityUnlocked=true;state.breakInfinityActive=true;save();render();switchScreen('test');}else if(action==='apply-state'){const path=document.getElementById('testStatePath').value;const value=JSON.parse(document.getElementById('testStateValue').value);testSetStatePath(path,value);save();render();switchScreen('test');document.getElementById('testStateStatus').textContent=path+' に適用しました。現在値: '+JSON.stringify(path.split('.').reduce((o,k)=>o?.[k],state));}else if(action==='show-state'){const path=document.getElementById('testStatePath').value;document.getElementById('testStateStatus').textContent=path+' = '+JSON.stringify(path.split('.').reduce((o,k)=>o?.[k],state));}else if(action==='refresh'){render();switchScreen('test');}else if(action==='save'){save();document.getElementById('testStateStatus').textContent='セーブしました。';}}catch(err){const status=document.getElementById('testStateStatus');if(status)status.textContent='エラー: '+err.message;else alert('テスト設定エラー: '+err.message);}}));
 tabContent.querySelectorAll('[data-ts-buy-tt]').forEach(el=>el.addEventListener('click',()=>tsBuyTheorem(el.dataset.tsBuyTt)));
 tabContent.querySelectorAll('[data-ts-buy-tt-max]').forEach(el=>el.addEventListener('click',()=>{
@@ -5127,190 +5127,245 @@ html #dimensions.dimensions > .dim > button.buy {
 }
 </style>
 
+
+<style id="autobuyers-match-reference-no-extra-cards">
+body[data-screen="autobuyers"] .ab-boost-card,
+body[data-screen="autobuyers"] .ab-galaxy-card,
+body[data-screen="autobuyers"] .ab-crunch-card{display:none!important}
+</style>
 </body>
 </html>
 
-<style id="reset-buttons-reference-copy">
-@media(max-width:540px){
- .mobile-reset-actions{grid-template-columns:1fr 1fr!important;gap:8px!important;align-items:stretch!important}
- .mobile-reset-actions button{height:82px!important;min-height:82px!important;padding:6px 5px!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;white-space:pre-line!important;overflow-wrap:anywhere!important;font-size:10px!important;font-weight:750!important;line-height:1.22!important;border-width:2px!important;border-radius:5px!important}
- .mobile-reset-actions .mobile-boost{background:#292326!important;border-color:#a94b65!important;color:#e6dce0!important}
- .mobile-reset-actions .mobile-galaxy{background:#292326!important;border-color:#a94b65!important;color:#e6dce0!important}
-}
-</style>
-
-<style id="initial-reset-reference-text-final">
-@media(max-width:540px){
- body[data-screen="main"] .initial-reset-card .initial-reset-description{
-  min-height:84px!important;padding:7px 5px!important;font-size:11px!important;line-height:1.2!important;
-  text-align:center!important;overflow-wrap:anywhere!important;
- }
-}
-</style>
-
-<style id="nd-buy-button-independent-color">
-@media screen and (max-width:700px) {
-  html body[data-screen="main"] #dimensions.dimensions > .dim > button.buy {
-    position:relative !important;
-    overflow:hidden !important;
-    isolation:isolate !important;
-    background-color:#262626 !important;
-    background-image:linear-gradient(
-      to right,
-      #123b20 0%,
-      #123b20 var(--dim-bought-progress, 0%),
-      #24552f var(--dim-bought-progress, 0%),
-      #24552f calc(var(--dim-bought-progress, 0%) + var(--dim-afford-progress, 0%)),
-      #262626 calc(var(--dim-bought-progress, 0%) + var(--dim-afford-progress, 0%)),
-      #262626 100%
-    ) !important;
-    border-color:#b34f69 !important;
-    color:#d0d0d0 !important;
-  }
-  html body[data-screen="main"] #dimensions.dimensions > .dim.dim-can-afford > button.buy { border-color:#008b28 !important; }
-  html body[data-screen="main"] #dimensions.dimensions > .dim:nth-child(even) { background:rgba(125,35,45,.34) !important; }
-  html body[data-screen="main"] #dimensions.dimensions > .dim:nth-child(odd) { background:transparent !important; }
-}
-</style>
-
-<style id="reset-card-action-state-colors">
-@media screen and (max-width:540px){
- html body[data-screen="main"] .initial-reset-card .initial-reset-description{
-  background:#262626 !important;
-  border-color:#b34f69 !important;
-  transition:none !important;
- }
- html body[data-screen="main"] .initial-reset-card.can-execute .initial-reset-description{
-  background:#171717 !important;
-  border-color:#008b28 !important;
- }
-}
-</style>
-
-<style id="five-tab-reference-layout">
-@media(max-width:700px){
- body[data-screen="main"] .initial-main-footer{height:75px!important;padding:0 0 env(safe-area-inset-bottom)!important;background:#000!important;display:block!important}
- body[data-screen="main"] .initial-footer-icons{height:75px!important;display:flex!important;align-items:stretch!important;justify-content:space-around!important;width:100%!important}
- body[data-screen="main"] .initial-footer-icons button{display:flex!important;flex:1 1 0!important;width:20%!important;min-width:0!important;height:75px!important;align-items:center!important;justify-content:center!important;padding:0!important;margin:0!important;background:none!important;border:0!important;border-bottom:4px solid transparent!important;color:#aaa!important;font-size:0!important}
- body[data-screen="main"] .initial-footer-icons button[hidden]{display:none!important}
- body[data-screen="main"] .initial-footer-icons button svg{display:block!important;width:42px!important;height:42px!important;fill:none!important;stroke:currentColor!important;stroke-width:3.1!important;stroke-linecap:round!important;stroke-linejoin:round!important}
- body[data-screen="main"] .initial-footer-icons button[data-nav-screen="main"] svg{fill:rgba(189,113,135,.16)!important}
- body[data-screen="main"] .initial-footer-icons button.active{color:#bd7187!important;border-bottom:4px solid #d41469!important}
- body[data-screen="main"] .initial-footer-title{display:none!important}
-}
-@media(min-width:701px){body[data-screen="main"] .initial-footer-icons button svg{width:32px;height:32px}}
-</style>
-
-
-<style id="mobile-drawer-compact-header-fix">
+<style id="autobuyers-reference-exact-layout-final">
 @media (max-width:700px) {
-  .mobile-game-drawer-backdrop {
-    position:fixed!important; inset:0!important; z-index:10000!important;
-    background:rgba(0,0,0,.62)!important;
-    opacity:0!important; visibility:hidden!important;
-    transition:opacity .18s ease,visibility .18s ease!important;
+  /* Autobuyers screen is a standalone view: no global header, hamburger, footer tabs, or buy-ten panel. */
+  body[data-screen="autobuyers"] .initial-game-header,
+  body[data-screen="autobuyers"] .initial-main-footer,
+  body[data-screen="autobuyers"] nav#screenTabs,
+  body[data-screen="autobuyers"] #nd2TickspeedPanel,
+  body[data-screen="autobuyers"] .initial-buy-ten-label,
+  body[data-screen="autobuyers"] .sticky-tools .initial-buy-ten-label,
+  body[data-screen="autobuyers"] .ab-boost-card,
+  body[data-screen="autobuyers"] .ab-galaxy-card,
+  body[data-screen="autobuyers"] .ab-crunch-card,
+  body[data-screen="autobuyers"] .ab-dimension-group-title,
+  body[data-screen="autobuyers"] #tabContent > h2 {
+    display:none !important;
   }
-  .mobile-game-drawer {
-    position:fixed!important; z-index:10001!important;
-    top:0!important; bottom:0!important; left:0!important;
-    width:72vw!important; max-width:none!important;
-    box-sizing:border-box!important; overflow-y:auto!important;
-    overscroll-behavior:contain!important;
-    padding:0 0 calc(16px + env(safe-area-inset-bottom))!important;
-    background:#19191d!important;
-    transform:translateX(-105%)!important;
-    transition:transform .2s ease!important;
-    box-shadow:8px 0 28px rgba(0,0,0,.28)!important;
+  body[data-screen="autobuyers"] main {
+    width:100% !important; max-width:none !important;
+    margin:0 !important; padding:12px 7px 24px !important;
   }
-  body.mobile-drawer-open .mobile-game-drawer-backdrop {
-    opacity:1!important; visibility:visible!important;
+  body[data-screen="autobuyers"] #tabContent {
+    margin:0 !important; padding:0 !important;
+    border:0 !important; border-radius:0 !important;
+    background:transparent !important;
   }
-  body.mobile-drawer-open .mobile-game-drawer {
-    transform:translateX(0)!important;
+  body[data-screen="autobuyers"] .ab-grid {
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:7px !important; margin:0 !important;
   }
-  body.mobile-drawer-open {overflow:hidden!important}
-  .mobile-game-drawer .drawer-brand {
-    display:flex!important; align-items:center!important; justify-content:center!important;
-    height:112px!important; min-height:112px!important;
-    box-sizing:border-box!important; padding:12px 10px!important;
-    margin:0!important; text-align:center!important;
-    font-size:18px!important; line-height:1.2!important; font-weight:700!important;
-    color:#dedee2!important; background:#19191d!important;
-    border-bottom:1px solid #303036!important;
+  /* Flatten the dimensions wrapper so the eight dimension cards share the main grid. */
+  body[data-screen="autobuyers"] .ab-grid > .ab-dimension-group,
+  body[data-screen="autobuyers"] .ab-dimension-grid {
+    display:contents !important;
   }
-  .mobile-game-drawer .drawer-brand-mark {display:none!important}
-  .mobile-game-drawer .drawer-items {display:block!important; padding:0!important; margin:0!important}
-  .mobile-game-drawer .drawer-main-group {display:block!important; border-bottom:1px solid #303036!important}
-  .mobile-game-drawer .drawer-item {
-    position:relative!important; width:100%!important;
-    height:58px!important; min-height:58px!important;
-    box-sizing:border-box!important; display:flex!important;
-    align-items:center!important; gap:14px!important;
-    padding:0 16px 0 28px!important; margin:0!important;
-    border:0!important; border-radius:0!important;
-    background:transparent!important; color:#bdbdc2!important;
-    text-align:left!important; font-size:16px!important; font-weight:600!important;
+  body[data-screen="autobuyers"] .ab-dimension-card {
+    box-sizing:border-box !important; display:flex !important;
+    flex-direction:column !important; align-items:center !important;
+    justify-content:space-between !important; text-align:center !important;
+    width:100% !important; min-width:0 !important; min-height:180px !important;
+    padding:12px 8px 10px !important; margin:0 !important;
+    border:1.5px solid #4b4b50 !important; border-radius:13px !important;
+    background:#171719 !important;
   }
-  .mobile-game-drawer .drawer-main-category {border-bottom:1px solid #303036!important}
-  .mobile-game-drawer .drawer-main-group.active .drawer-main-category {
-    background:#24242a!important; color:#bd7187!important;
+  body[data-screen="autobuyers"] .ab-dimension-card.ab-available {
+    border:1.5px solid #bd812b !important;
   }
-  .mobile-game-drawer .drawer-item.active {
-    background:#24242a!important; color:#bd7187!important;
+  body[data-screen="autobuyers"] .ab-dimension-card .ab-card-heading {
+    display:flex !important; flex-direction:column !important;
+    align-items:center !important; width:100% !important;
+    gap:0 !important; text-align:center !important;
   }
-  .mobile-game-drawer .drawer-item.active:before {
-    content:""!important; position:absolute!important; left:0!important;
-    top:0!important; bottom:0!important; width:4px!important;
-    background:#d41469!important;
+  body[data-screen="autobuyers"] .ab-dimension-card strong {
+    display:block !important; font-size:13px !important;
+    line-height:1.25 !important; text-align:center !important;
   }
-  .mobile-game-drawer .drawer-item-icon {
-    width:26px!important; height:28px!important; flex:0 0 26px!important;
-    display:flex!important; align-items:center!important; justify-content:center!important;
-    color:inherit!important;
+  body[data-screen="autobuyers"] .ab-dimension-card small {
+    display:block !important; width:100% !important;
+    margin-top:34px !important; font-size:12px !important;
+    line-height:1.35 !important; color:#bdbdc2 !important;
+    text-align:center !important;
   }
-  .mobile-game-drawer .drawer-item-icon svg {
-    display:block!important; width:24px!important; height:24px!important;
-    fill:none!important; stroke:currentColor!important; stroke-width:3.1!important;
-    stroke-linecap:round!important; stroke-linejoin:round!important;
+  body[data-screen="autobuyers"] .ab-dimension-card .ab-unlock-button {
+    display:block !important; width:72% !important; min-height:34px !important;
+    margin:0 auto !important; padding:5px 6px !important;
+    border:1.5px solid #bd812b !important; border-radius:7px !important;
+    background:transparent !important; color:#bd812b !important;
+    font-size:12px !important; font-weight:700 !important;
   }
-  .mobile-game-drawer .drawer-item-label {flex:1!important}
-  .mobile-game-drawer .drawer-chevron {color:#888!important; font-size:20px!important; line-height:1!important}
-  .mobile-game-drawer .drawer-submenu {
-    display:block!important; padding:0!important; margin:0!important;
-    background:#24242a!important;
+  body[data-screen="autobuyers"] .ab-tickspeed-card {
+    order:-1 !important; grid-column:1 / -1 !important;
+    justify-self:center !important; width:66.5% !important;
+    min-height:180px !important; box-sizing:border-box !important;
+    display:flex !important; flex-direction:column !important;
+    align-items:center !important; justify-content:space-between !important;
+    padding:15px 10px !important; margin:0 0 1px !important;
+    border:1.5px solid #4b4b50 !important; border-radius:13px !important;
+    background:#171719 !important; text-align:center !important;
   }
-  .mobile-game-drawer .drawer-main-group:not(.expanded) .drawer-submenu {display:none!important}
-  .mobile-game-drawer .drawer-leaf {
-    width:100%!important; height:44px!important; min-height:44px!important;
-    display:flex!important; align-items:center!important; justify-content:space-between!important;
-    box-sizing:border-box!important; padding:0 18px 0 54px!important;
-    border:0!important; border-left:4px solid transparent!important;
-    border-radius:0!important; background:#24242a!important;
-    color:#eee!important; text-align:left!important;
-    font-size:14px!important; font-weight:500!important;
+  body[data-screen="autobuyers"] .ab-tickspeed-card > div {
+    display:flex !important; flex-direction:column !important;
+    align-items:center !important; width:100% !important;
   }
-  .mobile-game-drawer .drawer-leaf.active {
-    border-left-color:#d41469!important; color:#fff!important;
+  body[data-screen="autobuyers"] .ab-tickspeed-card strong {
+    font-size:13px !important; text-align:center !important;
   }
-  .mobile-game-drawer .drawer-leaf-label {flex:1!important}
-  .mobile-game-drawer .drawer-leaf-symbol {font-size:17px!important; font-weight:700!important}
-  body[data-screen="main"] #screenTabs {display:none!important}
+  body[data-screen="autobuyers"] .ab-tickspeed-card small {
+    margin-top:34px !important; font-size:12px !important;
+    line-height:1.35 !important; text-align:center !important;
+  }
+  body[data-screen="autobuyers"] .ab-tickspeed-card .ab-toggle,
+  body[data-screen="autobuyers"] .ab-tickspeed-card button {display:none !important;}
+  body[data-screen="autobuyers"] #abToggleAll,
+  body[data-screen="autobuyers"] #abToggleBuyUntil10,
+  body[data-screen="autobuyers"] .ab-top-control {
+    box-sizing:border-box !important; display:inline-flex !important;
+    width:calc(33.333% - 5px) !important; min-height:50px !important;
+    align-items:center !important; justify-content:center !important;
+    margin:0 2px 7px 0 !important; padding:6px 5px !important;
+    border:1.5px solid #bd812b !important; border-radius:8px !important;
+    background:#202024 !important; color:#c5c5c8 !important;
+    font-size:13px !important; line-height:1.2 !important;
+    text-align:center !important; white-space:normal !important;
+  }
+  body[data-screen="autobuyers"] .ab-grid .ab-card:not(.ab-dimension-card):not(.ab-tickspeed-card) {display:none !important;}
 }
-@media (min-width:701px) {
-  .mobile-game-drawer,.mobile-game-drawer-backdrop {display:none!important}
+</style>
+<style id="autobuyers-reference-layout-correction-2">
+@media(max-width:700px){
+ body[data-screen="autobuyers"] .initial-game-header,
+ body[data-screen="autobuyers"] .initial-main-footer,
+ body[data-screen="autobuyers"] #screenTabs,
+ body[data-screen="autobuyers"] .mobile-bottom-actions,
+ body[data-screen="autobuyers"] #nd2TickspeedPanel,
+ body[data-screen="autobuyers"] .initial-buy-ten-label {display:none!important}
+ body[data-screen="autobuyers"] main{padding:0 7px 18px!important}
+ body[data-screen="autobuyers"] main>.sticky-tools{
+   display:block!important; position:relative!important; top:auto!important;
+   margin:0 0 8px!important; padding:18px 0 0!important;
+   border:0!important; background:transparent!important; box-shadow:none!important;
+ }
+ body[data-screen="autobuyers"] .sticky-tools .stats{
+   display:flex!important; justify-content:center!important; align-items:center!important;
+   margin:0 0 12px!important; padding:0!important; background:transparent!important;
+ }
+ body[data-screen="autobuyers"] .sticky-tools .stats>.stat:not(:first-child){display:none!important}
+ body[data-screen="autobuyers"] .sticky-tools .stats>.stat:first-child{
+   display:block!important; width:100%!important; padding:0!important; margin:0!important;
+   border:0!important; background:transparent!important; box-shadow:none!important;
+   text-align:center!important;
+ }
+ body[data-screen="autobuyers"] #matter{
+   display:inline-block!important; font-size:25px!important; line-height:1.2!important;
+   font-weight:700!important; color:#bdbdc2!important; white-space:nowrap!important;
+ }
+ body[data-screen="autobuyers"] #matter:before{content:"You have "!important;font-size:14px!important;font-weight:400!important;color:#888!important}
+ body[data-screen="autobuyers"] #matter:after{content:" antimatter."!important;font-size:14px!important;font-weight:400!important;color:#888!important}
+ body[data-screen="autobuyers"] .sticky-tools .quick-actions{display:none!important}
+ body[data-screen="autobuyers"] .ab-top-controls{
+   display:grid!important; grid-template-columns:repeat(3,minmax(0,1fr))!important;
+   align-items:stretch!important; gap:6px!important; width:100%!important;
+   margin:0 0 7px!important; padding:0!important;
+ }
+ body[data-screen="autobuyers"] .ab-top-status,
+ body[data-screen="autobuyers"] #abToggleAll,
+ body[data-screen="autobuyers"] #abToggleBuyUntil10{
+   box-sizing:border-box!important; display:flex!important; align-items:center!important;
+   justify-content:center!important; width:100%!important; min-width:0!important;
+   min-height:50px!important; margin:0!important; padding:5px!important;
+   border:1.5px solid #bd812b!important; border-radius:8px!important;
+   background:#202024!important; color:#c5c5c8!important;
+   font-size:13px!important; font-weight:400!important; line-height:1.2!important;
+   text-align:center!important; white-space:normal!important;
+ }
+ body[data-screen="autobuyers"] .ab-dimension-card .ab-card-heading strong{max-width:125px!important}
+ body[data-screen="autobuyers"] .ab-dimension-card .ab-unlock-button{filter:sepia(.8) saturate(2)!important}
+}
+</style>
+<style id="autobuyers-hide-extra-antimatter-caption">
+@media(max-width:700px){body[data-screen="autobuyers"] .sticky-tools .stats>.stat:first-child>small{display:none!important}}
+</style>
+
+<style id="autobuyers-correct-reference-controls">
+@media(max-width:700px){
+  /* Keep the requested standalone Autobuyers layout, but retain the two floating game actions. */
+  body[data-screen="autobuyers"] .mobile-bottom-actions{
+    display:block!important;position:fixed!important;left:auto!important;right:8px!important;
+    bottom:14px!important;z-index:120!important;width:58px!important;height:58px!important;
+    margin:0!important;padding:0!important;background:transparent!important;border:0!important;
+    box-shadow:none!important;overflow:visible!important;
+  }
+  body[data-screen="autobuyers"] #mobileMaxAllBtn{
+    display:flex!important;position:absolute!important;right:0!important;bottom:0!important;
+    align-items:center!important;justify-content:center!important;width:58px!important;height:58px!important;
+    min-height:58px!important;padding:0!important;border:0!important;border-radius:50%!important;
+    background:#000!important;color:#fff!important;font-size:15px!important;font-weight:700!important;
+  }
+  body[data-screen="autobuyers"] #mobileTickspeedBtn,
+  body[data-screen="autobuyers"] #mobileBuyModeBtn,
+  body[data-screen="autobuyers"] #mobileSaveBtn{display:none!important}
+  body[data-screen="autobuyers"] .mobile-reset-actions{
+    display:grid!important;position:fixed!important;left:auto!important;right:77px!important;
+    bottom:14px!important;z-index:120!important;width:58px!important;height:58px!important;
+    grid-template-columns:58px!important;gap:0!important;margin:0!important;padding:0!important;
+    background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none!important;
+  }
+  body[data-screen="autobuyers"] #mobileBoostBtn{
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    width:58px!important;height:58px!important;min-height:58px!important;padding:0!important;
+    border:0!important;border-radius:50%!important;background:#000!important;color:#fff!important;
+    font-size:12px!important;font-weight:700!important;white-space:pre-line!important;
+    pointer-events:auto!important;
+  }
+  body[data-screen="autobuyers"] #mobileGalaxyBtn,
+  body[data-screen="autobuyers"] #mobileChallenge9ResetBtn,
+  body[data-screen="autobuyers"] #mobileICResetBtn{display:none!important}
+  body[data-screen="autobuyers"] main{padding-bottom:90px!important}
 }
 </style>
 
-
-<style id="five-tab-bottom-reference-layout-v2">
+<style id="autobuyers-final-header-footer-and-buyten-fix">
 @media(max-width:700px){
- body[data-screen="main"] .initial-main-footer{position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:100!important;height:105px!important;min-height:105px!important;padding:0 0 env(safe-area-inset-bottom)!important;box-sizing:content-box!important;background:#000!important;display:flex!important;flex-direction:column!important}
- body[data-screen="main"] .initial-footer-icons{height:50px!important;min-height:50px!important;flex:0 0 50px!important;display:flex!important;align-items:stretch!important;justify-content:space-around!important;width:100%!important;margin:0!important;padding:0!important}
- body[data-screen="main"] .initial-footer-icons button{display:flex!important;flex:1 1 0!important;width:20%!important;min-width:0!important;height:50px!important;min-height:50px!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;padding:0!important;margin:0!important;background:none!important;border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;color:#aaa!important;font-size:0!important}
- body[data-screen="main"] .initial-footer-icons button[hidden]{display:none!important}
- body[data-screen="main"] .initial-footer-icons button svg{display:block!important;width:26px!important;height:26px!important;max-width:26px!important;max-height:26px!important;fill:none!important;stroke:currentColor!important;stroke-width:3.1!important;stroke-linecap:round!important;stroke-linejoin:round!important}
- body[data-screen="main"] .initial-footer-icons button[data-nav-screen="main"] svg{fill:rgba(189,113,135,.16)!important}
- body[data-screen="main"] .initial-footer-icons button.active{color:#bd7187!important;border-bottom:2px solid #d41469!important}
- body[data-screen="main"] .initial-footer-title{display:flex!important;flex:1 1 auto!important;width:100%!important;min-height:0!important;height:55px!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;border:0!important;border-bottom:2px solid #d41469!important;background:#000!important;color:#fff!important;font-size:20px!important;font-weight:700!important;line-height:1!important;text-align:center!important}
+  /* Keep the shared hamburger header and bottom navigation on Autobuyers. */
+  body[data-screen="autobuyers"] .initial-game-header{display:flex!important;}
+  body[data-screen="autobuyers"] .initial-main-footer{display:flex!important;}
+  body[data-screen="autobuyers"] #screenTabs{display:none!important;}
+  /* Remove only the Buy ten multiplier / tickspeed purchase block. */
+  body[data-screen="autobuyers"] #nd2TickspeedPanel,
+  body[data-screen="autobuyers"] .initial-buy-ten-label,
+  body[data-screen="autobuyers"] .sticky-tools .initial-buy-ten-label{display:none!important;}
+  body[data-screen="autobuyers"] main{padding-top:42px!important;padding-bottom:125px!important;}
+}
+</style>
+<style id="autobuyers-hamburger-and-bottom-action-position">
+@media(max-width:700px){
+ body[data-screen="autobuyers"] .initial-game-header{
+   position:fixed!important;z-index:100!important;top:0!important;left:0!important;right:0!important;
+   height:100px!important;min-height:100px!important;box-sizing:border-box!important;
+   padding:28px 30px!important;align-items:flex-start!important;background:#000!important;
+ }
+ body[data-screen="autobuyers"] .initial-menu-button{
+   display:block!important;width:42px!important;height:34px!important;min-width:42px!important;
+   padding:0!important;border:0!important;background:none!important;color:#bbb!important;
+   font-size:0!important;position:relative!important;
+ }
+ body[data-screen="autobuyers"] .initial-menu-button:before{
+   content:"☰"!important;display:block!important;font-size:36px!important;line-height:30px!important;font-weight:300!important;
+ }
+ body[data-screen="autobuyers"] main{padding-top:112px!important;padding-bottom:125px!important;}
+ body[data-screen="autobuyers"] .mobile-bottom-actions{bottom:120px!important;}
+ body[data-screen="autobuyers"] .mobile-reset-actions{bottom:120px!important;}
 }
 </style>
