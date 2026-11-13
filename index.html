@@ -6015,3 +6015,34 @@ body[data-screen="main"] #initial-galaxy-card.can-execute .initial-reset-descrip
   body.crunch-ready #mobileMaxAllBtn{font-size:15px!important}
 }
 </style>
+
+<style id="global-dboost-next-to-max-all-screens">
+@media (max-width:700px) {
+  body[data-screen="main"] .mobile-bottom-actions,
+  body[data-screen="autobuyers"] .mobile-bottom-actions,
+  body[data-screen="achievements"] .mobile-bottom-actions,
+  body[data-screen="statistics"] .mobile-bottom-actions,
+  body[data-screen="options"] .mobile-bottom-actions,
+  body[data-screen="infinity"] .mobile-bottom-actions,
+  body[data-screen="challenges"] .mobile-bottom-actions {
+    display:block!important;position:fixed!important;left:auto!important;right:5px!important;bottom:111px!important;
+    width:58px!important;height:58px!important;margin:0!important;padding:0!important;z-index:120!important;
+    background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible!important;
+  }
+  body:not(.crunch-ready) #mobileMaxAllBtn {
+    display:flex!important;position:absolute!important;right:0!important;left:auto!important;top:0!important;bottom:auto!important;
+    width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important;
+    margin:0!important;padding:0!important;align-items:center!important;justify-content:center!important;
+    border:0!important;border-radius:50%!important;background:#000!important;color:#fff!important;
+  }
+  body:not(.crunch-ready) #mobileDboostBtn:not([hidden]) {
+    display:flex!important;position:absolute!important;left:-66px!important;right:auto!important;top:0!important;bottom:auto!important;
+    width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important;
+    margin:0!important;padding:0!important;align-items:center!important;justify-content:center!important;
+    border:0!important;border-radius:50%!important;background:#000!important;color:#fff!important;
+    font-size:12px!important;font-weight:700!important;white-space:nowrap!important;
+  }
+  body:not(.crunch-ready) #mobileDboostBtn[hidden]{display:none!important;}
+  body:not(.crunch-ready) .mobile-bottom-actions>:not(#mobileMaxAllBtn):not(#mobileDboostBtn){display:none!important;}
+}
+</style>
