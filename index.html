@@ -2878,13 +2878,14 @@ function render(){
  const sacrificePanelUnlocked=Boolean(state.hasUnlockedSacrifice||state.eighthDimensionBoughtThisInfinity);if(sacrificePanelUnlocked&&!state.hasShownSacrificeMultiplierCaption){state.hasShownSacrificeMultiplierCaption=true;save();}
  $('sacrificePanel').style.display=sacrificePanelUnlocked?'':'none';
  const hasEighthDimensionForSacrifice=dimensionAmountBig(state.activeChallenge===12?5:7).compare(1)>=0;
- const sacrificeReady=sacrificeUnlocked&&hasEighthDimensionForSacrifice;
- $('sacrificeBtn').disabled=!sacrificeReady||dimensionAmountBig(0).compare(0)<=0||sacrificeGainBigNumber().compare(1.01)<0;
+ const gain=sacrificeGainBigNumber();
+ const sacrificeGainAvailable=gain.compare(1.01)>=0;
+ const sacrificeReady=sacrificeUnlocked&&hasEighthDimensionForSacrifice&&sacrificeGainAvailable;
+ $('sacrificeBtn').disabled=!sacrificeReady||dimensionAmountBig(0).compare(0)<=0;
  $('sacrificeBtn').classList.toggle('sacrifice-ready',sacrificeReady);
  setText($('sacrificeMultiplier'),'倍率 ×'+sacrificeMultiplierBigNumber().toDisplayString(2));
  $('sacrificePanel').style.opacity=sacrificeUnlocked?'1':'.65';
- const gain=sacrificeGainBigNumber();
- setText($('sacrificeBtn'),!sacrificeUnlocked?'Sacrifice disabled (requires 5 Dimboosts)':!hasEighthDimensionForSacrifice?'Sacrifice disabled (no 8th ADs)':sacrificeReady?'Dimensional Sacrifice (×'+gain.toDisplayString(2)+')':'Sacrifice disabled');
+ setText($('sacrificeBtn'),!sacrificeUnlocked?'Sacrifice disabled (requires 5 Dimboosts)':!hasEighthDimensionForSacrifice?'Sacrifice disabled (no 8th ADs)':!sacrificeGainAvailable?'Sacrifice disabled (×1 multiplier)':'Dimensional Sacrifice (×'+gain.toDisplayString(2)+')');
  const tsCost=tickspeedCost();
  $('tickspeedBtn').disabled=matterBigNumber().compare(tickspeedCostBigNumber())<0;
  setText($('tickspeedBtn'),'購入 · '+tickspeedCostBigNumber().toDisplayString(0));
