@@ -6055,3 +6055,71 @@ body[data-screen="main"] #initial-galaxy-card.can-execute .initial-reset-descrip
   body:not(.crunch-ready) .mobile-bottom-actions>:not(#mobileMaxAllBtn):not(#mobileDboostBtn):not(#mobileGalaxyQuickBtn){display:none!important;}
 }
 </style>
+
+
+<style id="quick-actions-dynamic-tight-layout">
+@media (max-width:700px) {
+  html body:not(.crunch-ready) nav.mobile-bottom-actions[aria-label="クイック操作"] {
+    display:flex!important; position:fixed!important; left:auto!important; right:5px!important; bottom:111px!important;
+    width:max-content!important; height:58px!important; min-height:58px!important; gap:12px!important;
+    align-items:center!important; justify-content:flex-end!important; margin:0!important; padding:0!important;
+    box-sizing:border-box!important; z-index:120!important; background:transparent!important; border:0!important;
+    box-shadow:none!important; overflow:visible!important;
+  }
+  body[data-screen="main"] main > nav.mobile-bottom-actions,
+  body[data-screen="autobuyers"] nav.mobile-bottom-actions,
+  body[data-screen="achievements"] nav.mobile-bottom-actions,
+  body[data-screen="statistics"] nav.mobile-bottom-actions,
+  body[data-screen="options"] nav.mobile-bottom-actions,
+  body[data-screen="infinity"] nav.mobile-bottom-actions,
+  body[data-screen="challenges"] nav.mobile-bottom-actions {
+    display:flex!important;width:max-content!important;min-width:0!important;max-width:none!important;
+    grid-template-columns:none!important;gap:12px!important;justify-content:flex-end!important;
+  }
+  body[data-screen="main"] #mobileDboostBtn,
+  body[data-screen="main"] #mobileGalaxyQuickBtn,
+  body[data-screen="main"] #mobileMaxAllBtn,
+  body[data-screen="autobuyers"] #mobileDboostBtn,
+  body[data-screen="autobuyers"] #mobileGalaxyQuickBtn,
+  body[data-screen="autobuyers"] #mobileMaxAllBtn {
+    position:static!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+  }
+  body:not(.crunch-ready) #mobileDboostBtn,
+  body:not(.crunch-ready) #mobileGalaxyQuickBtn,
+  body:not(.crunch-ready) #mobileMaxAllBtn {
+    position:static!important; inset:auto!important; flex:0 0 58px!important; width:58px!important; min-width:58px!important;
+    max-width:58px!important; height:58px!important; min-height:58px!important; max-height:58px!important;
+    margin:0!important; padding:0!important; display:flex!important; align-items:center!important; justify-content:center!important;
+    border:0!important; border-radius:50%!important; background:#000!important; color:#fff!important; box-sizing:border-box!important;
+  }
+  body:not(.crunch-ready) #mobileDboostBtn {order:1;font-size:12px!important;font-weight:700!important;white-space:nowrap!important;}
+  body:not(.crunch-ready) #mobileGalaxyQuickBtn {order:2;font-size:12px!important;font-weight:700!important;white-space:nowrap!important;}
+  body:not(.crunch-ready) #mobileMaxAllBtn {order:3;font-size:15px!important;font-weight:700!important;}
+  body:not(.crunch-ready) .mobile-bottom-actions #mobileDboostBtn[hidden], body:not(.crunch-ready) .mobile-bottom-actions #mobileGalaxyQuickBtn[hidden] {display:none!important;}
+  body:not(.crunch-ready) .mobile-bottom-actions > :not(#mobileDboostBtn):not(#mobileGalaxyQuickBtn):not(#mobileMaxAllBtn) {display:none!important;}
+}
+</style>
+
+<style id="final-visible-button-row-override">
+@media(max-width:700px){
+ body:not(.crunch-ready)[data-screen="main"] main > nav.mobile-bottom-actions,
+ body:not(.crunch-ready)[data-screen="autobuyers"] nav.mobile-bottom-actions,
+ body:not(.crunch-ready)[data-screen="achievements"] nav.mobile-bottom-actions,
+ body:not(.crunch-ready)[data-screen="statistics"] nav.mobile-bottom-actions,
+ body:not(.crunch-ready)[data-screen="options"] nav.mobile-bottom-actions,
+ body:not(.crunch-ready)[data-screen="infinity"] nav.mobile-bottom-actions,
+ body:not(.crunch-ready)[data-screen="challenges"] nav.mobile-bottom-actions{
+  display:flex!important;width:max-content!important;min-width:0!important;max-width:none!important;
+  grid-template-columns:none!important;grid-auto-columns:auto!important;gap:12px!important;
+  justify-content:flex-end!important;align-items:center!important;
+ }
+ body:not(.crunch-ready)[data-screen] #mobileDboostBtn,
+ body:not(.crunch-ready)[data-screen] #mobileGalaxyQuickBtn,
+ body:not(.crunch-ready)[data-screen] #mobileMaxAllBtn{
+  position:static!important;inset:auto!important;flex:0 0 58px!important;width:58px!important;min-width:58px!important;
+  max-width:58px!important;height:58px!important;min-height:58px!important;max-height:58px!important;
+ }
+ body:not(.crunch-ready)[data-screen] #mobileDboostBtn[hidden],
+ body:not(.crunch-ready)[data-screen] #mobileGalaxyQuickBtn[hidden]{display:none!important}
+}
+</style>
