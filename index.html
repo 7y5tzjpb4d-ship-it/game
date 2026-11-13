@@ -2881,7 +2881,7 @@ function render(){
  setText($('sacrificeMultiplier'),'倍率 ×'+sacrificeMultiplierBigNumber().toDisplayString(2));
  $('sacrificePanel').style.opacity=sacrificeUnlocked?'1':'.65';
  const gain=sacrificeGainBigNumber();
- setText($('sacrificeBtn'),!sacrificeUnlocked?'Sacrifice disabled (requires 5 Dimboosts)':$('sacrificeBtn').disabled?'Sacrifice disabled':'Sacrifice ×'+gain.toDisplayString(2));
+ setText($('sacrificeBtn'),!sacrificeUnlocked?'Sacrifice disabled (requires 5 Dimboosts)':state.amount[state.activeChallenge===12?5:7]<1?'Sacrifice disabled (no 8th ADs)':$('sacrificeBtn').disabled?'Sacrifice disabled':'Sacrifice ×'+gain.toDisplayString(2));
  const tsCost=tickspeedCost();
  $('tickspeedBtn').disabled=matterBigNumber().compare(tickspeedCostBigNumber())<0;
  setText($('tickspeedBtn'),'購入 · '+tickspeedCostBigNumber().toDisplayString(0));
