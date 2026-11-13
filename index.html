@@ -1866,6 +1866,36 @@ body[data-screen="main"] .nd2-tickspeed-actions button:disabled { background-col
 }
 </style>
 
+
+<style id="infinity-collapse-screen-layout">
+body.crunch-ready #tabContent.infinity-collapse-host,
+body.crunch-ready #tabContent {display:block!important;position:relative!important;box-sizing:border-box!important;background:transparent!important;border:0!important;box-shadow:none!important;}
+body.crunch-ready .infinity-collapse-view{position:relative;min-height:calc(100dvh - 220px);padding:10px 0 120px;box-sizing:border-box;text-align:center;color:#bdbdc2;}
+body.crunch-ready .infinity-collapse-message{margin:10px 0 10px;font-size:clamp(14px,4.2vw,22px);line-height:1.35;color:#bdbdc2;}
+body.crunch-ready .infinity-collapse-crunch{display:block;width:min(52%,260px);min-width:190px;height:56px;margin:0 auto;background:#000!important;border:3px solid #bd842c!important;border-radius:7px!important;color:#bd842c!important;font-size:clamp(24px,5.5vw,34px)!important;font-weight:400!important;box-shadow:none!important;}
+body.crunch-ready .infinity-collapse-quick-actions{position:fixed;right:10px;bottom:calc(118px + env(safe-area-inset-bottom));z-index:90;display:flex;gap:8px;align-items:center;}
+body.crunch-ready .infinity-collapse-quick-actions button{width:58px;height:58px;border-radius:50%!important;border:0!important;background:#000!important;color:#fff!important;font-size:13px!important;font-weight:700!important;padding:0!important;box-shadow:0 2px 8px #0008!important;}
+body.crunch-ready .screen-tabs{display:flex!important;visibility:visible!important;}
+body.crunch-ready .initial-main-footer{display:flex!important;visibility:visible!important;}
+body.crunch-ready .initial-game-header{display:flex!important;visibility:visible!important;}
+@media(min-width:701px){body.crunch-ready .infinity-collapse-view{min-height:calc(100vh - 170px);}}
+</style>
+
+<style id="infinity-collapse-clean-layout">
+/* Collapse screen replaces every Main gameplay panel, while keeping the app header/footer and tab navigation. */
+body.crunch-ready main > *:not(#tabContent){display:none!important;}
+body.crunch-ready #tabContent{display:block!important;position:relative!important;min-height:calc(100dvh - 150px)!important;padding:0 10px!important;margin:0!important;overflow:visible!important;}
+body.crunch-ready .infinity-collapse-view{min-height:calc(100dvh - 150px);padding:28px 0 105px!important;}
+body.crunch-ready .infinity-collapse-message{white-space:nowrap;font-size:clamp(11px,3.4vw,14px)!important;margin:8px -4px 10px!important;}
+body.crunch-ready .infinity-collapse-crunch{width:min(34%,180px)!important;min-width:0!important;height:38px!important;min-height:38px!important;padding:0 4px!important;font-size:clamp(17px,4.8vw,22px)!important;border-width:3px!important;}
+body.crunch-ready .infinity-collapse-quick-actions{bottom:calc(118px + env(safe-area-inset-bottom))!important;right:10px!important;gap:8px!important;}
+body.crunch-ready .infinity-collapse-quick-actions button{width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important;}
+body.crunch-ready #mobileMaxAllBtn{display:none!important;}
+body.crunch-ready .achievement-toast-container{display:none!important;}
+body.crunch-ready .screen-tabs{display:none!important;}
+body.crunch-ready .initial-main-footer{display:flex!important;visibility:visible!important;}
+body.crunch-ready .initial-game-header{display:flex!important;visibility:visible!important;}
+</style>
 </head>
 <body><main>
 <div class="sticky-tools">
@@ -2676,6 +2706,17 @@ function buildRows(){
 }
 let lastRegularScreen='main';
 let autobuyerCrunchInProgress=false;
+function infinityCollapseView(){
+ return `<div class="infinity-collapse-view">
+  <p class="infinity-collapse-message">The world has collapsed due to excess of antimatter.</p>
+  <button type="button" class="infinity-collapse-crunch" id="collapseBigCrunchBtn">Big Crunch</button>
+  <div class="infinity-collapse-quick-actions">
+   <button type="button" id="collapseQuickBoost">D.Boost</button>
+   <button type="button" id="collapseQuickGalaxy">A.Galaxy</button>
+   <button type="button" id="collapseQuickMax">Max</button>
+  </div>
+ </div>`;
+}
 function render(){
  syncBigNumberState();
  checkAchievements();
@@ -2728,8 +2769,25 @@ function render(){
  const infinityReady=atInfinity()&&!state.breakInfinityActive;
  document.body.classList.toggle('crunch-ready',infinityReady);
  $('infinityPanel').style.display='none';
- if(infinityReady){document.body.dataset.screen='infinity';$('screenTabs').style.display='none';$('tabContent').hidden=false;$('tabContent').innerHTML='<h2>Infinity</h2><button type="button" class="big-crunch-btn" id="tabCrunchBtn">Big Crunch (+'+fmtBig(ipGainBigNumber())+' IP)'+crunchEfficiencyMarkup()+'</button>';$('tabCrunchBtn').onclick=()=>state.activeChallenge?completeChallenge():bigCrunch();}
- else{$('screenTabs').style.display='';if(wasCrunchReady&&!state.activeChallenge){const destination=lastRegularScreen;switchScreen(destination);$('tabContent').hidden=destination==='main';if(destination==='main')$('tabContent').innerHTML='';}}
+ // Infinity到達後も通常のタブナビゲーションを維持する。Mainに戻った時だけ崩壊画面を表示する。
+ $('screenTabs').style.display='';
+ if(infinityReady){
+  if(document.body.dataset.screen==='main'){
+   $('tabContent').hidden=false;
+   $('tabContent').innerHTML=infinityCollapseView();
+   const crunch=$('collapseBigCrunchBtn');if(crunch)crunch.onclick=()=>state.activeChallenge?completeChallenge():bigCrunch();
+   $('collapseQuickBoost')?.addEventListener('click',()=>$('mobileBoostBtn')?.click());
+   $('collapseQuickGalaxy')?.addEventListener('click',()=>$('mobileGalaxyBtn')?.click());
+   $('collapseQuickMax')?.addEventListener('click',()=>$('mobileMaxAllBtn')?.click());
+  }
+ }else{
+  if(wasCrunchReady&&!state.activeChallenge){
+   const destination=lastRegularScreen;
+   switchScreen(destination);
+   $('tabContent').hidden=destination==='main';
+   if(destination==='main')$('tabContent').innerHTML='';
+  }
+ }
  setText($('ipCount'),getIPBigNumber().toDisplayString(3));setText($('infinityCount'),fmt(state.infinities));
  setText($('tickspeedMultiplier'),'購入 '+BigNumber.from(state.tickspeed).toDisplayString(0)+'回 · 倍率 ×'+tickspeedMultiplierBigNumber().toDisplayString(3));
  setText($('tickspeedDesc'),'');
@@ -5845,6 +5903,25 @@ body[data-screen="main"] #initial-galaxy-card.can-execute .initial-reset-descrip
   body[data-screen="autobuyers"] .ab-tickspeed-locked-layout .ab-unlock-button{
     min-height:0!important;height:18%!important;width:72%!important;
     padding:2%!important;border-radius:2.1cqi!important;font-size:5.2cqi!important;
+  }
+}
+</style>
+
+<style id="infinity-collapse-reference-spacing">
+@media (max-width:700px) {
+  body.crunch-ready .infinity-collapse-view {
+    padding-top: 12px !important;
+  }
+  body.crunch-ready .infinity-collapse-message {
+    margin-top: 2px !important;
+    margin-bottom: 10px !important;
+  }
+  body.crunch-ready .infinity-collapse-crunch {
+    width: min(40%, 220px) !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    padding: 0 8px !important;
+    font-size: clamp(21px, 5.4vw, 27px) !important;
   }
 }
 </style>
