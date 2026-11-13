@@ -2842,7 +2842,7 @@ function render(){
  }
  document.querySelectorAll('[data-current-multiplier]').forEach(el=>{const id=el.dataset.currentMultiplier;el.textContent='現在の倍率：'+infinityUpgradeCurrentMultiplier(id)+(state.infinityUpgrades.includes(id)?'':'（未購入）');});
  document.querySelectorAll('[data-bi-current-multiplier]').forEach(el=>{el.textContent='現在の倍率：×'+fmtFixedBig(breakInfinityUpgradeEffectBigNumber(el.dataset.biCurrentMultiplier),2)+(breakInfinityUpgradeBought(el.dataset.biCurrentMultiplier)?'':'（未購入）');});
- const dBoostQuickButton=$('mobileDboostBtn');if(dBoostQuickButton)dBoostQuickButton.hidden=!state.hasEverBoosted;if(Number(state.galaxies)>0)state.hasEverGalaxy=true;const galaxyQuickButton=$('mobileGalaxyQuickBtn');if(galaxyQuickButton)galaxyQuickButton.hidden=!state.hasEverGalaxy;
+ const dBoostQuickButton=$('mobileDboostBtn');if(dBoostQuickButton){if(Number(state.boosts)>0&&!state.hasEverBoosted){state.hasEverBoosted=true;save();}dBoostQuickButton.hidden=!(state.hasEverBoosted||Number(state.boosts)>0);}if(Number(state.galaxies)>0)state.hasEverGalaxy=true;const galaxyQuickButton=$('mobileGalaxyQuickBtn');if(galaxyQuickButton)galaxyQuickButton.hidden=!state.hasEverGalaxy;
  const wasCrunchReady=document.body.classList.contains('crunch-ready');
  if(atInfinity()&&!state.breakInfinityActive&&!state.infinityCollapseActive){state.infinityCollapseActive=true;save();}
  const infinityReady=Boolean(state.infinityCollapseActive);
