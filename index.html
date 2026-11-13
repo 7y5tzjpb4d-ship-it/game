@@ -2877,11 +2877,14 @@ function render(){
  const sacrificeUnlocked=state.boosts>=5;
  const sacrificePanelUnlocked=Boolean(state.hasUnlockedSacrifice||state.eighthDimensionBoughtThisInfinity);if(sacrificePanelUnlocked&&!state.hasShownSacrificeMultiplierCaption){state.hasShownSacrificeMultiplierCaption=true;save();}
  $('sacrificePanel').style.display=sacrificePanelUnlocked?'':'none';
- $('sacrificeBtn').disabled=!sacrificeUnlocked||state.amount[state.activeChallenge===12?5:7]<1||dimensionAmountBig(0).compare(0)<=0||sacrificeGainBigNumber().compare(1.01)<0;
+ const hasEighthDimensionForSacrifice=dimensionAmountBig(state.activeChallenge===12?5:7).compare(1)>=0;
+ const sacrificeReady=sacrificeUnlocked&&hasEighthDimensionForSacrifice;
+ $('sacrificeBtn').disabled=!sacrificeReady||dimensionAmountBig(0).compare(0)<=0||sacrificeGainBigNumber().compare(1.01)<0;
+ $('sacrificeBtn').classList.toggle('sacrifice-ready',sacrificeReady);
  setText($('sacrificeMultiplier'),'倍率 ×'+sacrificeMultiplierBigNumber().toDisplayString(2));
  $('sacrificePanel').style.opacity=sacrificeUnlocked?'1':'.65';
  const gain=sacrificeGainBigNumber();
- setText($('sacrificeBtn'),!sacrificeUnlocked?'Sacrifice disabled (requires 5 Dimboosts)':state.amount[state.activeChallenge===12?5:7]<1?'Sacrifice disabled (no 8th ADs)':$('sacrificeBtn').disabled?'Sacrifice disabled':'Sacrifice ×'+gain.toDisplayString(2));
+ setText($('sacrificeBtn'),!sacrificeUnlocked?'Sacrifice disabled (requires 5 Dimboosts)':!hasEighthDimensionForSacrifice?'Sacrifice disabled (no 8th ADs)':sacrificeReady?'Dimensional Sacrifice (×'+gain.toDisplayString(2)+')':'Sacrifice disabled');
  const tsCost=tickspeedCost();
  $('tickspeedBtn').disabled=matterBigNumber().compare(tickspeedCostBigNumber())<0;
  setText($('tickspeedBtn'),'購入 · '+tickspeedCostBigNumber().toDisplayString(0));
@@ -6245,3 +6248,13 @@ body[data-screen="main"] #initial-galaxy-card.can-execute .initial-reset-descrip
   else start();
 })();
 </script>
+
+<style id="sacrifice-ready-green-style">
+@media(max-width:700px){
+ body[data-screen="main"] #sacrificePanel .sacrifice-buy.sacrifice-ready{
+   background:#242428!important;
+   border-color:#008b2b!important;
+   color:#c9c9cc!important;
+ }
+}
+</style>
