@@ -749,7 +749,36 @@ body[data-screen="autobuyers"] .id-autobuyer-options {width:100%;}
 </style>
 
 <style id="statistics-screen-ui">
-body[data-screen="statistics"] #tabContent{background:#1b1b20;border:0;border-radius:0;padding:12px 8px 90px;text-align:center;color:#bdbdc2;line-height:1.45}body[data-screen="statistics"] #tabContent h2{font-size:28px;margin:20px 0 4px;color:#ddd}body[data-screen="statistics"] #tabContent h2.stat-general{color:#ddd}body[data-screen="statistics"] #tabContent h2.stat-infinity{color:#c18a36}body[data-screen="statistics"] #tabContent h2.stat-eternity{color:#b04bd7}body[data-screen="statistics"] #tabContent .stat-lead{font-size:18px;margin:10px 0 18px}body[data-screen="statistics"] #tabContent .stat-lead strong{font-size:30px;color:#eee}body[data-screen="statistics"] #tabContent .stat-section{margin:22px auto 30px;max-width:560px}body[data-screen="statistics"] #tabContent .stat-line{font-size:15px;margin:3px 0;color:#bdbdc2}body[data-screen="statistics"] #tabContent .stat-accent-ip{color:#c18a36;font-weight:700}body[data-screen="statistics"] #tabContent .stat-accent-ep{color:#b04bd7;font-weight:700}body[data-screen="statistics"] #tabContent .stat-subnav{position:sticky;bottom:0;z-index:5;display:flex;justify-content:space-around;gap:4px;margin:22px -8px -90px;padding:12px 2px calc(12px + env(safe-area-inset-bottom));background:#08080a;border-top:1px solid #333;overflow-x:auto}body[data-screen="statistics"] #tabContent .stat-subnav button{flex:1;min-width:0;background:none;border:0;border-radius:0;color:#999;padding:9px 3px;font-size:13px;font-weight:700;white-space:nowrap}body[data-screen="statistics"] #tabContent .stat-subnav button.active{color:#fff;border-bottom:3px solid #d41469}body[data-screen="statistics"] #tabContent .stat-record-grid{display:grid;grid-template-columns:1fr;gap:7px;text-align:left}body[data-screen="statistics"] #tabContent .stat-record{background:#24242b;border:1px solid #3a3a43;border-radius:5px;padding:9px 11px}body[data-screen="statistics"] #tabContent .stat-record strong{display:block;color:#eee;font-size:15px}body[data-screen="statistics"] #tabContent .stat-record small{color:#aaa}body[data-screen="statistics"] #tabContent .stat-bars{display:flex;align-items:end;gap:5px;height:130px;padding:12px;background:#24242b;border-radius:5px}body[data-screen="statistics"] #tabContent .stat-bars i{flex:1;min-width:4px;background:#a64acb;border-radius:3px 3px 0 0}
+body[data-screen="statistics"] .initial-game-header,
+body[data-screen="statistics"] .initial-main-footer{display:flex!important}
+body[data-screen="statistics"] .initial-game-header{position:fixed!important;top:0!important;left:0!important;right:0!important;z-index:100!important}
+body[data-screen="statistics"] .initial-main-footer{position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:100!important;height:105px!important;background:#000!important;display:flex!important;flex-direction:column!important;padding-bottom:env(safe-area-inset-bottom)!important}
+body[data-screen="statistics"] .initial-footer-icons{height:62px!important;display:flex!important;align-items:center!important;justify-content:space-around!important}
+body[data-screen="statistics"] .initial-footer-icons button{width:16.66%!important;height:60px!important;background:none!important;border:0!important;color:#aaa!important}
+body[data-screen="statistics"] .initial-footer-icons button.active{color:#b76a7d!important;border-bottom:4px solid #d41469!important}
+body[data-screen="statistics"] .initial-footer-title{display:none!important}
+body[data-screen="statistics"] .screen-tabs{display:none!important}
+body[data-screen="statistics"] #tabContent{background:#1b1b20!important;border:0!important;border-radius:0!important;padding:105px 8px 145px!important;text-align:center!important;color:#bdbdc2!important;line-height:1.45!important;min-height:calc(100vh - 105px)!important;box-sizing:border-box!important}
+body[data-screen="statistics"] #tabContent h2{font-size:28px!important;margin:20px 0 4px!important;color:#ddd!important}
+body[data-screen="statistics"] #tabContent h2.stat-general{color:#ddd!important}
+body[data-screen="statistics"] #tabContent h2.stat-infinity{color:#c18a36!important}
+body[data-screen="statistics"] #tabContent h2.stat-eternity{color:#b04bd7!important}
+body[data-screen="statistics"] #tabContent .stat-lead{font-size:18px!important;margin:10px 0 18px!important}
+body[data-screen="statistics"] #tabContent .stat-lead strong{font-size:30px!important;color:#eee!important}
+body[data-screen="statistics"] #tabContent .stat-section{margin:22px auto 30px!important;max-width:560px!important}
+body[data-screen="statistics"] #tabContent .stat-line{font-size:15px!important;margin:3px 0!important;color:#bdbdc2!important}
+body[data-screen="statistics"] #tabContent .stat-accent-ip{color:#c18a36!important;font-weight:700!important}
+body[data-screen="statistics"] #tabContent .stat-accent-ep{color:#b04bd7!important;font-weight:700!important}
+body[data-screen="statistics"] #tabContent .stat-subnav{position:fixed!important;bottom:0!important;left:0!important;right:0!important;z-index:110!important;height:43px!important;box-sizing:border-box!important;display:flex!important;justify-content:space-around!important;gap:4px!important;margin:0!important;padding:0 2px env(safe-area-inset-bottom)!important;background:#08080a!important;border-top:1px solid #333!important;overflow-x:auto!important}
+body[data-screen="statistics"] #tabContent .stat-subnav button{flex:1!important;min-width:0!important;background:none!important;border:0!important;border-radius:0!important;color:#999!important;padding:7px 3px!important;font-size:14px!important;font-weight:700!important;white-space:nowrap!important}
+body[data-screen="statistics"] #tabContent .stat-subnav button.active{color:#fff!important;border-bottom:3px solid #d41469!important}
+body[data-screen="statistics"] #tabContent .stat-record-grid{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;text-align:left!important}
+body[data-screen="statistics"] #tabContent .stat-record{background:#24242b!important;border:1px solid #3a3a43!important;border-radius:5px!important;padding:9px 11px!important}
+body[data-screen="statistics"] #tabContent .stat-record strong{display:block!important;color:#eee!important;font-size:15px!important}
+body[data-screen="statistics"] #tabContent .stat-record small{color:#aaa!important}
+body[data-screen="statistics"] #tabContent .stat-bars{display:flex!important;align-items:end!important;gap:5px!important;height:130px!important;padding:12px!important;background:#24242b!important;border-radius:5px!important}
+body[data-screen="statistics"] #tabContent .stat-bars i{flex:1!important;min-width:4px!important;background:#a64acb!important;border-radius:3px 3px 0 0!important}
+body[data-screen="statistics"] .mobile-bottom-actions{display:flex!important}
 </style>
 
 <style id="official-initial-main-ui">
@@ -4312,13 +4341,29 @@ function eternityMilestonesView(){const e=Math.max(0,Math.floor(Number(state.ete
 function buyEternityUpgrade(id){const cost=eternityUpgradeCost(id);if(getEPBigNumber().compare(cost)<0)return;if(id!==1&&state.eternityUpgrades.includes(id))return;setEPBigNumber(getEPBigNumber().subtract(cost));state.eternityUpgrades.push(id);save();switchScreen('eternity');}
 function statisticsView(){
  const sub=statisticsSubpage;
- const nav=`<nav class="stat-subnav">${[['stats','Stats'],['records','Records'],['pastRuns','Past Runs'],['multipliers','Multipliers'],['graphs','Graphs']].map(([id,label])=>`<button data-stat-page="${id}" class="${sub===id?'active':''}">${label}</button>`).join('')}</nav>`;
+ const nav=`<nav class="stat-subnav">${[['stats','Stats'],['multipliers','Multipliers'],['graphs','Graphs']].map(([id,label])=>`<button data-stat-page="${id}" class="${sub===id?'active':''}">${label}</button>`).join('')}</nav>`;
  const totalAM=state.totalAntimatterProducedBN?fmtBig(BigNumber.from(state.totalAntimatterProducedBN)):fmtMatter(state.totalAntimatterProduced||state.matter);
  const currentAM=fmtMatter(state.matter); const ip=fmtBig(getIPBigNumber()); const ep=fmtBig(getEPBigNumber());
  const infCount=fmt(state.infinities||0), etCount=fmt(state.eternities||0);
  const line=(label,value)=>`<p class="stat-line">${label}: <strong>${value}</strong></p>`;
  let body='';
- if(sub==='stats'){body=`<p class="stat-lead">You are currently in the Antimatter Universe</p><p class="stat-lead">You have <strong class="stat-accent-ep">${ep}</strong> Eternity Points.</p><p class="stat-lead">You have <strong class="stat-accent-ip">${ip}</strong> Infinity Points.</p><p class="stat-lead">You have <strong>${currentAM}</strong> antimatter.</p><section class="stat-section"><h2 class="stat-general">General</h2>${line('You have made a total of',totalAM+' antimatter')}${line('You have played for',formatPlayTime(state.playTime))}${line('You have unlocked',`${(state.achievements||[]).filter(Boolean).length} Achievements`)}${line('Dimension Boosts',fmt(state.boosts||0))}${line('Antimatter Galaxies',fmt(state.galaxies||0))}</section><section class="stat-section"><h2 class="stat-infinity">Infinity</h2>${line('You have',infCount+' Infinities')}${line('You will gain on Crunch',fmtBig(ipGainBigNumber())+' IP')}${line('Your fastest Infinity',state.fastestInfinity>0?formatPlayTime(state.fastestInfinity):'未記録')}${line('You have spent',formatPlayTime(state.infinityTime))}${line('Your best IP/min',fmtBig(state.bestIPPerMinBN||0))}${line('Your highest IP gain',fmtBig(state.peakIPGainBN||0))}</section><section class="stat-section"><h2 class="stat-eternity">Eternity</h2>${line('You have',etCount+' Eternities')}${line('Your fastest Eternity',state.fastestEternity>0?formatPlayTime(state.fastestEternity):'未記録')}${line('You have spent',formatPlayTime(state.eternityTime||state.eternityRunTime||0))}${line('Your best EP/min',fmtBig(state.bestEPPerMinBN||0))}${line('Your highest EP gain',fmtBig(state.peakEPGainBN||0))}</section>`;}
+ if(sub==='stats'){
+  const played=formatPlayTime(state.playTime);
+  const secretCount=Array.isArray(state.secretAchievements)?state.secretAchievements.filter(Boolean).length:0;
+  const saveStamp=state.saveCreatedAt||state.createdAt||state.saveDate||null;
+  const saveLine=saveStamp?new Date(saveStamp).toLocaleString('en-US',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}):'';
+  const newsCount=Number(state.newsTickerCount??state.newsMessagesSeen??state.newsCount);
+  const proton=state.antimatterPerProton||'';
+  body=`<p class="stat-lead">You have <strong>${currentAM}</strong> antimatter.</p>
+   <section class="stat-section stat-general-block"><h2 class="stat-general">General</h2>
+   ${line('You have made a total of',totalAM+' antimatter')}
+   <p class="stat-line stat-multiline">You have played for<br><strong>${played}</strong></p>
+   <p class="stat-line stat-multiline">Your save was created on ${saveLine||'Unknown'}.</p>
+   ${line('You have seen',(Number.isFinite(newsCount)?newsCount:0)+' news ticker messages in total.')}
+   ${line('You have unlocked',secretCount+' Secret Achievements.')}
+   </section>
+   <p class="stat-proton">If every antimatter were ${proton||'4.46e6'} cubic attometers, you would have enough<br>to make a proton.</p>`;
+ }
  else if(sub==='records'){body=`<h2>Records</h2><section class="stat-section stat-record-grid">${[['Fastest Infinity',state.fastestInfinity>0?formatPlayTime(state.fastestInfinity):'未記録'],['Fastest Eternity',state.fastestEternity>0?formatPlayTime(state.fastestEternity):'未記録'],['Best IP per minute',fmtBig(state.bestIPPerMinBN||0)],['Best EP per minute',fmtBig(state.bestEPPerMinBN||0)],['Peak IP gain',fmtBig(state.peakIPGainBN||0)],['Peak EP gain',fmtBig(state.peakEPGainBN||0)]].map(([a,b])=>`<div class="stat-record"><strong>${a}</strong><small>${b}</small></div>`).join('')}</section>`;}
  else if(sub==='pastRuns'){const rows=(state.lastTenIPPerMinBN||[]).map((v,i)=>`<div class="stat-record"><strong>Infinity #${i+1}</strong><small>IP/min: ${fmtBig(v)}</small></div>`).join('');body=`<h2>Past Runs</h2><section class="stat-section stat-record-grid">${rows||'<p>記録はありません。</p>'}</section>`;}
  else if(sub==='multipliers'){body=`<h2>Multipliers</h2><section class="stat-section">${line('Antimatter Dimension multiplier',fmtBig(dimensionMultiplierBigNumber(1)))}${line('Tickspeed multiplier',fmtBig(tickspeedMultiplierBigNumber()))}${line('Infinity Power',fmtBig(state.infinityPowerBN||0))}${line('IP Multiplier level',fmt(state.ipMultLevel||0))}${line('Replicanti chance',`${state.replicantiChance||0}%`)}${line('Replicanti galaxies',fmt(state.replicantiGalaxies||0))}</section>`;}
@@ -5411,6 +5456,128 @@ body[data-screen="autobuyers"] .ab-boost-card,
 body[data-screen="autobuyers"] .ab-galaxy-card,
 body[data-screen="autobuyers"] .ab-crunch-card{display:none!important}
 </style>
+
+<style id="statistics-main-chrome-final">
+@media(max-width:700px){
+ body[data-screen="statistics"] .initial-game-header,
+ body[data-screen="statistics"] .initial-main-footer{
+   display:flex!important;visibility:visible!important;opacity:1!important;
+ }
+ body[data-screen="statistics"] .initial-game-header{
+   position:fixed!important;top:0!important;left:0!important;right:0!important;
+   height:100px!important;z-index:100!important;
+ }
+ body[data-screen="statistics"] .initial-main-footer{
+   position:fixed!important;bottom:0!important;left:0!important;right:0!important;
+   height:105px!important;z-index:100!important;background:#000!important;
+   flex-direction:column!important;
+ }
+ body[data-screen="statistics"] .initial-footer-icons{
+   height:62px!important;display:flex!important;align-items:center!important;
+   justify-content:space-around!important;
+ }
+ body[data-screen="statistics"] .initial-footer-icons button{
+   width:16.66%!important;height:60px!important;background:none!important;border:0!important;
+ }
+ body[data-screen="statistics"] .initial-footer-title{display:none!important}
+ body[data-screen="statistics"] #screenTabs{display:none!important}
+ body[data-screen="statistics"] .stat-subnav{
+   position:fixed!important;bottom:0!important;left:0!important;right:0!important;
+   height:43px!important;z-index:120!important;
+ }
+}
+</style>
+
+<style id="statistics-main-chrome-polish">
+@media(max-width:700px){
+ body[data-screen="statistics"] main{padding:100px 0 110px!important;margin:0!important;width:100%!important;max-width:none!important}
+ body[data-screen="statistics"] .sticky-tools{display:none!important}
+ body[data-screen="statistics"] #tabContent{margin:0!important;padding:10px 8px 145px!important;min-height:calc(100vh - 100px)!important}
+ body[data-screen="statistics"] .initial-game-header{height:100px!important;padding:28px 30px!important;align-items:flex-start!important;background:#000!important;box-sizing:border-box!important}
+ body[data-screen="statistics"] .initial-menu-button{display:block!important;border:0!important;background:none!important;color:#bbb!important;font-size:0!important;width:42px!important;height:34px!important;padding:0!important;position:relative!important}
+ body[data-screen="statistics"] .initial-menu-button:before{content:"☰"!important;font-size:36px!important;line-height:30px!important;font-weight:300!important}
+ body[data-screen="statistics"] .initial-footer-icons button{width:16.66%!important;height:60px!important;background:none!important;border:0!important;color:#aaa!important;padding:0!important}
+ body[data-screen="statistics"] .initial-footer-icons button.active{color:#b76a7d!important;border-bottom:4px solid #d41469!important}
+ body[data-screen="statistics"] .initial-footer-icons svg{width:38px!important;height:38px!important;fill:none!important;stroke:currentColor!important;stroke-width:3!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+ body[data-screen="statistics"] .initial-footer-icons button[hidden]{display:none!important}
+}
+</style>
+<style id="statistics-main-header-exact">
+@media(max-width:700px){
+ body[data-screen="statistics"]::before{
+   content:"";position:fixed;top:0;left:0;right:0;height:100px;
+   background:#000;z-index:90;pointer-events:none;
+ }
+ body[data-screen="statistics"] .initial-game-header{
+   height:32px!important;padding:0 16px!important;background:transparent!important;
+   z-index:100!important;
+ }
+ body[data-screen="statistics"] .initial-menu-button{
+   width:28px!important;height:28px!important;padding:0!important;
+   margin:0!important;position:relative!important;
+ }
+ body[data-screen="statistics"] .initial-menu-button:before{
+   content:"☰"!important;font-size:30px!important;line-height:28px!important;
+ }
+}
+</style>
+<style id="statistics-official-layout">
+@media(max-width:700px){
+ body[data-screen="statistics"] main{padding:100px 0 0!important;margin:0!important;width:100%!important;max-width:none!important}
+ body[data-screen="statistics"] .sticky-tools{display:none!important}
+ body[data-screen="statistics"] #tabContent{margin:0!important;padding:10px 8px 190px!important;min-height:calc(100vh - 100px)!important;background:#1b1b20!important;color:#bdbdc2!important;text-align:center!important;line-height:1.35!important;box-sizing:border-box!important}
+ body[data-screen="statistics"] .initial-game-header{height:100px!important;padding:0 16px!important;background:#000!important;align-items:flex-start!important;overflow:hidden!important}
+ body[data-screen="statistics"] .initial-menu-button{width:28px!important;height:28px!important;padding:0!important;margin:0!important;border:0!important;background:none!important;color:#bbb!important;font-size:0!important}
+ body[data-screen="statistics"] .initial-menu-button:before{content:"☰"!important;font-size:30px!important;line-height:28px!important;font-weight:300!important}
+ body[data-screen="statistics"] .initial-game-header:after{content:"I built a clock out of antimatter on Antimatter Dimensions"!important;position:absolute!important;left:35%!important;top:26px!important;white-space:nowrap!important;font-size:18px!important;font-weight:700!important;color:#bdbdc2!important}
+ body[data-screen="statistics"] #tabContent .stat-lead{margin:18px 0 8px!important;font-size:18px!important;color:#888!important}
+ body[data-screen="statistics"] #tabContent .stat-lead strong{font-size:30px!important;color:#bdbdc2!important}
+ body[data-screen="statistics"] #tabContent .stat-general-block{margin:12px auto 0!important;max-width:none!important}
+ body[data-screen="statistics"] #tabContent h2.stat-general{font-size:28px!important;margin:8px 0 0!important;color:#bdbdc2!important}
+ body[data-screen="statistics"] #tabContent .stat-line{font-size:15px!important;line-height:1.35!important;margin:4px 0!important;color:#bdbdc2!important}
+ body[data-screen="statistics"] #tabContent .stat-line strong{font-weight:400!important;color:#bdbdc2!important}
+ body[data-screen="statistics"] #tabContent .stat-multiline{margin:12px 0!important}
+ body[data-screen="statistics"] #tabContent .stat-proton{font-size:15px!important;line-height:1.35!important;margin:26px 0 0!important;color:#bdbdc2!important}
+ body[data-screen="statistics"] .initial-main-footer{height:105px!important;background:#000!important}
+ body[data-screen="statistics"] .initial-footer-icons{height:62px!important;display:flex!important;justify-content:space-around!important;align-items:center!important}
+ body[data-screen="statistics"] .initial-footer-icons button{width:16.66%!important;height:60px!important;display:flex!important;align-items:center!important;justify-content:center!important;background:none!important;border:0!important;color:#aaa!important;padding:0!important}
+ body[data-screen="statistics"] .initial-footer-icons:after{content:none!important;display:none!important}
+ body[data-screen="statistics"] .initial-footer-icons button[data-nav-screen="statistics"]{color:#fff!important;border-bottom:4px solid #d41469!important}
+ body[data-screen="statistics"] .initial-footer-icons button[data-nav-screen="statistics"] svg{stroke:#fff!important}
+ body[data-screen="statistics"] .initial-footer-title{display:none!important}
+ body[data-screen="statistics"] #screenTabs{display:none!important}
+ body[data-screen="statistics"] .stat-subnav{position:fixed!important;bottom:0!important;left:0!important;right:0!important;height:43px!important;z-index:120!important;display:flex!important;justify-content:space-around!important;background:#08080a!important;border-top:1px solid #333!important;margin:0!important;padding:0 2px!important}
+ body[data-screen="statistics"] .stat-subnav button{flex:1!important;background:none!important;border:0!important;border-radius:0!important;color:#999!important;font-size:14px!important;font-weight:700!important;padding:7px 3px!important}
+ body[data-screen="statistics"] .stat-subnav button.active{color:#fff!important;border-bottom:3px solid #d41469!important}
+ body[data-screen="statistics"] .mobile-bottom-actions{display:flex!important}
+}
+</style>
+
+
+<style id="statistics-five-tab-layout">
+@media(max-width:700px){
+ body[data-screen="statistics"] .initial-footer-icons{
+   display:flex!important;
+   justify-content:space-around!important;
+   align-items:center!important;
+   position:relative!important;
+ }
+ body[data-screen="statistics"] .initial-footer-icons button[data-nav-screen="main"],
+ body[data-screen="statistics"] .initial-footer-icons button[data-nav-screen="autobuyers"],
+ body[data-screen="statistics"] .initial-footer-icons button[data-nav-screen="achievements"],
+ body[data-screen="statistics"] .initial-footer-icons button[data-nav-screen="statistics"],
+ body[data-screen="statistics"] .initial-footer-icons button[data-nav-screen="options"]{
+   display:flex!important;
+   position:static!important;
+   flex:1 1 20%!important;
+   width:20%!important;
+   min-width:0!important;
+   align-items:center!important;
+   justify-content:center!important;
+ }
+}
+</style>
+
 </body>
 </html>
 
