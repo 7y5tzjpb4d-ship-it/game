@@ -5594,6 +5594,61 @@ body[data-screen="autobuyers"] .ab-crunch-card{display:none!important}
   body[data-screen="statistics"] .initial-footer-title{display:none!important}
 }
 </style>
+
+<style id="statistics-content-main-height-and-active-red">
+@media(max-width:700px){
+  /* AM行の上端をMain画面のAM表示（y=36px）に揃える */
+  body[data-screen="statistics"] main{
+    padding-top:8px!important;
+  }
+  body[data-screen="statistics"] #tabContent{
+    padding-top:10px!important;
+  }
+  body[data-screen="statistics"] #tabContent .stat-lead{
+    margin-top:18px!important;
+  }
+  /* 選択中のサブタブは他画面の選択色に統一 */
+  body[data-screen="statistics"] .stat-subnav button.active{
+    color:#bd7187!important;
+    -webkit-text-fill-color:#bd7187!important;
+    border-bottom:4px solid #d41469!important;
+  }
+}
+</style>
+
+
+<style id="statistics-subtab-active-icon-red">
+@media(max-width:700px){
+  body[data-screen="statistics"] .stat-subnav button.active{
+    color:#999!important;
+    -webkit-text-fill-color:initial!important;
+  }
+  body[data-screen="statistics"] .stat-subnav button.active svg,
+  body[data-screen="statistics"] .stat-subnav button.active .icon,
+  body[data-screen="statistics"] .stat-subnav button.active i{
+    color:#d41469!important;
+    fill:#d41469!important;
+    stroke:#d41469!important;
+  }
+}
+</style>
+
+
+<style id="statistics-bottom-active-icon-pink">
+@media(max-width:700px){
+  /* 下部ナビは選択中のアイコンだけを他画面と同じピンクにする */
+  body[data-screen="statistics"] .initial-footer-icons button[data-nav-screen="statistics"]{
+    color:#bd7187!important;
+  }
+  body[data-screen="statistics"] .initial-footer-icons button[data-nav-screen="statistics"] svg,
+  body[data-screen="statistics"] .initial-footer-icons button[data-nav-screen="statistics"] svg *{
+    color:#bd7187!important;
+    stroke:#bd7187!important;
+    fill:none!important;
+  }
+}
+</style>
+
 </body>
 </html>
 
