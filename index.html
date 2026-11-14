@@ -4881,8 +4881,44 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
 
       makeGroup("achievements","Achievements",icons.achievements,"Normal Achievements",active==="achievements");
 
+      // Statistics expands into the three pages shown in the reference menu.
+      {
+        const group=document.createElement("section");
+        group.className="drawer-group drawer-statistics-group"+(active==="statistics"?" expanded active":"");
+        const category=document.createElement("button");
+        category.type="button";
+        category.className="drawer-category"+(active==="statistics"?" active":"");
+        category.setAttribute("aria-expanded",String(active==="statistics"));
+        category.innerHTML='<span class="drawer-item-icon">'+icons.statistics+'</span><span class="drawer-item-label">Statistics</span><span class="drawer-chevron">'+(active==="statistics"?"⌄":"›")+'</span>';
+        category.addEventListener("click",()=>{
+          const expanded=group.classList.toggle("expanded");
+          category.setAttribute("aria-expanded",String(expanded));
+          category.querySelector(".drawer-chevron").textContent=expanded?"⌄":"›";
+        });
+        group.appendChild(category);
+        const submenu=document.createElement("div");
+        submenu.className="drawer-submenu drawer-statistics-submenu";
+        const statPages=[
+          {id:"stats",label:"Statistics",icon:'<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="9" y="8" width="30" height="36" rx="4"/><path d="M18 8V5h12v3M16 19h2m5 0h10M16 28h2m5 0h10"/></svg>'},
+          {id:"multipliers",label:"Multiplier Breakdown",icon:'<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="4" width="34" height="40" rx="5"/><rect x="13" y="10" width="22" height="8" rx="2"/><circle cx="15" cy="25" r="2"/><circle cx="24" cy="25" r="2"/><circle cx="33" cy="25" r="2"/><circle cx="15" cy="34" r="2"/><circle cx="24" cy="34" r="2"/><circle cx="33" cy="34" r="2"/></svg>'},
+          {id:"graphs",label:"Graphs",icon:'<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 5v38h36M12 32l10-10 8 6 12-14"/></svg>'}
+        ];
+        statPages.forEach(item=>{
+          const leaf=document.createElement("button");
+          leaf.type="button";
+          leaf.className="drawer-stat-page"+(active==="statistics"&&statisticsSubpage===item.id?" active":"");
+          leaf.innerHTML='<span>'+item.label+'</span><span class="drawer-stat-page-icon">'+item.icon+'</span>';
+          leaf.addEventListener("click",()=>{
+            statisticsSubpage=item.id;
+            activate("statistics");
+          });
+          submenu.appendChild(leaf);
+        });
+        group.appendChild(submenu);
+        list.appendChild(group);
+      }
+
       const rows=[
-        {screen:"statistics",label:"Statistics",icon:icons.statistics},
         {screen:"options",label:"Options",icon:icons.options},
         {screen:"shop",label:"Shop",icon:"<span class='drawer-text-icon'>$</span>"},
         {screen:"info",label:"Info",icon:"<span class='drawer-text-icon'>ⓘ</span>"}
@@ -5837,6 +5873,41 @@ function updateVisibleScreenRealtime(now){
   body[data-screen="statistics"] #tabContent .stat-proton{
     margin-top:10px!important;
   }
+}
+</style>
+
+<style id="drawer-statistics-submenu-reference">
+@media(max-width:700px){
+ .mobile-game-drawer .drawer-statistics-group{border-bottom:0!important}
+ .mobile-game-drawer .drawer-statistics-group>.drawer-category{
+   min-height:48px!important;height:48px!important;
+ }
+ .mobile-game-drawer .drawer-statistics-submenu{
+   display:none!important;padding:0!important;
+ }
+ .mobile-game-drawer .drawer-statistics-group.expanded .drawer-statistics-submenu{
+   display:block!important;
+ }
+ .mobile-game-drawer .drawer-statistics-submenu .drawer-stat-page{
+   width:100%!important;height:68px!important;min-height:68px!important;
+   display:flex!important;align-items:center!important;justify-content:space-between!important;
+   box-sizing:border-box!important;padding:0 24px 0 58px!important;
+   border:0!important;border-radius:0!important;border-left:3px solid transparent!important;
+   background:transparent!important;color:#bdbdc2!important;
+   font-size:16px!important;font-weight:400!important;text-align:left!important;
+ }
+ .mobile-game-drawer .drawer-statistics-submenu .drawer-stat-page.active{
+   background:#24242a!important;border-left-color:#d41469!important;color:#fff!important;
+ }
+ .mobile-game-drawer .drawer-stat-page-icon{
+   width:28px!important;height:32px!important;display:flex!important;
+   align-items:center!important;justify-content:center!important;flex:0 0 28px!important;
+   color:#aaa!important;
+ }
+ .mobile-game-drawer .drawer-stat-page-icon svg{
+   width:27px!important;height:27px!important;fill:none!important;stroke:currentColor!important;
+   stroke-width:3!important;stroke-linecap:round!important;stroke-linejoin:round!important;
+ }
 }
 </style>
 </body>
