@@ -4653,7 +4653,7 @@ function tick(now){
  if(offlineProgressActive){requestAnimationFrame(tick);return;}
  const dt=Math.min(.25,(now-last)/1000);last=now;
  simulateGameStep(dt);
- render();updateReplicantiCountdownDisplay();
+ render();updateReplicantiCountdownDisplay();updateVisibleScreenRealtime(now);
  if(document.body.dataset.screen==='statistics'&&now-lastStatisticsLiveRender>=100){lastStatisticsLiveRender=now;updateStatisticsLive();}// 統計画面の数値だけを10fpsで差分更新。レイアウトDOMは再生成しない。
  if(document.body.dataset.screen==='main'&&mainSubpage==='infinityDimensions'&&now-lastInfinityDimensionRender>=100){lastInfinityDimensionRender=now;updateInfinityDimensionScreen();}else if(document.body.dataset.screen==='main'&&mainSubpage==='timeDimensions'&&now-lastInfinityDimensionRender>=100){lastInfinityDimensionRender=now;switchScreen('main');}if(document.body.dataset.screen==='infinity'&&infinitySubpage==='replicanti'&&now-lastReplicantiRender>=500){lastReplicantiRender=now;switchScreen('infinity');}if((state.activeChallenge||state.activeInfinityChallenge)&&document.body.dataset.screen==='challenges'&&now-lastRender>500){switchScreen('challenges');}lastRender=now;
  if(now-lastSave>5000){save();lastSave=now;}
@@ -5736,6 +5736,104 @@ body[data-screen="autobuyers"] .ab-crunch-card{display:none!important}
   }
 }
 </style>
+
+<script id="live-render-all-screens">
+let lastVisibleScreenRefresh=0;
+let lastVisibleScreenSignature='';
+function visibleScreenSignature(screen){
+ const ab=state.autobuyers||{};
+ const common=[
+  state.matterBN||state.matter,
+  state.totalAntimatterProducedBN||state.totalAntimatterProduced,
+  state.amountBN||state.amount,state.bought,
+  state.boosts,state.galaxies,state.infinities,state.eternities,
+  state.infinityPointsBN||state.infinityPoints,state.eternityPointsBN||state.eternityPoints,
+  state.achievements,state.completedChallenges,state.completedInfinityChallenges,
+  state.infinityUpgrades,state.breakInfinityUpgrades,
+  state.replicanti,state.replicantiGalaxies
+ ];
+ if(screen==='autobuyers') return JSON.stringify([
+  ab.dims,ab.unlockedDims,ab.unlockedCards,ab.tickspeed,ab.tickspeedUnlocked,
+  ab.tickspeedCardUnlocked,ab.intervalUpgradeLevels,ab.intervalUpgradeLevel,
+  ab.dimBulkLevels,ab.dimModes,ab.dimMode,ab.boost,ab.galaxy,ab.crunch,ab.sacrifice,
+  ab.ipMult,ab.replicantiGalaxy,ab.infinityDims,ab.replicantiChance,
+  ab.replicantiInterval,ab.replicantiMaxGalaxies,state.eternityAutobuyer,
+  state.eternityAutobuyerTargetBN,state.eternities,
+  Array.from({length:8},(_,i)=>dimAutobuyerUnlocked(i)),
+  tickspeedAutobuyerUnlocked()
+ ]);
+ if(screen==='achievements') return JSON.stringify([
+  state.achievements,achievementMultiplier(),state.secretAchievements
+ ]);
+ if(screen==='challenges'||screen==='infinity'||screen==='eternity'||screen==='test')
+  return JSON.stringify([common,state.activeChallenge,state.activeInfinityChallenge,
+    state.challenge11Matter,state.icMatter,state.infinityCollapseActive,
+    state.breakInfinityActive,state.replicantiUnlocked,state.replicantiChance,
+    state.replicantiInterval,state.replicantiGalaxies,
+    state.timeShardsBN,state.timeTheorems,state.eternityUpgrades,
+    state.timeStudies,state.eternityMilestones]);
+ if(screen==='options') return JSON.stringify([
+  state.buyMax,state.options,state.autobuyers?.offlineProgress
+ ]);
+ return '';
+}
+function updateAchievementsLive(){
+ const root=document.getElementById('tabContent');
+ if(!root)return;
+ const amount=root.querySelector('.achievement-antimatter strong');
+ if(amount)amount.textContent=matterBigNumber().toDisplayString(2);
+ const multiplier=root.querySelector('.achievement-multiplier');
+ if(multiplier)multiplier.innerHTML='Your Achievements provide a multiplier to:<br>Antimatter Dimensions: ×'+achievementMultiplier().toFixed(3);
+ root.querySelectorAll('.achievement-tile[data-achievement-id]').forEach(tile=>{
+  tile.classList.toggle('unlocked',hasAchievement(Number(tile.dataset.achievementId)));
+ });
+}
+function updateAutobuyersLiveIntervals(){
+ const root=document.getElementById('tabContent');
+ if(!root)return;
+ root.querySelectorAll('[data-ab-dim]').forEach(input=>{
+  const i=Number(input.dataset.abDim);
+  input.checked=!!state.autobuyers.dims[i];
+ });
+ root.querySelectorAll('.ab-dim-interval').forEach((el)=>{
+  const card=el.closest('.ab-dimension-card');
+  if(!card)return;
+  const title=card.querySelector('.ab-unlocked-title')?.textContent||'';
+  const match=title.match(/(\d+)(?:st|nd|rd|th)/);
+  if(!match)return;
+  const tier=Number(match[1])-1;
+  if(tier>=0&&tier<8)el.textContent='Current interval: '+autobuyerInterval()[tier].toFixed(3)+' seconds';
+ });
+ const tickspeedInterval=root.querySelector('.ab-tickspeed-unlocked-layout small');
+ if(tickspeedInterval)tickspeedInterval.textContent='Current interval: '+autobuyerInterval()[8].toFixed(3)+' seconds';
+ const status=root.querySelector('.ab-top-status');
+ if(status){
+  const enabled=state.autobuyers.dims.some(Boolean)||state.autobuyers.tickspeed||
+    state.autobuyers.boost||state.autobuyers.galaxy||state.autobuyers.crunch;
+  status.textContent=enabled?'Autobuyers enabled':'Autobuyers disabled';
+ }
+}
+function updateVisibleScreenRealtime(now){
+ if(now-lastVisibleScreenRefresh<100)return;
+ lastVisibleScreenRefresh=now;
+ const screen=document.body.dataset.screen;
+ if(screen==='statistics'){updateStatisticsLive();return;}
+ if(screen==='main')return;
+ if(screen==='achievements'){updateAchievementsLive();return;}
+ if(screen==='autobuyers')updateAutobuyersLiveIntervals();
+ const signature=visibleScreenSignature(screen);
+ if(!signature||signature===lastVisibleScreenSignature)return;
+ // Do not replace a screen while the player is editing an input.
+ if(document.activeElement&&document.activeElement.matches('input,textarea,select'))return;
+ const root=document.getElementById('tabContent');
+ const scrollRoot=root?.closest('main')||root;
+ const scrollTop=scrollRoot?.scrollTop||0;
+ lastVisibleScreenSignature=signature;
+ switchScreen(screen);
+ if(scrollRoot)scrollRoot.scrollTop=scrollTop;
+}
+</script>
+
 </body>
 </html>
 
