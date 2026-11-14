@@ -5690,6 +5690,41 @@ body[data-screen="autobuyers"] .ab-crunch-card{display:none!important}
   }
 }
 </style>
+
+<style id="statistics-typography-and-icon-position-final">
+@media(max-width:700px){
+  /* AM数値はMainの#matterと同じ25px/30px */
+  body[data-screen="statistics"] #tabContent .stat-lead strong{
+    position:relative!important;
+    top:-1px!important;
+    font-size:25px!important;
+    line-height:30px!important;
+    font-weight:700!important;
+  }
+  /* General見出しはMain下部タイトルと同じ17px */
+  body[data-screen="statistics"] #tabContent h2.stat-general{
+    font-size:17px!important;
+    line-height:20px!important;
+    font-weight:700!important;
+  }
+  /* 統計行はMainの通常テキスト基準に揃える */
+  body[data-screen="statistics"] #tabContent .stat-line,
+  body[data-screen="statistics"] #tabContent .stat-proton{
+    font-size:14px!important;
+    line-height:18.9px!important;
+  }
+  /* 下部ナビのSVG中心をMainの実測位置に合わせる */
+  body[data-screen="statistics"] .initial-footer-icons button svg{
+    width:28px!important;
+    height:28px!important;
+    transform:translateY(-2px)!important;
+  }
+  body[data-screen="statistics"] .initial-footer-icons button{
+    font-size:0!important;
+    line-height:0!important;
+  }
+}
+</style>
 </body>
 </html>
 
