@@ -4367,9 +4367,6 @@ function statisticsView(){
    <section class="stat-section stat-general-block"><h2 class="stat-general">General</h2>
    <p class="stat-line">You have made a total of: <strong id="statistics-total-am">${totalAM} antimatter</strong></p>
    <p class="stat-line stat-multiline">You have played for<br><strong id="statistics-play-time">${played}</strong></p>
-   <p class="stat-line stat-multiline">Your save was created on ${saveLine||'Unknown'}.</p>
-   ${line('You have seen',(Number.isFinite(newsCount)?newsCount:0)+' news ticker messages in total.')}
-   ${line('You have unlocked',secretCount+' Secret Achievements.')}
    </section>
    <p class="stat-proton">If every antimatter were ${proton||'4.46e6'} cubic attometers, you would have enough<br>to make a proton.</p>`;
  }
@@ -5834,6 +5831,14 @@ function updateVisibleScreenRealtime(now){
 }
 </script>
 
+
+<style id="statistics-general-compact-after-row-removal">
+@media(max-width:700px){
+  body[data-screen="statistics"] #tabContent .stat-proton{
+    margin-top:10px!important;
+  }
+}
+</style>
 </body>
 </html>
 
