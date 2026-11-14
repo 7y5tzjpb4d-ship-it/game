@@ -6188,7 +6188,7 @@ body[data-screen="achievements"] .achievement-subnav{position:fixed;left:0;right
 body[data-screen="achievements"] .achievement-subnav button{height:48px;border:0;border-radius:0;background:#000;color:#999;font-size:14px;font-weight:700}
 body[data-screen="achievements"] .achievement-subnav button.active{color:#fff;border-bottom:3px solid #e00070}
 body[data-screen="achievements"] #tabContent{padding-bottom:115px!important}
-body[data-screen="achievements"] .achievement-grid.hide-completed-rows .achievement-tile.unlocked{display:none!important}
+body[data-screen="achievements"] .achievement-grid.hide-completed-rows .achievement-tile.completed-achievement-row{display:none!important}
 @media(max-width:540px){
  body[data-screen="achievements"] #tabContent{padding-left:5px!important;padding-right:5px!important}
  body[data-screen="achievements"] .achievement-grid{gap:2px!important}
@@ -6204,6 +6204,16 @@ document.addEventListener('click',function(event){
   const grid=document.querySelector('body[data-screen="achievements"] .achievement-grid');
   if(!grid)return;
   const enabled=grid.classList.toggle('hide-completed-rows');
+  const tiles=Array.from(grid.querySelectorAll('.achievement-tile'));
+  tiles.forEach(tile=>tile.classList.remove('completed-achievement-row'));
+  if(enabled){
+   for(let i=0;i<tiles.length;i+=8){
+    const row=tiles.slice(i,i+8);
+    if(row.length===8 && row.every(tile=>tile.classList.contains('unlocked'))){
+     row.forEach(tile=>tile.classList.add('completed-achievement-row'));
+    }
+   }
+  }
   hide.textContent='Hide completed rows: '+(enabled?'ON':'OFF');
  }
  const hand=event.target.closest('#achievementHandDrawn');
