@@ -4706,7 +4706,7 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
         const leaf=document.createElement("button");
         leaf.type="button";
         leaf.className="drawer-leaf"+(active===key?" active":"");
-        leaf.innerHTML='<span class="drawer-leaf-label">'+leafLabel+'</span><span class="drawer-leaf-symbol">'+(key==="main"?"Ω":"⚙")+'</span>';
+        leaf.innerHTML='<span class="drawer-leaf-label">'+leafLabel+'</span><span class="drawer-leaf-symbol">'+(key==="main"?"Ω":key==="achievements"?"🏅":"⚙")+'</span>';
         leaf.addEventListener("click",()=>activate(key));
         submenu.appendChild(leaf);
         group.appendChild(submenu);
@@ -4720,8 +4720,9 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
         makeGroup("autobuyers","Automation",icons.autobuyers,"Autobuyers",active==="autobuyers");
       }
 
+      makeGroup("achievements","Achievements",icons.achievements,"Normal Achievements",active==="achievements");
+
       const rows=[
-        {screen:"achievements",label:"Achievements",icon:icons.achievements},
         {screen:"statistics",label:"Statistics",icon:icons.statistics},
         {screen:"options",label:"Options",icon:icons.options},
         {screen:"shop",label:"Shop",icon:"<span class='drawer-text-icon'>$</span>"},
