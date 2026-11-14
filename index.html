@@ -2989,7 +2989,9 @@ function render(){
  setText($('tickspeedMaxBtn'),'Buy Max');
  const nd2TickspeedPanel=$('nd2TickspeedPanel');
  if(nd2TickspeedPanel){
-  const showND2Tickspeed=dimensionAmountBig(1).compare(1)>=0 && document.body.dataset.screen==='main';
+  // Tickspeed is part of the Main screen layout; do not hide its purchase
+  // controls merely because a Dimension Boost has reset Dimension amounts.
+  const showND2Tickspeed=document.body.dataset.screen==='main';
   nd2TickspeedPanel.style.display='block';
   nd2TickspeedPanel.style.visibility=showND2Tickspeed?'visible':'hidden';
   nd2TickspeedPanel.style.pointerEvents=showND2Tickspeed?'auto':'none';
@@ -3190,6 +3192,8 @@ function applyDimensionBoostReset(){
  if(state.activeInfinityChallenge===5)state.ic5CostSteps=Array(8).fill(0);
 }
 function finishDimensionBoostReset(count,silent=false){
+ // Keep the permanent unlock flag in sync for manual and autobuyer bulk boosts.
+ state.hasEverBoosted=true;
  state.boosts+=count;
  if(state.activeChallenge===9){state.challenge9CostSteps=Array(8).fill(0);state.challenge9TickspeedCostBumps=0;}
  checkAchievements();
@@ -4762,7 +4766,9 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
    const grid=document.createElement('div');grid.className='initial-reset-grid';
    grid.innerHTML='<section class="initial-reset-card" id="initial-boost-card"><h3>Dimension Boost (<span id="initial-boost-count">0</span>)</h3><p id="initial-boost-requirement">Requires: 20 4th D</p><div class="initial-reset-description">Reset your Dimensions to unlock the 5th Dimension and give a ×2.0 multiplier to the 1st Dimension</div></section><section class="initial-reset-card" id="initial-galaxy-card"><h3>Antimatter Galaxies (<span id="initial-galaxy-count">0</span>)</h3><p id="initial-galaxy-requirement">Requires: 80 8th D</p><div class="initial-reset-description">Reset your Dimensions and Dimension Boosts to increase the power of Tickspeed upgrades</div></section>';
    panel.after(grid);
-   document.getElementById('initial-boost-card').addEventListener('click',()=>document.getElementById('boostBtn')?.click());
+   document.getElementById('initial-boost-card').addEventListener('click',()=>{
+    if(typeof canBoost==='function'&&canBoost()&&typeof boost==='function')boost();
+   });
    document.getElementById('initial-galaxy-card').addEventListener('click',()=>document.getElementById('mobileGalaxyBtn')?.click());
    const progress=document.createElement('div');progress.className='initial-infinity-progress';progress.innerHTML='<span>Percentage to Infinity: <b id="initial-infinity-percent">0.32%</b></span>';grid.after(progress);
   }
