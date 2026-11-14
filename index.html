@@ -6277,3 +6277,19 @@ document.addEventListener('click',function(event){
   }
 }
 </style>
+<style id="hide-legacy-screen-tabs-on-achievements-final">
+@media(max-width:700px){
+  body[data-screen="achievements"] #screenTabs,
+  body[data-screen="achievements"] nav#screenTabs.screen-tabs,
+  body[data-screen="achievements"] .screen-tabs{
+    display:none!important;
+    visibility:hidden!important;
+    opacity:0!important;
+    pointer-events:none!important;
+    height:0!important;
+    min-height:0!important;
+    max-height:0!important;
+    overflow:hidden!important;
+  }
+}
+</style>
