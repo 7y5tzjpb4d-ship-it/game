@@ -6217,95 +6217,63 @@ document.addEventListener('click',function(event){
 <style id="achievement-nav-final">body[data-screen="achievements"] .screen-tabs{display:none!important}</style>
 
 
-<style id="achievements-shared-main-chrome">
+
+
+
+<style id="achievements-main-chrome-exact-v2">
 @media(max-width:700px){
-  /* Achievements uses exactly the same header, footer and quick actions as Main. */
+  /* Clone the final Main header dimensions, including its compact override. */
   body[data-screen="achievements"] .initial-game-header{
     position:fixed!important;z-index:100!important;top:0!important;left:0!important;right:0!important;
-    height:100px!important;min-height:100px!important;padding:28px 30px!important;
+    height:32px!important;min-height:32px!important;padding:0 16px!important;
     box-sizing:border-box!important;display:flex!important;align-items:flex-start!important;
     justify-content:flex-start!important;background:#000!important;
   }
   body[data-screen="achievements"] .initial-menu-button{
-    display:block!important;width:42px!important;height:34px!important;min-width:42px!important;
-    min-height:34px!important;margin:0!important;padding:0!important;border:0!important;
-    background:none!important;color:#bbb!important;font-size:0!important;position:relative!important;
+    display:block!important;width:28px!important;height:28px!important;min-width:28px!important;
+    min-height:28px!important;margin:0!important;padding:0!important;align-self:flex-start!important;
+    border:0!important;background:none!important;color:#bbb!important;font-size:0!important;position:relative!important;
   }
   body[data-screen="achievements"] .initial-menu-button:before{
-    content:"☰"!important;display:block!important;font-size:36px!important;
-    line-height:30px!important;font-weight:300!important;color:#bbb!important;
+    content:"☰"!important;display:block!important;font-size:25px!important;line-height:27px!important;
+    font-weight:300!important;color:#bbb!important;
   }
-  body[data-screen="achievements"] main{
-    max-width:none!important;width:100%!important;margin:0!important;
-    padding:112px 5px 125px!important;box-sizing:border-box!important;
-  }
+
+  /* Clone the final Main footer sizing and five-slot responsive flex layout. */
   body[data-screen="achievements"] .initial-main-footer{
-    position:fixed!important;z-index:100!important;left:0!important;right:0!important;bottom:0!important;
-    height:105px!important;min-height:105px!important;display:flex!important;flex-direction:column!important;
+    position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:100!important;
+    display:flex!important;flex-direction:column!important;min-height:105px!important;height:105px!important;
     padding:0 0 env(safe-area-inset-bottom)!important;box-sizing:content-box!important;background:#000!important;
   }
   body[data-screen="achievements"] .initial-footer-icons{
     display:flex!important;visibility:visible!important;opacity:1!important;width:100%!important;
     height:62px!important;min-height:62px!important;flex:0 0 62px!important;
-    align-items:center!important;justify-content:space-around!important;margin:0!important;padding:0!important;
+    align-items:center!important;justify-content:space-around!important;box-sizing:border-box!important;
+    margin:0!important;padding:0!important;
   }
   body[data-screen="achievements"] .initial-footer-icons button{
     display:flex!important;visibility:visible!important;opacity:1!important;flex:1 1 0!important;
-    width:16.666%!important;height:60px!important;min-height:60px!important;
-    align-items:center!important;justify-content:center!important;background:none!important;
-    border:0!important;color:#aaa!important;font-size:27px!important;
+    width:20%!important;min-width:0!important;height:60px!important;min-height:60px!important;
+    box-sizing:border-box!important;align-items:center!important;justify-content:center!important;
+    margin:0!important;padding:0!important;border:0!important;border-bottom:4px solid transparent!important;
+    border-radius:0!important;background:none!important;color:#aaa!important;font-size:0!important;line-height:1!important;
   }
   body[data-screen="achievements"] .initial-footer-icons button svg{
-    display:block!important;visibility:visible!important;opacity:1!important;
-    width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;
-    max-width:28px!important;max-height:28px!important;fill:none!important;stroke:currentColor!important;
-    stroke-width:3.1!important;stroke-linecap:round!important;stroke-linejoin:round!important;
+    display:block!important;visibility:visible!important;opacity:1!important;width:28px!important;height:28px!important;
+    min-width:28px!important;min-height:28px!important;max-width:28px!important;max-height:28px!important;
+    box-sizing:content-box!important;fill:none!important;stroke:currentColor!important;stroke-width:3.1!important;
+    stroke-linecap:round!important;stroke-linejoin:round!important;
   }
   body[data-screen="achievements"] .initial-footer-icons button.active{
     color:#bd7187!important;border-bottom:4px solid #d41469!important;
   }
+  body[data-screen="achievements"] .initial-footer-icons button[hidden]{display:none!important}
   body[data-screen="achievements"] .initial-footer-title{
     display:flex!important;visibility:visible!important;opacity:1!important;flex:0 0 43px!important;
-    width:100%!important;height:43px!important;min-height:43px!important;
-    align-items:center!important;justify-content:center!important;box-sizing:border-box!important;
-    margin:0!important;padding:0!important;background:#000!important;color:#fff!important;
-    font-size:21px!important;font-weight:700!important;line-height:1!important;
-    border-bottom:4px solid #d41469!important;
+    width:100%!important;height:43px!important;min-height:43px!important;align-items:center!important;
+    justify-content:center!important;box-sizing:border-box!important;margin:0!important;padding:0!important;
+    background:#000!important;color:#fff!important;font-size:17px!important;font-weight:700!important;
+    line-height:1!important;border-bottom:4px solid #d41469!important;
   }
-  body[data-screen="achievements"] #screenTabs{display:none!important}
-  body[data-screen="achievements"] .mobile-bottom-actions{
-    display:flex!important;position:fixed!important;left:auto!important;right:5px!important;bottom:111px!important;
-    width:max-content!important;height:58px!important;min-height:58px!important;z-index:120!important;
-    gap:12px!important;align-items:center!important;justify-content:flex-end!important;
-    margin:0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;
-  }
-  body[data-screen="achievements"] #mobileDboostBtn,
-  body[data-screen="achievements"] #mobileGalaxyQuickBtn,
-  body[data-screen="achievements"] #mobileMaxAllBtn{
-    position:static!important;inset:auto!important;flex:0 0 58px!important;width:58px!important;min-width:58px!important;
-    max-width:58px!important;height:58px!important;min-height:58px!important;max-height:58px!important;
-    margin:0!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;
-    border:0!important;border-radius:50%!important;background:#000!important;color:#fff!important;box-sizing:border-box!important;
-  }
-  body[data-screen="achievements"] #mobileDboostBtn{font-size:12px!important;font-weight:700!important;white-space:nowrap!important}
-  body[data-screen="achievements"] #mobileGalaxyQuickBtn{font-size:12px!important;font-weight:700!important;white-space:nowrap!important}
-  body[data-screen="achievements"] #mobileMaxAllBtn{font-size:15px!important;font-weight:700!important}
-  body[data-screen="achievements"] #mobileDboostBtn[hidden],
-  body[data-screen="achievements"] #mobileGalaxyQuickBtn[hidden]{display:none!important}
-  body[data-screen="achievements"] .mobile-bottom-actions>:not(#mobileDboostBtn):not(#mobileGalaxyQuickBtn):not(#mobileMaxAllBtn){display:none!important}
-}
-</style>
-
-<style id="achievements-match-main-header-footer">
-@media(max-width:700px){
-body[data-screen="achievements"] .initial-game-header{position:fixed!important;z-index:100!important;top:0!important;left:0!important;right:0!important;width:100%!important;height:32px!important;min-height:32px!important;padding:0 16px!important;box-sizing:border-box!important;display:flex!important;align-items:flex-start!important;justify-content:flex-start!important;background:#000!important}
-body[data-screen="achievements"] .initial-menu-button{display:block!important;width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;margin:0!important;padding:0!important;border:0!important;background:none!important;color:#bbb!important;font-size:0!important;position:relative!important}
-body[data-screen="achievements"] .initial-menu-button:before{content:"☰"!important;display:block!important;font-size:30px!important;line-height:28px!important;font-weight:300!important;color:#bbb!important}
-body[data-screen="achievements"] .initial-main-footer{position:fixed!important;z-index:100!important;bottom:0!important;left:0!important;right:0!important;width:100%!important;height:105px!important;min-height:105px!important;display:flex!important;flex-direction:column!important;padding:0 0 env(safe-area-inset-bottom)!important;box-sizing:content-box!important;background:#000!important}
-body[data-screen="achievements"] .initial-footer-icons{display:flex!important;visibility:visible!important;opacity:1!important;width:100%!important;height:62px!important;min-height:62px!important;flex:0 0 62px!important;align-items:center!important;justify-content:space-around!important;margin:0!important;padding:0!important}
-body[data-screen="achievements"] .initial-footer-icons button{display:flex!important;visibility:visible!important;opacity:1!important;flex:1 1 0!important;width:16.666%!important;height:60px!important;min-height:60px!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;margin:0!important;padding:0!important;background:none!important;border:0!important;color:#aaa!important;font-size:27px!important}
-body[data-screen="achievements"] .initial-footer-icons button svg{display:block!important;visibility:visible!important;opacity:1!important;width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;max-width:28px!important;max-height:28px!important;fill:none!important;stroke:currentColor!important;stroke-width:3.1!important;stroke-linecap:round!important;stroke-linejoin:round!important}
-body[data-screen="achievements"] .initial-footer-icons button.active{color:#b76a7d!important;border-bottom:4px solid #d41469!important}
-body[data-screen="achievements"] .initial-footer-title{display:flex!important;visibility:visible!important;opacity:1!important;flex:0 0 43px!important;width:100%!important;height:43px!important;min-height:43px!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;margin:0!important;padding:0!important;background:#000!important;color:#fff!important;font-size:21px!important;font-weight:700!important;line-height:1!important;border-bottom:4px solid #d41469!important}
 }
 </style>
