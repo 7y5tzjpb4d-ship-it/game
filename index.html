@@ -4222,7 +4222,7 @@ const tabViews={test:()=>testToolsView(),eternity:()=>eternitySubpage==='studies
 <div class="achievement-antimatter">You have <strong>${matterBigNumber().toDisplayString(2)}</strong> antimatter.</div>
 <div class="achievement-controls">
 <button type="button" id="achievementHideRows" class="achievement-control">Hide completed rows: OFF</button>
-<button type="button" id="achievementHandDrawn" class="achievement-control">Hand-drawn images: OFF</button>
+
 </div>
 <div class="achievement-multiplier">Your Achievements provide a multiplier to:<br>Antimatter Dimensions: ×${achievementMultiplier().toFixed(3)}</div>
 </div><div class="achievement-grid">${[
@@ -6175,8 +6175,8 @@ body[data-screen="achievements"] .initial-main-footer{display:flex!important}
 body[data-screen="achievements"] .achievement-heading{text-align:center;padding:10px 4px 0}
 body[data-screen="achievements"] .achievement-antimatter{font-size:clamp(15px,3.5vw,23px);color:#999;margin:0 0 10px}
 body[data-screen="achievements"] .achievement-antimatter strong{font-size:1.55em;color:#c6c6cb;font-weight:800}
-body[data-screen="achievements"] .achievement-controls{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:8px 2px}
-body[data-screen="achievements"] .achievement-control{min-width:0;min-height:34px;padding:4px 3px;border:1.5px solid #008b2b;border-radius:6px;background:#242428;color:#c4c4c8;font-size:clamp(10px,2.7vw,15px);white-space:nowrap}
+body[data-screen="achievements"] .achievement-controls{display:flex;justify-content:center;align-items:center;margin:8px 2px}
+body[data-screen="achievements"] .achievement-control{width:min(82%,420px);min-width:0;min-height:34px;padding:4px 3px;border:1.5px solid #008b2b;border-radius:6px;background:#242428;color:#c4c4c8;font-size:clamp(10px,2.7vw,15px);white-space:nowrap}
 body[data-screen="achievements"] .achievement-multiplier{font-size:clamp(11px,2.9vw,16px);line-height:1.25;color:#c4c4c8;margin:8px 0 10px}
 body[data-screen="achievements"] .achievement-grid{display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;grid-auto-flow:row!important;grid-auto-columns:auto!important;gap:3px!important;overflow:visible!important;padding:0!important;margin:0!important;width:100%!important;box-sizing:border-box!important}
 body[data-screen="achievements"] .achievement-tile{min-width:0!important;width:auto!important;height:clamp(58px,10.8vw,84px)!important;min-height:0!important;padding:3px 2px!important;box-sizing:border-box!important;overflow:hidden!important;border:1.5px solid #b63d5b!important;border-radius:5px!important;background:#202024!important;color:#c7c7ca!important;display:flex;flex-direction:column;justify-content:flex-start;text-align:center}
