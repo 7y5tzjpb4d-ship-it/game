@@ -4339,6 +4339,15 @@ const eternityMilestoneData=[
 ];
 function eternityMilestonesView(){const e=Math.max(0,Math.floor(Number(state.eternities)||0));return `<div class="ep-subnav"><button data-ep-page="studies">Studies</button><button data-ep-page="upgrades">Upgrades</button><button class="active" data-ep-page="milestones">Milestones</button></div><section class="eternity-screen"><h2>Eternity Milestones</h2><p>Eternities: <strong>${e.toLocaleString('en-US')}</strong></p><div class="ep-milestone-grid">${eternityMilestoneData.map(([n,t,d])=>`<div class="ep-milestone ${e>=n?'reached':''}"><strong>${n.toLocaleString('en-US')} Eternit${n===1?'y':'ies'} — ${t}</strong><span>${d}</span><small>${e>=n?'達成済み':'必要：'+n.toLocaleString('en-US')+' Eternities'}</small></div>`).join('')}</div><p class="ts-description">マイルストーンはEternity回数に応じて自動達成され、Eternityを行っても消費されません。</p></section>`;}
 function buyEternityUpgrade(id){const cost=eternityUpgradeCost(id);if(getEPBigNumber().compare(cost)<0)return;if(id!==1&&state.eternityUpgrades.includes(id))return;setEPBigNumber(getEPBigNumber().subtract(cost));state.eternityUpgrades.push(id);save();switchScreen('eternity');}
+function updateStatisticsLive(){
+ if(document.body.dataset.screen!=='statistics')return;
+ const current=document.getElementById('statistics-current-am');
+ if(current)current.textContent=fmtMatter(state.matter);
+ const total=document.getElementById('statistics-total-am');
+ if(total)total.textContent=(state.totalAntimatterProducedBN?fmtBig(BigNumber.from(state.totalAntimatterProducedBN)):fmtMatter(state.totalAntimatterProduced||state.matter))+' antimatter';
+ const played=document.getElementById('statistics-play-time');
+ if(played)played.textContent=formatPlayTime(state.playTime);
+}
 function statisticsView(){
  const sub=statisticsSubpage;
  const nav=`<nav class="stat-subnav">${[['stats','Stats'],['multipliers','Multipliers'],['graphs','Graphs']].map(([id,label])=>`<button data-stat-page="${id}" class="${sub===id?'active':''}">${label}</button>`).join('')}</nav>`;
@@ -4354,10 +4363,10 @@ function statisticsView(){
   const saveLine=saveStamp?new Date(saveStamp).toLocaleString('en-US',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}):'';
   const newsCount=Number(state.newsTickerCount??state.newsMessagesSeen??state.newsCount);
   const proton=state.antimatterPerProton||'';
-  body=`<p class="stat-lead">You have <strong>${currentAM}</strong> antimatter.</p>
+  body=`<p class="stat-lead">You have <strong id="statistics-current-am">${currentAM}</strong> antimatter.</p>
    <section class="stat-section stat-general-block"><h2 class="stat-general">General</h2>
-   ${line('You have made a total of',totalAM+' antimatter')}
-   <p class="stat-line stat-multiline">You have played for<br><strong>${played}</strong></p>
+   <p class="stat-line">You have made a total of: <strong id="statistics-total-am">${totalAM} antimatter</strong></p>
+   <p class="stat-line stat-multiline">You have played for<br><strong id="statistics-play-time">${played}</strong></p>
    <p class="stat-line stat-multiline">Your save was created on ${saveLine||'Unknown'}.</p>
    ${line('You have seen',(Number.isFinite(newsCount)?newsCount:0)+' news ticker messages in total.')}
    ${line('You have unlocked',secretCount+' Secret Achievements.')}
@@ -4639,11 +4648,13 @@ function runAutobuyers(dt, options={}){
  return changed;
 }
 
+let lastStatisticsLiveRender=0;
 function tick(now){
  if(offlineProgressActive){requestAnimationFrame(tick);return;}
  const dt=Math.min(.25,(now-last)/1000);last=now;
  simulateGameStep(dt);
- render();updateReplicantiCountdownDisplay();// Infinity Dimension画面は約30fpsで再描画し、数値更新のカクつきを軽減する。
+ render();updateReplicantiCountdownDisplay();
+ if(document.body.dataset.screen==='statistics'&&now-lastStatisticsLiveRender>=100){lastStatisticsLiveRender=now;updateStatisticsLive();}// 統計画面の数値だけを10fpsで差分更新。レイアウトDOMは再生成しない。
  if(document.body.dataset.screen==='main'&&mainSubpage==='infinityDimensions'&&now-lastInfinityDimensionRender>=100){lastInfinityDimensionRender=now;updateInfinityDimensionScreen();}else if(document.body.dataset.screen==='main'&&mainSubpage==='timeDimensions'&&now-lastInfinityDimensionRender>=100){lastInfinityDimensionRender=now;switchScreen('main');}if(document.body.dataset.screen==='infinity'&&infinitySubpage==='replicanti'&&now-lastReplicantiRender>=500){lastReplicantiRender=now;switchScreen('infinity');}if((state.activeChallenge||state.activeInfinityChallenge)&&document.body.dataset.screen==='challenges'&&now-lastRender>500){switchScreen('challenges');}lastRender=now;
  if(now-lastSave>5000){save();lastSave=now;}
  requestAnimationFrame(tick);
