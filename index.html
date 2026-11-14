@@ -4222,7 +4222,7 @@ const tabViews={test:()=>testToolsView(),eternity:()=>eternitySubpage==='studies
 <div class="achievement-antimatter">You have <strong>${matterBigNumber().toDisplayString(2)}</strong> antimatter.</div>
 <div class="achievement-controls">
 <button type="button" id="achievementHideRows" class="achievement-control">Hide completed rows: OFF</button>
-
+<button type="button" id="achievementHandDrawn" class="achievement-control">Hand-drawn images: OFF</button>
 </div>
 <div class="achievement-multiplier">Your Achievements provide a multiplier to:<br>Antimatter Dimensions: ×${achievementMultiplier().toFixed(3)}</div>
 </div><div class="achievement-grid">${[
@@ -6175,13 +6175,12 @@ body[data-screen="achievements"] .initial-main-footer{display:flex!important}
 body[data-screen="achievements"] .achievement-heading{text-align:center;padding:10px 4px 0}
 body[data-screen="achievements"] .achievement-antimatter{font-size:clamp(15px,3.5vw,23px);color:#999;margin:0 0 10px}
 body[data-screen="achievements"] .achievement-antimatter strong{font-size:1.55em;color:#c6c6cb;font-weight:800}
-body[data-screen="achievements"] .achievement-controls{display:flex;justify-content:center;align-items:center;margin:8px 2px}
-body[data-screen="achievements"] .achievement-controls #achievementHideRows{width:min(72%,280px);margin:0 auto}
+body[data-screen="achievements"] .achievement-controls{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:8px 2px}
 body[data-screen="achievements"] .achievement-control{min-width:0;min-height:34px;padding:4px 3px;border:1.5px solid #008b2b;border-radius:6px;background:#242428;color:#c4c4c8;font-size:clamp(10px,2.7vw,15px);white-space:nowrap}
 body[data-screen="achievements"] .achievement-multiplier{font-size:clamp(11px,2.9vw,16px);line-height:1.25;color:#c4c4c8;margin:8px 0 10px}
 body[data-screen="achievements"] .achievement-grid{display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;grid-auto-flow:row!important;grid-auto-columns:auto!important;gap:3px!important;overflow:visible!important;padding:0!important;margin:0!important;width:100%!important;box-sizing:border-box!important}
 body[data-screen="achievements"] .achievement-tile{min-width:0!important;width:auto!important;height:clamp(58px,10.8vw,84px)!important;min-height:0!important;padding:3px 2px!important;box-sizing:border-box!important;overflow:hidden!important;border:1.5px solid #b63d5b!important;border-radius:5px!important;background:#202024!important;color:#c7c7ca!important;display:flex;flex-direction:column;justify-content:flex-start;text-align:center}
-body[data-screen="achievements"] .achievement-tile.unlocked{background:#176b32!important;border:1.5px solid #28a745!important;color:#f0fff3!important}
+body[data-screen="achievements"] .achievement-tile.unlocked{background:#17612d!important;border-color:#269b4a!important;color:#f0fff3!important}
 body[data-screen="achievements"] .achievement-id{font-size:clamp(8px,2vw,12px)!important;line-height:1.1!important;opacity:1!important;font-weight:700}
 body[data-screen="achievements"] .achievement-name{display:block!important;font-size:clamp(6px,1.65vw,10px)!important;line-height:1.13!important;overflow-wrap:anywhere!important;margin:3px 0 0!important;font-weight:500!important}
 body[data-screen="achievements"] .achievement-subnav{position:fixed;left:0;right:0;bottom:calc(54px + env(safe-area-inset-bottom));z-index:50;display:grid;grid-template-columns:1fr 1fr;background:#000;border-top:1px solid #222}
@@ -6206,6 +6205,8 @@ document.addEventListener('click',function(event){
   const enabled=grid.classList.toggle('hide-completed-rows');
   hide.textContent='Hide completed rows: '+(enabled?'ON':'OFF');
  }
+ const hand=event.target.closest('#achievementHandDrawn');
+ if(hand){const enabled=hand.dataset.enabled!=='true';hand.dataset.enabled=String(enabled);hand.textContent='Hand-drawn images: '+(enabled?'ON':'OFF');}
  const category=event.target.closest('[data-achievement-category]');
  if(category){
   document.querySelectorAll('[data-achievement-category]').forEach(button=>button.classList.toggle('active',button===category));
@@ -6292,5 +6293,19 @@ document.addEventListener('click',function(event){
   body[data-screen="achievements"] #mobileDboostBtn[hidden],
   body[data-screen="achievements"] #mobileGalaxyQuickBtn[hidden]{display:none!important}
   body[data-screen="achievements"] .mobile-bottom-actions>:not(#mobileDboostBtn):not(#mobileGalaxyQuickBtn):not(#mobileMaxAllBtn){display:none!important}
+}
+</style>
+
+<style id="achievements-match-main-header-footer">
+@media(max-width:700px){
+body[data-screen="achievements"] .initial-game-header{position:fixed!important;z-index:100!important;top:0!important;left:0!important;right:0!important;width:100%!important;height:32px!important;min-height:32px!important;padding:0 16px!important;box-sizing:border-box!important;display:flex!important;align-items:flex-start!important;justify-content:flex-start!important;background:#000!important}
+body[data-screen="achievements"] .initial-menu-button{display:block!important;width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;margin:0!important;padding:0!important;border:0!important;background:none!important;color:#bbb!important;font-size:0!important;position:relative!important}
+body[data-screen="achievements"] .initial-menu-button:before{content:"☰"!important;display:block!important;font-size:30px!important;line-height:28px!important;font-weight:300!important;color:#bbb!important}
+body[data-screen="achievements"] .initial-main-footer{position:fixed!important;z-index:100!important;bottom:0!important;left:0!important;right:0!important;width:100%!important;height:105px!important;min-height:105px!important;display:flex!important;flex-direction:column!important;padding:0 0 env(safe-area-inset-bottom)!important;box-sizing:content-box!important;background:#000!important}
+body[data-screen="achievements"] .initial-footer-icons{display:flex!important;visibility:visible!important;opacity:1!important;width:100%!important;height:62px!important;min-height:62px!important;flex:0 0 62px!important;align-items:center!important;justify-content:space-around!important;margin:0!important;padding:0!important}
+body[data-screen="achievements"] .initial-footer-icons button{display:flex!important;visibility:visible!important;opacity:1!important;flex:1 1 0!important;width:16.666%!important;height:60px!important;min-height:60px!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;margin:0!important;padding:0!important;background:none!important;border:0!important;color:#aaa!important;font-size:27px!important}
+body[data-screen="achievements"] .initial-footer-icons button svg{display:block!important;visibility:visible!important;opacity:1!important;width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;max-width:28px!important;max-height:28px!important;fill:none!important;stroke:currentColor!important;stroke-width:3.1!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+body[data-screen="achievements"] .initial-footer-icons button.active{color:#b76a7d!important;border-bottom:4px solid #d41469!important}
+body[data-screen="achievements"] .initial-footer-title{display:flex!important;visibility:visible!important;opacity:1!important;flex:0 0 43px!important;width:100%!important;height:43px!important;min-height:43px!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important;margin:0!important;padding:0!important;background:#000!important;color:#fff!important;font-size:21px!important;font-weight:700!important;line-height:1!important;border-bottom:4px solid #d41469!important}
 }
 </style>
