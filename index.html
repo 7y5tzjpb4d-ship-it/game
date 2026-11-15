@@ -7360,3 +7360,49 @@ body[data-screen="achievements"] #achievementHideRows{quotes:none!important}
  }
 }
 </style>
+
+<style id="multiplier-bar-press-feedback">
+@media (max-width: 700px) {
+  body[data-screen="statistics"] #tabContent .multiplier-total-bar,
+  body[data-screen="statistics"] #tabContent .multiplier-entry-row {
+    transition: background-color 120ms ease, filter 120ms ease, box-shadow 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    user-select: none;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-panel.multiplier-pressed .multiplier-total-bar {
+    filter: brightness(1.22);
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-panel.multiplier-pressed .multiplier-entry-row {
+    background-color: rgba(164, 67, 82, 0.28);
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-panel.multiplier-pressed .multiplier-entry-row .multiplier-entry-icon {
+    filter: brightness(1.08);
+  }
+}
+</style>
+<script id="multiplier-bar-press-behavior">
+(() => {
+  let releaseTimer = null;
+  document.addEventListener('click', event => {
+    const target = event.target instanceof Element
+      ? event.target.closest('.multiplier-total-bar, .multiplier-entry-row')
+      : null;
+    if (!target || document.body.dataset.screen !== 'statistics') return;
+    const panel = target.closest('.multiplier-panel');
+    if (!panel || panel.hidden) return;
+
+    // 同じパネル内のどちらのバーを押しても、本家動画と同様の短い押下フィードバック。
+    // 詳細ポップアップや倍率適用メッセージは表示しない。
+    panel.classList.remove('multiplier-pressed');
+    void panel.offsetWidth;
+    panel.classList.add('multiplier-pressed');
+    if (releaseTimer) clearTimeout(releaseTimer);
+    releaseTimer = setTimeout(() => {
+      panel.classList.remove('multiplier-pressed');
+      releaseTimer = null;
+    }, 480);
+  });
+})();
+</script>
+
