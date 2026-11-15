@@ -4544,9 +4544,9 @@ function getAD1MultiplierContributors(){
  // including effects which are not yet individually represented in this game's multiplier UI.
  const i=0;
  const factors=[];
- const add=(id,label,value,icon='Ω')=>{
+ const add=(id,label,value,icon='Ω',iconClass='dimension-entry-icon')=>{
   const v=BigNumber.from(value);
-  if(v.compare(1)!==0) factors.push({id,key:id,icon,iconClass:'dimension-entry-icon',label,mult:v,pow:1,ignoresNerfPowers:false,valueText:()=>`×${v.toDisplayString(2)}`});
+  if(v.compare(1)!==0) factors.push({id,key:id,icon,iconClass,label,mult:v,pow:1,ignoresNerfPowers:false,valueText:()=>`×${v.toDisplayString(2)}`});
  };
  add('ad1-dimboost','Dimension Boost',challengeRuleActive(8)?1:dimensionBoostMult(i));
  if(tsOwned(91)){const mins=Math.min(20,Math.max(0,Number(state.eternityTime)||0)/60);add('ad1-ts91','Time Study 91',BigNumber.from(10).power(15*mins).min('1e300'));}
@@ -4578,7 +4578,7 @@ function getAD1MultiplierContributors(){
   ['ad1-ach74','Achievement 74',hasAchievement(74)&&(state.activeChallenge||state.activeInfinityChallenge)?1.4:1]
  ];
  for(const [id,label,value] of achievementFactors)add(id,label,value,'🏆');
- add('ad1-achievement-multiplier','Achievement Multiplier',cachedDimensionMultiplierValue('achievementMultiplier',achievementMultiplier),'🏆');
+ add('ad1-achievement-multiplier','Achievement Multiplier',cachedDimensionMultiplierValue('achievementMultiplier',achievementMultiplier),'🏆','achievement-entry-icon');
  add('ad1-time-mult','Infinity Upgrade: Total Time',cachedDimensionMultiplierValue('timeMult',()=>infinityUpgradeMultiplierBigNumber('timeMult')));
  add('ad1-time-mult2','Infinity Upgrade: Current Infinity',cachedDimensionMultiplierValue('timeMult2',()=>infinityUpgradeMultiplierBigNumber('timeMult2')));
  add('ad1-unspent','Unspent IP bonus',cachedDimensionMultiplierValue('unspentBonus',()=>infinityUpgradeMultiplierBigNumber('unspentBonus')));
@@ -4642,7 +4642,7 @@ function renderMultiplierEntry(entry, depth=0, historyKey=''){
  const row=`<div class="multiplier-entry-row"><span class="multiplier-entry-icon${iconClass}">${entry.icon||'Ω'}</span><span><strong>${formatContributionPercent(entry.weight||0)}</strong> ${entry.label}${value?` (${value})`:''}</span></div>`;
  if(!hasChildren)return `<div class="multiplier-entry" data-multiplier-entry="${entry.id}">${row}</div>`;
  const weighted=officialMultiplierPercents(children,`${historyKey}/${entry.id}`,entry.id==='base-ad-production'?baseADProductionBigNumber():null);
- const segments=weighted.map(child=>`<span class="multiplier-contribution-segment" style="width:${Math.max(0,child.weight)}%">${child.icon||'Ω'}</span>`).join('');
+ const segments=weighted.map(child=>`<span class="multiplier-contribution-segment${child.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}" style="flex:0 0 ${Math.max(0,child.weight)}%;width:${Math.max(0,child.weight)}%">${child.iconClass==='achievement-entry-icon'?'':(child.icon||'Ω')}</span>`).join('');
  return `<details class="multiplier-entry multiplier-entry-expandable" data-multiplier-entry="${entry.id}"><summary>${row}<span class="multiplier-expand-indicator" aria-hidden="true">›</span></summary><div class="multiplier-entry-children"><div class="multiplier-total-bar multiplier-child-total multiplier-contribution-bar">${segments}</div>${weighted.map(child=>renderMultiplierEntry(child,depth+1,`${historyKey}/${entry.id}`)).join('')}</div></details>`;
 }
 function advanceMultiplierCycle(categoryId){
@@ -6391,7 +6391,26 @@ function updateVisibleScreenRealtime(now){
  }
 }
 </style>
-</body>
+<style id="achievement-multiplier-yellow">
+ body[data-screen="statistics"] #tabContent .multiplier-entry-icon.achievement-entry-icon{
+  background:#c9b45f!important;color:#201b08!important;
+ }
+</style>
+
+<style id="achievement-contribution-segment-yellow">
+@media(max-width:700px){
+ body[data-screen="statistics"] #tabContent .multiplier-contribution-bar{
+  display:flex!important;gap:0!important;overflow:hidden!important;box-sizing:border-box!important;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-contribution-segment{
+  flex-grow:0!important;flex-shrink:0!important;min-width:0!important;box-sizing:border-box!important;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-contribution-segment.achievement-contribution-segment{
+  background:#c9b45f!important;color:#201b08!important;font-size:0!important;
+ }
+}
+</style>
+\n</body>
 </html>
 
 <style id="autobuyers-reference-exact-layout-final">
@@ -7592,12 +7611,6 @@ body[data-screen="achievements"] #achievementHideRows{quotes:none!important}
    content:none !important;display:none !important;
  }
  body[data-screen="statistics"] #tabContent .multiplier-entry summary{padding-right:8px !important;}
- body[data-screen="statistics"] #tabContent .multiplier-total-bar.achievement-bar{
-   background:#c9b45f !important;color:#201b08 !important;
- }
- body[data-screen="statistics"] #tabContent .multiplier-entry-icon.achievement-entry-icon{
-   background:#c9b45f !important;color:#201b08 !important;
- }
 }
 </style>
 
