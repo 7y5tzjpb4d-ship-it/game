@@ -4491,39 +4491,52 @@ function getMultiplierCategoryDefinitions(context){
  };
 }
 const multiplierContributionHistory = new Map();
+function getActiveADProductionTiers(){
+ // Official AD.total uses AntimatterDimensions.all.filter(ad => ad.isProducing).
+ // In this implementation a tier is producing when its current amount is positive.
+ const tiers=[];
+ for(let i=0;i<8;i++)if(dimensionAmountBig(i).compare(0)>0)tiers.push(i);
+ return tiers.length?tiers:[0];
+}
 function highestAntimatterDimensionTier(){
- // The Ω source is the amount of the highest tier currently contributing to
- // the normal-dimension production chain, not unconditionally AD1.
- for(let i=7;i>=0;i--){
-  if(dimensionAmountBig(i).compare(0)>0 || Number(state.bought?.[i]||0)>0) return i;
- }
- return 0;
+ const tiers=getActiveADProductionTiers();
+ return tiers[tiers.length-1];
 }
 function baseADProductionBigNumber(){
- const highestTier=highestAntimatterDimensionTier();
- // Preserve the game's actual AD1 production total. The breakdown below
- // identifies its multiplier source and the highest-tier amount source.
- return dimensionMultiplierBigNumber(0).multiply(dimensionAmountBig(0));
+ const tiers=getActiveADProductionTiers();
+ const highestTier=tiers[tiers.length-1];
+ const multiplierProduct=tiers.reduce((product,tier)=>product.multiply(dimensionMultiplierBigNumber(tier)),BigNumber.from(1));
+ return multiplierProduct.multiply(dimensionAmountBig(highestTier)).max(1);
 }
 function getBaseADProductionContributors(){
- const highestTier=highestAntimatterDimensionTier();
+ const tiers=getActiveADProductionTiers();
+ const highestTier=tiers[tiers.length-1];
  const highestAmount=dimensionAmountBig(highestTier);
- const highestLabel=`AD ${highestTier+1}`;
- return [
-  {
-   id:'ad1-multiplier-contribution', key:'AD_total_1', icon:'Ω1',
-   iconClass:'dimension-entry-icon', label:'AD 1 Multiplier',
-   mult:dimensionMultiplierBigNumber(0), pow:1, ignoresNerfPowers:false,
-   valueText:()=>`×${dimensionMultiplierBigNumber(0).toDisplayString(2)}`,
-   children:()=>getAD1MultiplierContributors()
-  },
-  {
-   id:'highest-dimension-contribution', key:'AD_highestDim', icon:'Ω',
-   iconClass:'', label:'Amount of highest Dimension',
-   mult:highestAmount, pow:1, ignoresNerfPowers:false,
-   valueText:()=>`${highestLabel}, ${highestAmount.toDisplayString(2)}`
-  }
- ];
+ const contributors=tiers.map(tier=>{
+  const multiplier=dimensionMultiplierBigNumber(tier);
+  const contributionValue=multiplier.multiply(highestAmount);
+  return {
+   id:`ad-multiplier-contribution-${tier+1}`, key:`AD_total_${tier+1}`, icon:`Ω${tier+1}`,
+   iconClass:'dimension-entry-icon', label:`AD ${tier+1} Multiplier`,
+   // Official AD.total_<tier> includes that tier's multiplier times the highest
+   // producing dimension amount. The displayed override intentionally shows only the multiplier.
+   mult:contributionValue, pow:1, ignoresNerfPowers:false,
+   valueText:()=>`×${multiplier.toDisplayString(2)}`,
+   children:()=>tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier)
+  };
+ });
+ contributors.push({
+  id:'highest-dimension-contribution', key:'AD_highestDim', icon:'Ω',
+  iconClass:'', label:'Amount of highest Dimension',
+  mult:highestAmount, pow:1, ignoresNerfPowers:false,
+  valueText:()=>`AD ${highestTier+1}, ${highestAmount.toDisplayString(2)}`
+ });
+ return contributors;
+}
+function getADMultiplierContributors(tier){
+ if(tier===0)return getAD1MultiplierContributors();
+ const exact=dimensionMultiplierBigNumber(tier);
+ return [{id:`ad${tier+1}-exact-multiplier`,key:`AD_base_${tier+1}`,icon:`Ω${tier+1}`,iconClass:'dimension-entry-icon',label:`AD ${tier+1} Multiplier`,mult:exact,pow:1,ignoresNerfPowers:false,valueText:()=>`×${exact.toDisplayString(2)}`}];
 }
 function getAD1MultiplierContributors(){
  // These are the independently identifiable factors used by the current AD1 multiplier formula.
@@ -4581,11 +4594,11 @@ function getAD1MultiplierContributors(){
  if(residual.compare(1)!==0)factors.push({id:'ad1-other-effects',key:'AD_other',icon:'Ω',iconClass:'dimension-entry-icon',label:'Other applicable effects',mult:residual,pow:1,ignoresNerfPowers:false,valueText:()=>`×${residual.toDisplayString(2)}`});
  return factors.length?factors:[{id:'ad1-base',key:'AD_base',icon:'Ω',iconClass:'dimension-entry-icon',label:'Base multiplier',mult:exact,pow:1,ignoresNerfPowers:false,valueText:()=>`×${exact.toDisplayString(2)}`}];
 }
-function officialMultiplierPercents(entries, historyKey){
+function officialMultiplierPercents(entries, historyKey, totalValue=null){
  const powList=entries.map(e=>Number(e.pow??1));
  const totalPosPow=powList.filter(p=>p>1).reduce((x,y)=>x*y,1);
  const totalNegPow=powList.filter(p=>p<1).reduce((x,y)=>x*y,1);
- const total=entries.reduce((x,e)=>x.multiply(e.mult.power(Number(e.pow??1))),BigNumber.from(1));
+ const total=totalValue===null?entries.reduce((x,e)=>x.multiply(e.mult.power(Number(e.pow??1))),BigNumber.from(1)):BigNumber.from(totalValue);
  const log10Mult=total.log10()/totalPosPow;
  const isEmpty=log10Mult===0;
  let percents=[];
@@ -4628,7 +4641,7 @@ function renderMultiplierEntry(entry, depth=0, historyKey=''){
  const hasChildren=Array.isArray(children)&&children.length>0;
  const row=`<div class="multiplier-entry-row"><span class="multiplier-entry-icon${iconClass}">${entry.icon||'Ω'}</span><span><strong>${formatContributionPercent(entry.weight||0)}</strong> ${entry.label}${value?` (${value})`:''}</span></div>`;
  if(!hasChildren)return `<div class="multiplier-entry" data-multiplier-entry="${entry.id}">${row}</div>`;
- const weighted=officialMultiplierPercents(children,`${historyKey}/${entry.id}`);
+ const weighted=officialMultiplierPercents(children,`${historyKey}/${entry.id}`,entry.id==='base-ad-production'?baseADProductionBigNumber():null);
  const segments=weighted.map(child=>`<span class="multiplier-contribution-segment" style="width:${Math.max(0,child.weight)}%">${child.icon||'Ω'}</span>`).join('');
  return `<details class="multiplier-entry multiplier-entry-expandable" data-multiplier-entry="${entry.id}"><summary>${row}<span class="multiplier-expand-indicator" aria-hidden="true">›</span></summary><div class="multiplier-entry-children"><div class="multiplier-total-bar multiplier-child-total multiplier-contribution-bar">${segments}</div>${weighted.map(child=>renderMultiplierEntry(child,depth+1,`${historyKey}/${entry.id}`)).join('')}</div></details>`;
 }
