@@ -4491,23 +4491,37 @@ function getMultiplierCategoryDefinitions(context){
  };
 }
 const multiplierContributionHistory = new Map();
+function highestAntimatterDimensionTier(){
+ // The Ω source is the amount of the highest tier currently contributing to
+ // the normal-dimension production chain, not unconditionally AD1.
+ for(let i=7;i>=0;i--){
+  if(dimensionAmountBig(i).compare(0)>0 || Number(state.bought?.[i]||0)>0) return i;
+ }
+ return 0;
+}
 function baseADProductionBigNumber(){
+ const highestTier=highestAntimatterDimensionTier();
+ // Preserve the game's actual AD1 production total. The breakdown below
+ // identifies its multiplier source and the highest-tier amount source.
  return dimensionMultiplierBigNumber(0).multiply(dimensionAmountBig(0));
 }
 function getBaseADProductionContributors(){
+ const highestTier=highestAntimatterDimensionTier();
+ const highestAmount=dimensionAmountBig(highestTier);
+ const highestLabel=`AD ${highestTier+1}`;
  return [
   {
    id:'ad1-multiplier-contribution', key:'AD_total_1', icon:'Ω1',
    iconClass:'dimension-entry-icon', label:'AD 1 Multiplier',
    mult:dimensionMultiplierBigNumber(0), pow:1, ignoresNerfPowers:false,
-   valueText:()=>`×${fmtBig(dimensionMultiplierBigNumber(0))}`,
+   valueText:()=>`×${dimensionMultiplierBigNumber(0).toDisplayString(2)}`,
    children:()=>getAD1MultiplierContributors()
   },
   {
    id:'highest-dimension-contribution', key:'AD_highestDim', icon:'Ω',
    iconClass:'', label:'Amount of highest Dimension',
-   mult:dimensionAmountBig(0), pow:1, ignoresNerfPowers:false,
-   valueText:()=>`AD 1, ${dimensionAmountBig(0).toDisplayString(2)}`
+   mult:highestAmount, pow:1, ignoresNerfPowers:false,
+   valueText:()=>`${highestLabel}, ${highestAmount.toDisplayString(2)}`
   }
  ];
 }
