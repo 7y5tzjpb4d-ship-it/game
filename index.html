@@ -6017,6 +6017,74 @@ function updateVisibleScreenRealtime(now){
  body[data-screen="statistics"] #tabContent .multiplier-base-description{font-size:13px;line-height:1.35;color:#bdbdc2;margin:0 0 2px}
 }
 </style>
+<script id="multipliers-live-render-loop">
+(() => {
+  // Main画面と同じ60 FPSでMultipliersの数値・有効項目を更新する。
+  // ゲーム進行ロジックには触れず、表示だけを現在のstateに同期する。
+  const FRAME_INTERVAL = 1000 / 60;
+  let lastFrame = 0;
+  let rafId = 0;
+
+  function updateMultipliersFrame() {
+    if (document.body.dataset.screen !== 'statistics' || statisticsSubpage !== 'multipliers') return;
+    const root = document.querySelector('#tabContent .multiplier-view');
+    if (!root) return;
+
+    const template = document.createElement('template');
+    template.innerHTML = statisticsView();
+    const freshRoot = template.content.querySelector('.multiplier-view');
+    if (!freshRoot) return;
+
+    const current = root.querySelector('.multiplier-current-am');
+    const freshCurrent = freshRoot.querySelector('.multiplier-current-am');
+    if (current && freshCurrent && current.innerHTML !== freshCurrent.innerHTML) {
+      current.innerHTML = freshCurrent.innerHTML;
+    }
+
+    for (const mode of ['production', 'dimensions']) {
+      const oldPanel = root.querySelector(`[data-multiplier-panel="${mode}"]`);
+      const newPanel = freshRoot.querySelector(`[data-multiplier-panel="${mode}"]`);
+      if (!oldPanel || !newPanel) continue;
+
+      const opened = new Set(
+        [...oldPanel.querySelectorAll('details[open]')]
+          .map(entry => entry.querySelector('summary')?.textContent?.trim())
+          .filter(Boolean)
+      );
+      if (oldPanel.innerHTML !== newPanel.innerHTML) {
+        oldPanel.innerHTML = newPanel.innerHTML;
+        oldPanel.querySelectorAll('details.multiplier-entry').forEach(entry => {
+          const key = entry.querySelector('summary')?.textContent?.trim();
+          if (key && opened.has(key)) entry.open = true;
+        });
+        oldPanel.querySelectorAll('[data-multiplier-refresh]').forEach(button => {
+          button.addEventListener('click', () => updateMultipliersFrame());
+        });
+      }
+    }
+  }
+
+  function frame(now) {
+    if (now - lastFrame >= FRAME_INTERVAL - 0.25) {
+      lastFrame = now;
+      updateMultipliersFrame();
+    }
+    rafId = requestAnimationFrame(frame);
+  }
+
+  function start() {
+    if (!rafId) rafId = requestAnimationFrame(frame);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else {
+    start();
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) lastFrame = 0;
+  });
+})();
+</script>
 </body>
 </html>
 
@@ -7087,6 +7155,126 @@ body[data-screen="achievements"] #achievementHideRows{quotes:none!important}
   body[data-screen="statistics"] #tabContent .cube-symbol{
     font-size:16px !important;
     line-height:1 !important;
+  }
+}
+</style>
+<style id="multipliers-reference-exact-panel-v7">
+@media(max-width:700px){
+  body[data-screen="statistics"] #tabContent .multiplier-view{
+    width:calc(100% + 10px) !important;
+    margin-left:-5px !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-panel{
+    padding:4px 4px 8px !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-entry summary{
+    min-height:24px !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-entry-icon{
+    flex-basis:18px !important;
+    width:18px !important;
+    height:18px !important;
+    font-size:12px !important;
+  }
+}
+</style>
+<style id="multipliers-reference-exact-panel-v8">
+@media(max-width:700px){
+  body[data-screen="statistics"] #tabContent .multiplier-view{
+    width:calc(100% + 10px) !important;
+    margin-left:-5px !important;
+    padding:0 2px 20px !important;
+    box-sizing:border-box !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-panel{
+    box-sizing:border-box !important;
+    padding:4px 4px 8px !important;
+    border-width:1.5px !important;
+    border-radius:7px !important;
+    margin:0 0 8px !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-panel h2{
+    font-size:14px !important;
+    line-height:1.25 !important;
+    margin:3px 0 12px !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-total-bar{
+    height:24px !important;
+    min-height:24px !important;
+    border-width:1px !important;
+    border-radius:6px !important;
+    font-size:16px !important;
+    margin:0 0 6px !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-entry{
+    border-width:1px !important;
+    border-radius:5px !important;
+    margin:0 0 4px !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-entry summary{
+    min-height:24px !important;
+    padding:3px 6px !important;
+    gap:8px !important;
+    font-size:12px !important;
+    line-height:1.2 !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-entry summary:after{
+    font-size:16px !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-entry-icon{
+    flex:0 0 18px !important;
+    width:18px !important;
+    height:18px !important;
+    border-radius:4px !important;
+    font-size:12px !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-entry-detail{
+    padding:5px 8px 7px 36px !important;
+    font-size:11px !important;
+  }
+}
+</style>
+
+<style id="multipliers-dimension-panel-reference-size-v9">
+@media(max-width:700px){
+  /* Keep the Ω◇ panel's production breakdown controls the same compact size
+     as the Antimatter Production panel; retain its explanatory text. */
+  body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"]{
+    box-sizing:border-box !important;
+    padding:4px 4px 8px !important;
+    border-width:1.5px !important;
+    border-radius:7px !important;
+    margin:0 0 8px !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-panel-heading{
+    display:flex !important;
+    align-items:center !important;
+    gap:6px !important;
+    margin:0 0 8px !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-panel-heading h2{
+    flex:1 1 auto !important;
+    min-width:0 !important;
+    font-size:14px !important;
+    line-height:1.25 !important;
+    margin:3px 0 12px !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-refresh{
+    box-sizing:border-box !important;
+    width:24px !important;
+    min-width:24px !important;
+    height:24px !important;
+    min-height:24px !important;
+    flex:0 0 24px !important;
+    border-width:1px !important;
+    border-radius:5px !important;
+    font-size:16px !important;
+    line-height:1 !important;
+  }
+  body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-base-description{
+    font-size:13px !important;
+    line-height:1.35 !important;
+    margin:7px 0 2px !important;
   }
 }
 </style>
