@@ -2111,6 +2111,70 @@ body[data-screen="autobuyers"] .initial-antimatter-display {
  body[data-screen="statistics"] #tabContent .multiplier-notes p{margin-bottom:8px}
 }
 </style>
+<style id="official-multiplier-contribution-layout">
+@media(max-width:700px){
+ body[data-screen="statistics"] #tabContent .multiplier-entry-expandable>summary{
+  list-style:none;position:relative;display:block;cursor:pointer;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-entry-expandable>summary::-webkit-details-marker{display:none}
+ body[data-screen="statistics"] #tabContent details.multiplier-entry-expandable>summary:after{
+  content:"›"!important;display:block!important;position:absolute;right:7px;top:50%;transform:translateY(-50%);
+  font-size:22px!important;color:#bdbdc2;line-height:1;
+ }
+ body[data-screen="statistics"] #tabContent details.multiplier-entry-expandable[open]>summary:after{
+  content:"⌄"!important;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-entry-children{
+  margin:4px 0 0 7px;padding:5px 5px 7px 8px;
+  border-left:2px solid #a44352;border-radius:0 0 5px 5px;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-entry-children .multiplier-child-total{
+  height:24px;min-height:24px;margin:0 0 5px;font-size:15px;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-entry-children .multiplier-entry{
+  margin-bottom:4px;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-entry-children .multiplier-entry-row{
+  min-height:26px;padding:2px 5px;font-size:13px;
+ }
+}
+</style>
+
+
+<style id="official-multiplier-segmented-bar">
+@media(max-width:700px){
+ body[data-screen="statistics"] #tabContent .multiplier-contribution-bar{
+  display:flex;overflow:hidden;padding:0!important;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-contribution-segment{
+  box-sizing:border-box;display:flex;align-items:center;justify-content:center;
+  min-width:0;height:100%;font-size:15px;font-weight:700;white-space:nowrap;
+  background:#a44352;color:#17090b;border-right:1px solid #c4c4c4;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-contribution-segment:last-child{border-right:0}
+}
+</style>
+
+
+
+<style id="multiplier-expand-indicator-layout">
+@media(max-width:700px){
+ body[data-screen="statistics"] #tabContent details.multiplier-entry-expandable>summary{
+  display:flex!important;align-items:center!important;position:relative!important;
+ }
+ body[data-screen="statistics"] #tabContent details.multiplier-entry-expandable>summary>.multiplier-entry-row{
+  flex:1 1 auto;min-width:0;
+ }
+ body[data-screen="statistics"] #tabContent details.multiplier-entry-expandable>summary>.multiplier-expand-indicator{
+  flex:0 0 18px;display:block!important;margin-left:3px;text-align:center;
+  font-size:22px;line-height:1;color:#bdbdc2;
+ }
+ body[data-screen="statistics"] #tabContent details.multiplier-entry-expandable[open]>summary>.multiplier-expand-indicator{
+  transform:rotate(90deg);
+ }
+}
+</style>
+
 </head>
 <body><main>
 <div class="sticky-tools">
@@ -4402,7 +4466,8 @@ function getMultiplierCategoryDefinitions(context){
    emptyTitle:'No Active Effects',emptyDescription:'Total effect inactive, disabled, or reduced to ×1',
    variants:[{id:'base-production',barClass:'',barIcon:'Ω',entries:[{
     id:'base-ad-production',icon:'Ω',iconClass:'',color:'red',weight:100,
-    label:'Base AD Production',valueText:`${rateText}/sec`
+    label:'Base AD Production',valueText:()=>`${baseADProductionBigNumber().toDisplayString(2)}/sec`,
+    children:()=>getBaseADProductionContributors()
    }]}]
   },
   dimensions:{
@@ -4415,7 +4480,7 @@ function getMultiplierCategoryDefinitions(context){
    variants:[
     {id:'ad1',barClass:'dimension-bar',barIcon:'Ω1',entries:[{
      id:'ad1-multiplier',icon:'Ω1',iconClass:'dimension-entry-icon',color:'red',weight:100,
-     label:'AD 1 Multiplier',valueText:()=>`×${fmtBig(dimensionMultiplierBigNumber(0))}`
+     label:'AD 1 Multiplier',valueText:()=>`×${dimensionMultiplierBigNumber(0).toDisplayString(2)}`
     }]},
     {id:'achievement',barClass:'achievement-bar',barIcon:'🏆',entries:[{
      id:'achievement-multiplier',icon:'🏆',iconClass:'achievement-entry-icon',color:'yellow',weight:100,
@@ -4425,10 +4490,133 @@ function getMultiplierCategoryDefinitions(context){
   }
  };
 }
-function renderMultiplierEntry(entry){
+const multiplierContributionHistory = new Map();
+function baseADProductionBigNumber(){
+ return dimensionMultiplierBigNumber(0).multiply(dimensionAmountBig(0));
+}
+function getBaseADProductionContributors(){
+ return [
+  {
+   id:'ad1-multiplier-contribution', key:'AD_total_1', icon:'Ω1',
+   iconClass:'dimension-entry-icon', label:'AD 1 Multiplier',
+   mult:dimensionMultiplierBigNumber(0), pow:1, ignoresNerfPowers:false,
+   valueText:()=>`×${fmtBig(dimensionMultiplierBigNumber(0))}`,
+   children:()=>getAD1MultiplierContributors()
+  },
+  {
+   id:'highest-dimension-contribution', key:'AD_highestDim', icon:'Ω',
+   iconClass:'', label:'Amount of highest Dimension',
+   mult:dimensionAmountBig(0), pow:1, ignoresNerfPowers:false,
+   valueText:()=>`AD 1, ${dimensionAmountBig(0).toDisplayString(2)}`
+  }
+ ];
+}
+function getAD1MultiplierContributors(){
+ // These are the independently identifiable factors used by the current AD1 multiplier formula.
+ // The residual keeps the displayed factors mathematically equal to dimensionMultiplierBigNumber(0),
+ // including effects which are not yet individually represented in this game's multiplier UI.
+ const i=0;
+ const factors=[];
+ const add=(id,label,value,icon='Ω')=>{
+  const v=BigNumber.from(value);
+  if(v.compare(1)!==0) factors.push({id,key:id,icon,iconClass:'dimension-entry-icon',label,mult:v,pow:1,ignoresNerfPowers:false,valueText:()=>`×${v.toDisplayString(2)}`});
+ };
+ add('ad1-dimboost','Dimension Boost',challengeRuleActive(8)?1:dimensionBoostMult(i));
+ if(tsOwned(91)){const mins=Math.min(20,Math.max(0,Number(state.eternityTime)||0)/60);add('ad1-ts91','Time Study 91',BigNumber.from(10).power(15*mins).min('1e300'));}
+ if(tsOwned(101)&&state.replicantiUnlocked)add('ad1-ts101','Time Study 101',replicantiBigNumber().max(1));
+ if(tsOwned(193))add('ad1-ts193','Time Study 193',BigNumber.from('1e13000').power(Math.min(1,Math.max(0,Number(state.eternities)||0)/1e6)).min('1e13000'));
+ if(tsOwned(161))add('ad1-ts161','Time Study 161','1e616');
+ add('ad1-infinity-power','Infinity Power',cachedDimensionMultiplierValue('infinityPower',infinityPowerDimensionMultiplierBigNumber));
+ const tenBuy=(challengeRuleActive(7)?Math.min(2,1+0.2*state.boosts):(state.infinityUpgrades.includes('dimMult')?2.2:2))+(hasAchievement(58)?0.01:0);
+ add('ad1-purchases','AD 1 Purchases',BigNumber.from(tenBuy).power(Math.floor(state.bought[i]/10)));
+ if(state.activeInfinityChallenge===3||infinityChallengeEffectActive(3))add('ad1-ic3','Infinity Challenge 3',BigNumber.from(1.05+Math.max(0,Number(state.galaxies)||0)/200).power(state.tickspeed));
+ if(state.activeInfinityChallenge===6&&state.amount[1]>0)add('ad1-ic6','Infinity Challenge 6',BigNumber.from(Math.max(1,state.icMatter)).power(-1));
+ const achievementFactors=[
+  ['ad1-ach28','Achievement 28',state.achievements[15]?1.1:1],
+  ['ad1-ach31','Achievement 31',state.achievements[16]?1.05:1],
+  ['ad1-ach34','Achievement 34',state.achievements[19]?1.02:1],
+  ['ad1-ach43','Achievement 43',state.achievements[26]?1.01:1],
+  ['ad1-ach48','Achievement 48',state.achievements[31]?1.1:1],
+  ['ad1-ach64','Achievement 64',hasAchievement(64)?1.25:1],
+  ['ad1-ach68','Achievement 68',hasAchievement(68)?1.5:1],
+  ['ad1-ach71','Achievement 71',hasAchievement(71)?3:1],
+  ['ad1-ach72','Achievement 72',hasAchievement(72)?1.1:1],
+  ['ad1-ach73','Achievement 73',hasAchievement(73)?matterBigNumber().power(0.00002).add(1):1],
+  ['ad1-ach84','Achievement 84',hasAchievement(84)?matterBigNumber().power(0.00002).add(1):1],
+  ['ad1-ach76','Achievement 76',hasAchievement(76)?Math.max(1,Math.pow(Math.max(1,state.playTime/86400/2),0.05)):1],
+  ['ad1-ach91','Achievement 91',hasAchievement(91)&&state.infinityTime<5?Math.max((5-state.infinityTime)*60,1):1],
+  ['ad1-ach92','Achievement 92',hasAchievement(92)&&state.infinityTime<60?Math.max((1-state.infinityTime/60)*100,1):1],
+  ['ad1-ach56','Achievement 56',hasAchievement(56)&&state.infinityTime<180?Math.max(6/(state.infinityTime/60+3),1):1],
+  ['ad1-ach65','Achievement 65',hasAchievement(65)&&(state.activeChallenge||state.activeInfinityChallenge)&&state.infinityTime<180?Math.max(4/(state.infinityTime/60+1),1):1],
+  ['ad1-ach74','Achievement 74',hasAchievement(74)&&(state.activeChallenge||state.activeInfinityChallenge)?1.4:1]
+ ];
+ for(const [id,label,value] of achievementFactors)add(id,label,value,'🏆');
+ add('ad1-achievement-multiplier','Achievement Multiplier',cachedDimensionMultiplierValue('achievementMultiplier',achievementMultiplier),'🏆');
+ add('ad1-time-mult','Infinity Upgrade: Total Time',cachedDimensionMultiplierValue('timeMult',()=>infinityUpgradeMultiplierBigNumber('timeMult')));
+ add('ad1-time-mult2','Infinity Upgrade: Current Infinity',cachedDimensionMultiplierValue('timeMult2',()=>infinityUpgradeMultiplierBigNumber('timeMult2')));
+ add('ad1-unspent','Unspent IP bonus',cachedDimensionMultiplierValue('unspentBonus',()=>infinityUpgradeMultiplierBigNumber('unspentBonus')));
+ add('ad1-pair-upgrade','Infinity Upgrade: AD 1/8',infinityUpgradeMultiplierBigNumber('18Mult'));
+ for(const id of ['totalAM','currentAM','infinities','achievements','slowestChallenge'])if(breakInfinityUpgradeBought(id))add(`ad1-break-${id}`,`Break Infinity: ${id}`,cachedDimensionMultiplierValue('break:'+id,()=>breakInfinityUpgradeEffectBigNumber(id)));
+ if((state.activeChallenge===12?5:7)===i)add('ad1-sacrifice','Sacrifice',cachedDimensionMultiplierValue('sacrifice',sacrificeMultiplierBigNumber));
+ if(tsOwned(234))add('ad1-ts234','Time Study 234',cachedDimensionMultiplierValue('sacrifice',sacrificeMultiplierBigNumber));
+ // The exact current multiplier is authoritative. This residual absorbs any formula branches above which
+ // are not individually represented (including future additions) without changing the total.
+ const known=factors.reduce((acc,f)=>acc.multiply(f.mult.power(f.pow||1)),BigNumber.from(1));
+ const exact=dimensionMultiplierBigNumber(0);
+ const residual=exact.divide(known);
+ if(residual.compare(1)!==0)factors.push({id:'ad1-other-effects',key:'AD_other',icon:'Ω',iconClass:'dimension-entry-icon',label:'Other applicable effects',mult:residual,pow:1,ignoresNerfPowers:false,valueText:()=>`×${residual.toDisplayString(2)}`});
+ return factors.length?factors:[{id:'ad1-base',key:'AD_base',icon:'Ω',iconClass:'dimension-entry-icon',label:'Base multiplier',mult:exact,pow:1,ignoresNerfPowers:false,valueText:()=>`×${exact.toDisplayString(2)}`}];
+}
+function officialMultiplierPercents(entries, historyKey){
+ const powList=entries.map(e=>Number(e.pow??1));
+ const totalPosPow=powList.filter(p=>p>1).reduce((x,y)=>x*y,1);
+ const totalNegPow=powList.filter(p=>p<1).reduce((x,y)=>x*y,1);
+ const total=entries.reduce((x,e)=>x.multiply(e.mult.power(Number(e.pow??1))),BigNumber.from(1));
+ const log10Mult=total.log10()/totalPosPow;
+ const isEmpty=log10Mult===0;
+ let percents=[];
+ for(const entry of entries){
+  const pow=Number(entry.pow??1);
+  const multFrac=log10Mult===0?0:entry.mult.log10()/log10Mult;
+  const powFrac=totalPosPow===1?0:Math.log(pow)/Math.log(totalPosPow);
+  const perc=pow>=1
+   ?multFrac/totalPosPow+powFrac*(1-1/totalPosPow)
+   :(totalNegPow===1?0:Math.log(pow)/Math.log(totalNegPow)*(totalNegPow-1));
+  // Official source applies a nonzero floor only to specific base-resource entries.
+  const value=(entry.key==='IP_base'||entry.key==='EP_base'||entry.key==='TP_base')?Math.max(0.0001,perc):perc;
+  percents.push([Boolean(entry.ignoresNerfPowers),value]);
+ }
+ const totalPerc=percents.filter(p=>p[1]>0).reduce((x,p)=>x+p[1],0);
+ const nerfedPerc=percents.filter(p=>p[1]>0)
+  .reduce((x,p)=>x+(p[0]?p[1]:p[1]*totalNegPow),0);
+ percents=percents.map(p=>{
+  if(p[1]>0)return (p[0]?p[1]:p[1]*totalNegPow)/nerfedPerc;
+  return totalPerc===0?0:Math.max(p[1]*(totalPerc-nerfedPerc)/totalPerc/totalNegPow,-1);
+ });
+ const previous=multiplierContributionHistory.get(historyKey)||[];
+ previous.push(isEmpty?undefined:percents);
+ if(previous.length>10)previous.shift();
+ multiplierContributionHistory.set(historyKey,previous);
+ const usable=previous.filter(point=>point!==undefined);
+ const average=entries.map((entry,index)=>usable.length
+  ?usable.reduce((sum,point)=>sum+(point[index]||0),0)/usable.length*100
+  :0);
+ return entries.map((entry,index)=>({...entry,weight:average[index]}));
+}
+function formatContributionPercent(value){
+ const rounded=Math.round(Number(value)*10)/10;
+ return `${Number.isInteger(rounded)?rounded.toFixed(0):rounded.toFixed(1)}%`;
+}
+function renderMultiplierEntry(entry, depth=0, historyKey=''){
  const value=typeof entry.valueText==='function'?entry.valueText():entry.valueText;
  const iconClass=entry.iconClass?` ${entry.iconClass}`:'';
- return `<div class="multiplier-entry" data-multiplier-entry="${entry.id}"><div class="multiplier-entry-row"><span class="multiplier-entry-icon${iconClass}">${entry.icon}</span><span><strong>${entry.weight}%</strong> ${entry.label}${value?` (${value})`:''}</span></div></div>`;
+ const children=typeof entry.children==='function'?entry.children():entry.children;
+ const hasChildren=Array.isArray(children)&&children.length>0;
+ const row=`<div class="multiplier-entry-row"><span class="multiplier-entry-icon${iconClass}">${entry.icon||'Ω'}</span><span><strong>${formatContributionPercent(entry.weight||0)}</strong> ${entry.label}${value?` (${value})`:''}</span></div>`;
+ if(!hasChildren)return `<div class="multiplier-entry" data-multiplier-entry="${entry.id}">${row}</div>`;
+ const weighted=officialMultiplierPercents(children,`${historyKey}/${entry.id}`);
+ const segments=weighted.map(child=>`<span class="multiplier-contribution-segment" style="width:${Math.max(0,child.weight)}%">${child.icon||'Ω'}</span>`).join('');
+ return `<details class="multiplier-entry multiplier-entry-expandable" data-multiplier-entry="${entry.id}"><summary>${row}<span class="multiplier-expand-indicator" aria-hidden="true">›</span></summary><div class="multiplier-entry-children"><div class="multiplier-total-bar multiplier-child-total multiplier-contribution-bar">${segments}</div>${weighted.map(child=>renderMultiplierEntry(child,depth+1,`${historyKey}/${entry.id}`)).join('')}</div></details>`;
 }
 function advanceMultiplierCycle(categoryId){
  const rate=productionRateBigNumber();
@@ -6100,18 +6288,43 @@ function updateVisibleScreenRealtime(now){
 
       const opened = new Set(
         [...oldPanel.querySelectorAll('details[open]')]
-          .map(entry => entry.querySelector('summary')?.textContent?.trim())
+          .map(entry => entry.dataset.multiplierEntry)
           .filter(Boolean)
       );
       if (oldPanel.innerHTML !== newPanel.innerHTML) {
-        oldPanel.innerHTML = newPanel.innerHTML;
-        oldPanel.querySelectorAll('[data-multiplier-refresh]').forEach(button => {
-          button.addEventListener('click', () => advanceMultiplierCycle(button.dataset.multiplierRefresh));
-        });
-        oldPanel.querySelectorAll('details.multiplier-entry').forEach(entry => {
-          const key = entry.querySelector('summary')?.textContent?.trim();
-          if (key && opened.has(key)) entry.open = true;
-        });
+        const oldIds = [...oldPanel.querySelectorAll('[data-multiplier-entry]')].map(e => e.dataset.multiplierEntry);
+        const newIds = [...newPanel.querySelectorAll('[data-multiplier-entry]')].map(e => e.dataset.multiplierEntry);
+        const sameStructure = oldIds.length === newIds.length && oldIds.every((id, index) => id === newIds[index]) &&
+          oldPanel.querySelectorAll('.multiplier-total-bar').length === newPanel.querySelectorAll('.multiplier-total-bar').length;
+        if (sameStructure) {
+          // Patch only changing values and bar segments. Keep details/summary nodes alive so a 60-FPS
+          // refresh cannot interrupt a user's tap or collapse an entry while it is being opened.
+          oldPanel.querySelectorAll('.multiplier-entry-row').forEach((row, index) => {
+            const freshRow = newPanel.querySelectorAll('.multiplier-entry-row')[index];
+            if (freshRow && row.innerHTML !== freshRow.innerHTML) row.innerHTML = freshRow.innerHTML;
+          });
+          oldPanel.querySelectorAll('.multiplier-total-bar').forEach((bar, index) => {
+            const freshBar = newPanel.querySelectorAll('.multiplier-total-bar')[index];
+            if (freshBar && (bar.innerHTML !== freshBar.innerHTML || bar.className !== freshBar.className)) {
+              bar.innerHTML = freshBar.innerHTML;
+              bar.className = freshBar.className;
+            }
+          });
+          const oldHeading = oldPanel.querySelector('h2');
+          const freshHeading = newPanel.querySelector('h2');
+          if (oldHeading && freshHeading && oldHeading.textContent !== freshHeading.textContent) {
+            oldHeading.textContent = freshHeading.textContent;
+          }
+        } else {
+          oldPanel.innerHTML = newPanel.innerHTML;
+          oldPanel.querySelectorAll('[data-multiplier-refresh]').forEach(button => {
+            button.addEventListener('click', () => advanceMultiplierCycle(button.dataset.multiplierRefresh));
+          });
+          oldPanel.querySelectorAll('details.multiplier-entry').forEach(entry => {
+            const key = entry.dataset.multiplierEntry;
+            if (key && opened.has(key)) entry.open = true;
+          });
+        }
       }
     }
   }
@@ -7360,49 +7573,4 @@ body[data-screen="achievements"] #achievementHideRows{quotes:none!important}
  }
 }
 </style>
-
-<style id="multiplier-bar-press-feedback">
-@media (max-width: 700px) {
-  body[data-screen="statistics"] #tabContent .multiplier-total-bar,
-  body[data-screen="statistics"] #tabContent .multiplier-entry-row {
-    transition: background-color 120ms ease, filter 120ms ease, box-shadow 120ms ease;
-    -webkit-tap-highlight-color: transparent;
-    cursor: pointer;
-    user-select: none;
-  }
-  body[data-screen="statistics"] #tabContent .multiplier-panel.multiplier-pressed .multiplier-total-bar {
-    filter: brightness(1.22);
-  }
-  body[data-screen="statistics"] #tabContent .multiplier-panel.multiplier-pressed .multiplier-entry-row {
-    background-color: rgba(164, 67, 82, 0.28);
-  }
-  body[data-screen="statistics"] #tabContent .multiplier-panel.multiplier-pressed .multiplier-entry-row .multiplier-entry-icon {
-    filter: brightness(1.08);
-  }
-}
-</style>
-<script id="multiplier-bar-press-behavior">
-(() => {
-  let releaseTimer = null;
-  document.addEventListener('click', event => {
-    const target = event.target instanceof Element
-      ? event.target.closest('.multiplier-total-bar, .multiplier-entry-row')
-      : null;
-    if (!target || document.body.dataset.screen !== 'statistics') return;
-    const panel = target.closest('.multiplier-panel');
-    if (!panel || panel.hidden) return;
-
-    // 同じパネル内のどちらのバーを押しても、本家動画と同様の短い押下フィードバック。
-    // 詳細ポップアップや倍率適用メッセージは表示しない。
-    panel.classList.remove('multiplier-pressed');
-    void panel.offsetWidth;
-    panel.classList.add('multiplier-pressed');
-    if (releaseTimer) clearTimeout(releaseTimer);
-    releaseTimer = setTimeout(() => {
-      panel.classList.remove('multiplier-pressed');
-      releaseTimer = null;
-    }, 480);
-  });
-})();
-</script>
 
