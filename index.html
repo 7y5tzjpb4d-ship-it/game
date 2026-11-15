@@ -4430,13 +4430,13 @@ function statisticsView(){
    <section class="multiplier-panel" data-multiplier-panel="production" ${multiplierMode==='production'?'':'hidden'}>
     <h2>Antimatter Production: ${rateText}/sec</h2>
     ${rate.compare(0)<=0 ? `<div class="multiplier-no-effects"><div>No Active Effects</div><div>Total effect inactive, disabled, or reduced to ×1</div></div>` : `<div class="multiplier-total-bar"><span>Ω</span></div>
-    <details class="multiplier-entry"><summary><span class="multiplier-entry-icon">Ω</span><span><strong>100%</strong> Base AD Production (${rateText}/sec)</span></summary><div class="multiplier-entry-detail">Antimatter Dimensions produce antimatter at the displayed rate.</div></details>`}
+    <div class="multiplier-entry"><div class="multiplier-entry-row"><span class="multiplier-entry-icon">Ω</span><span><strong>100%</strong> Base AD Production (${rateText}/sec)</span></div></div>`}
    </section>
    <section class="multiplier-panel" data-multiplier-panel="dimensions" ${multiplierMode==='dimensions'?'':'hidden'}>
     <div class="multiplier-panel-heading"><h2>Base AD Production: ${rateText}/sec</h2><button type="button" class="multiplier-refresh" data-multiplier-refresh aria-label="Switch multiplier breakdown" title="Switch breakdown">↻</button></div>
     ${rate.compare(0)<=0 ? `<div class="multiplier-no-effects"><div>No Active Effects</div><div>Total effect inactive, disabled, or reduced to ×1</div></div>` : multiplierDimensionCycle===0 ? `<div class="multiplier-total-bar dimension-bar"><span>Ω1</span></div>
-    <details class="multiplier-entry"><summary><span class="multiplier-entry-icon">Ω1</span><span><strong>100%</strong> AD 1 Multiplier (×${fmtBig(adMult)})</span></summary><div class="multiplier-entry-detail">Multiplier applied to the 1st Antimatter Dimension.</div></details>` : `<div class="multiplier-total-bar achievement-bar"><span>🏆</span></div>
-    <details class="multiplier-entry"><summary><span class="multiplier-entry-icon achievement-entry-icon">🏆</span><span><strong>100%</strong> Achievement Multiplier (×${fmtBig(BigNumber.from(achievementMultiplier()))})</span></summary><div class="multiplier-entry-detail">Multiplier provided by your completed achievements.</div></details>`}
+    <div class="multiplier-entry"><div class="multiplier-entry-row"><span class="multiplier-entry-icon dimension-entry-icon">Ω1</span><span><strong>100%</strong> AD 1 Multiplier (×${fmtBig(adMult)})</span></div></div>` : `<div class="multiplier-total-bar achievement-bar"><span>🏆</span></div>
+    <div class="multiplier-entry"><div class="multiplier-entry-row"><span class="multiplier-entry-icon achievement-entry-icon">🏆</span><span><strong>100%</strong> Achievement Multiplier (×${fmtBig(BigNumber.from(achievementMultiplier()))})</span></div></div>`}
     <div class="multiplier-base-description">"Base AD Production" is the amount of Antimatter that you would be producing with your current AD upgrades as if you had waited a fixed amount of time (10-40 seconds depending on your AD count) after a Sacrifice. This may misrepresent your actual production if your ADs have been producing for a while, but the relative mismatch will become smaller as you progress further in the game and numbers become larger.</div>
    </section>
    <div class="multiplier-notes"><p>Note: Entries are only expandable if they contain multiple sources which can be different values. For example, any effects which affect all Dimensions of any type equally will not expand into a list of eight identical numbers.</p><p><strong>Some entries may cause lag if expanded out fully. Resizing happens over 200 ms (instead of instantly) in order to reduce possible adverse effects due to photosensitivity. This may cause some visual weirdness after prestige events.</strong></p><p>The text on this tab is not translated and is always shown in English, because the translation project cannot fit the large number of additional strings it would require.</p></div>
@@ -6086,6 +6086,20 @@ function updateVisibleScreenRealtime(now){
   });
 })();
 </script>
+
+<style id="multipliers-static-rows-and-omega-red">
+@media(max-width:700px){
+ body[data-screen="statistics"] #tabContent .multiplier-entry-row{
+  display:flex;align-items:center;gap:6px;min-height:26px;padding:2px 5px;
+  font-size:13px;line-height:1.3;cursor:default;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-entry-row>span:last-child{min-width:0}
+ body[data-screen="statistics"] #tabContent .multiplier-entry-icon.dimension-entry-icon,
+ body[data-screen="statistics"] #tabContent .multiplier-total-bar.dimension-bar{
+  background:#a44352!important;color:#17090b!important;
+ }
+}
+</style>
 </body>
 </html>
 
