@@ -4531,18 +4531,48 @@ function getBaseADProductionContributors(){
 }
 function getADMultiplierContributors(tier){
  if(tier===0)return getAD1MultiplierContributors();
+
+ // AD2-8 use the same per-ten purchase factor and the global Achievement
+ // Multiplier as AD1. Keep these visible as separate sources, then use an
+ // exact residual so the child factors multiply back to the live tier value.
  const exact=dimensionMultiplierBigNumber(tier);
- return [{id:`ad${tier+1}-exact-multiplier`,key:`AD_base_${tier+1}`,icon:`Ω${tier+1}`,iconClass:'dimension-entry-icon',label:`AD ${tier+1} Multiplier`,mult:exact,pow:1,ignoresNerfPowers:false,valueText:()=>`×${exact.toDisplayString(2)}`}];
+ const tenBuy=(challengeRuleActive(7)
+  ?Math.min(2,1+0.2*state.boosts)
+  :(state.infinityUpgrades.includes('dimMult')?2.2:2))
+  +(hasAchievement(58)?0.01:0);
+ const purchases=BigNumber.from(tenBuy).power(Math.floor(state.bought[tier]/10));
+ const achievements=cachedDimensionMultiplierValue('achievementMultiplier',achievementMultiplier);
+ const factors=[];
+ const add=(id,label,value,icon,iconClass)=>{
+  const mult=BigNumber.from(value);
+  if(mult.compare(1)!==0)factors.push({
+   id,key:id,icon,iconClass,label,mult,pow:1,ignoresNerfPowers:false,
+   valueText:()=>`×${mult.toDisplayString(2)}`
+  });
+ };
+ add(`ad${tier+1}-purchases`,`AD ${tier+1} Purchases`,purchases,`↗${tier+1}`,'dimension-entry-icon');
+ add(`ad${tier+1}-achievement-multiplier`,'Achievement Multiplier',achievements,'🏆','achievement-entry-icon');
+ const known=factors.reduce((acc,f)=>acc.multiply(f.mult.power(f.pow||1)),BigNumber.from(1));
+ const residual=exact.divide(known);
+ if(residual.compare(1)!==0)factors.push({
+  id:`ad${tier+1}-other-effects`,key:`AD${tier+1}_other`,icon:`Ω${tier+1}`,
+  iconClass:'dimension-entry-icon',label:'Other applicable effects',
+  mult:residual,pow:1,ignoresNerfPowers:false,
+  valueText:()=>`×${residual.toDisplayString(2)}`
+ });
+ return factors.length?factors:[{
+  id:`ad${tier+1}-exact-multiplier`,key:`AD_base_${tier+1}`,
+  icon:`Ω${tier+1}`,iconClass:'dimension-entry-icon',
+  label:`AD ${tier+1} Multiplier`,mult:exact,pow:1,
+  ignoresNerfPowers:false,valueText:()=>`×${exact.toDisplayString(2)}`
+ }];
 }
 function getFlatBaseADProductionContributors(){
  const tiers=getActiveADProductionTiers();
  const entries=[];
  for(const tier of tiers){
   if(tier===0)entries.push(...getAD1MultiplierContributors());
-  else {
-   const mult=dimensionMultiplierBigNumber(tier);
-   entries.push({id:`ad${tier+1}-exact-multiplier`,key:`AD_base_${tier+1}`,icon:`Ω${tier+1}`,iconClass:'dimension-entry-icon',label:`AD ${tier+1} Multiplier`,mult,pow:1,ignoresNerfPowers:false,valueText:()=>`×${mult.toDisplayString(2)}`});
-  }
+  else entries.push(...getADMultiplierContributors(tier));
  }
  const highestTier=tiers[tiers.length-1];
  const highestAmount=dimensionAmountBig(highestTier);
@@ -4653,7 +4683,7 @@ function renderMultiplierEntry(entry, depth=0, historyKey=''){
  const row=`<div class="multiplier-entry-row"><span class="multiplier-entry-icon${iconClass}">${entry.icon||'Ω'}</span><span><strong>${formatContributionPercent(entry.weight||0)}</strong> ${entry.label}${value?` (${value})`:''}</span></div>`;
  if(!hasChildren)return `<div class="multiplier-entry" data-multiplier-entry="${entry.id}">${row}</div>`;
  const weighted=officialMultiplierPercents(children,`${historyKey}/${entry.id}`,entry.id==='base-ad-production'?baseADProductionBigNumber():null);
- const segments=weighted.map(child=>`<span class="multiplier-contribution-segment${child.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}" style="flex:0 0 ${Math.max(0,child.weight)}%;width:${Math.max(0,child.weight)}%">${child.iconClass==='achievement-entry-icon'?'':(child.icon||'Ω')}</span>`).join('');
+ const segments=weighted.map(child=>`<span class="multiplier-contribution-segment${child.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}" style="flex:0 0 ${Math.max(0,child.weight)}%;width:${Math.max(0,child.weight)}%">${child.icon||'Ω'}</span>`).join('');
  const childTitle=entry.childTitle?`<div class="multiplier-child-heading">${typeof entry.childTitle==='function'?entry.childTitle():entry.childTitle}</div>`:'';
  return `<details class="multiplier-entry multiplier-entry-expandable" data-multiplier-entry="${entry.id}"${entry.defaultOpen?' open':''}><summary>${row}<span class="multiplier-expand-indicator" aria-hidden="true">›</span></summary><div class="multiplier-entry-children">${childTitle}<div class="multiplier-total-bar multiplier-child-total multiplier-contribution-bar">${segments}</div>${weighted.map(child=>renderMultiplierEntry(child,depth+1,`${historyKey}/${entry.id}`)).join('')}</div></details>`;
 }
@@ -4677,7 +4707,7 @@ function renderMultiplierCategory(id,category,context){
   :`<h2>${category.panelTitle}</h2>`;
  const flatEntries=variant.flatBreakdown?getFlatBaseADProductionContributors():null;
  const flatWeighted=flatEntries?officialMultiplierPercents(flatEntries,`flat/${id}`,baseADProductionBigNumber()):null;
- const renderSegments=weighted=>weighted.map(entry=>`<span class="multiplier-contribution-segment${entry.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}" style="flex:0 0 ${Math.max(0,entry.weight)}%;width:${Math.max(0,entry.weight)}%">${entry.iconClass==='achievement-entry-icon'?'':(entry.icon||'Ω')}</span>`).join('');
+ const renderSegments=weighted=>weighted.map(entry=>`<span class="multiplier-contribution-segment${entry.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}" style="flex:0 0 ${Math.max(0,entry.weight)}%;width:${Math.max(0,entry.weight)}%">${entry.icon||'Ω'}</span>`).join('');
  const flatBar=flatWeighted?`<div class="multiplier-total-bar multiplier-contribution-bar ${variant.barClass||''}">${renderSegments(flatWeighted)}</div>`:'';
  const flatRows=flatWeighted?flatWeighted.map(entry=>`<div class="multiplier-entry multiplier-entry-flat"><div class="multiplier-entry-row"><span class="multiplier-entry-icon${entry.iconClass?` ${entry.iconClass}`:''}">${entry.icon||'Ω'}</span><span><strong>${(Number(entry.weight)||0).toFixed(1)}%</strong> ${entry.label}${entry.valueText?` (${typeof entry.valueText==='function'?entry.valueText():entry.valueText})`:''}</span></div></div>`).join(''):'';
  const hierarchyEntries=variant.hierarchicalBreakdown?getBaseADProductionContributors():null;
@@ -6429,7 +6459,7 @@ function updateVisibleScreenRealtime(now){
   flex-grow:0!important;flex-shrink:0!important;min-width:0!important;box-sizing:border-box!important;
  }
  body[data-screen="statistics"] #tabContent .multiplier-contribution-segment.achievement-contribution-segment{
-  background:#c9b45f!important;color:#201b08!important;font-size:0!important;
+  background:#c9b45f!important;color:#201b08!important;font-size:14px!important;
  }
 }
 </style>
@@ -7662,7 +7692,7 @@ body[data-screen="achievements"] #achievementHideRows{quotes:none!important}
   font-size:15px!important;font-weight:700!important;overflow:hidden!important;white-space:nowrap!important;
  }
  body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-contribution-segment.achievement-contribution-segment{
-  background:#c9b45f!important;color:#201b08!important;font-size:0!important;
+  background:#c9b45f!important;color:#201b08!important;font-size:14px!important;
  }
  body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-entry-flat{
   border:1px solid #bdbdc2!important;border-radius:5px!important;margin:0 0 4px!important;overflow:hidden!important;background:transparent!important;
