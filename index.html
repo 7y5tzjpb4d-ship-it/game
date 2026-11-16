@@ -4502,32 +4502,67 @@ function baseADProductionBigNumber(){
  const multiplierProduct=tiers.reduce((product,tier)=>product.multiply(dimensionMultiplierBigNumber(tier)),BigNumber.from(1));
  return multiplierProduct.multiply(dimensionAmountBig(highestTier)).max(1);
 }
+function getAggregatedADMultiplierContributors(){
+ const tiers=getActiveADProductionTiers();
+ const all=[];
+ for(const tier of tiers){
+  all.push(...(tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier)));
+ }
+ const groups=[
+  {id:'ad-all-purchases',label:'Purchases',icon:'↗',iconClass:'dimension-entry-icon',match:e=>/-purchases$/.test(e.id)},
+  {id:'ad-all-achievement-multiplier',label:'Achievement Multiplier',icon:'🏆',iconClass:'achievement-entry-icon',match:e=>/-achievement-multiplier$/.test(e.id)||/^ad\d+-ach/.test(e.id)},
+  {id:'ad-all-other-effects',label:'Other applicable effects',icon:'Ω',iconClass:'dimension-entry-icon',match:e=>!/-purchases$/.test(e.id)&&!/-achievement-multiplier$/.test(e.id)&&!/^ad\d+-ach/.test(e.id)}
+ ];
+ const result=[];
+ for(const group of groups){
+  const members=all.filter(group.match);
+  if(!members.length)continue;
+  const mult=members.reduce((value,e)=>value.multiply(e.mult.power(Number(e.pow??1))),BigNumber.from(1));
+  if(mult.compare(1)===0||Math.abs(mult.log10())<1e-10||mult.toDisplayString(2)==='1.00')continue;
+  result.push({
+   id:group.id,key:group.id,icon:group.icon,iconClass:group.iconClass,
+   label:group.label,mult,pow:1,ignoresNerfPowers:false,
+   valueText:()=>`×${mult.toDisplayString(2)}`
+  });
+ }
+ const exact=tiers.reduce((value,tier)=>value.multiply(dimensionMultiplierBigNumber(tier)),BigNumber.from(1));
+ const grouped=result.reduce((value,e)=>value.multiply(e.mult.power(e.pow||1)),BigNumber.from(1));
+ const residual=exact.divide(grouped);
+ if(residual.compare(1)!==0&&Math.abs(residual.log10())>=1e-10&&residual.toDisplayString(2)!=='1.00'){
+  const existing=result.find(e=>e.id==='ad-all-other-effects');
+  if(existing){
+   existing.mult=existing.mult.multiply(residual);
+   existing.valueText=()=>`×${existing.mult.toDisplayString(2)}`;
+  } else result.push({
+   id:'ad-all-other-effects',key:'ad-all-other-effects',icon:'Ω',
+   iconClass:'dimension-entry-icon',label:'Other applicable effects',
+   mult:residual,pow:1,ignoresNerfPowers:false,
+   valueText:()=>`×${residual.toDisplayString(2)}`
+  });
+ }
+ return result;
+}
 function getBaseADProductionContributors(){
  const tiers=getActiveADProductionTiers();
  const highestTier=tiers[tiers.length-1];
  const highestAmount=dimensionAmountBig(highestTier);
- const contributors=tiers.map(tier=>{
-  const multiplier=dimensionMultiplierBigNumber(tier);
-  const contributionValue=multiplier.multiply(highestAmount);
-  return {
-   id:`ad-multiplier-contribution-${tier+1}`, key:`AD_total_${tier+1}`, icon:`Ω${tier+1}`,
-   iconClass:'dimension-entry-icon', label:`AD ${tier+1} Multiplier`,
-   // Official AD.total_<tier> includes that tier's multiplier times the highest
-   // producing dimension amount. The displayed override intentionally shows only the multiplier.
-   mult:contributionValue, pow:1, ignoresNerfPowers:false,
-   valueText:()=>`×${multiplier.toDisplayString(2)}`,
-   childTitle:tier===0?()=>`AD ${tier+1} Multiplier: ×${multiplier.toDisplayString(2)}`:null,
-   defaultOpen:tier===0,
-   children:()=>tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier)
-  };
- });
- contributors.push({
-  id:'highest-dimension-contribution', key:'AD_highestDim', icon:'Ω',
-  iconClass:'', label:'Amount of highest Dimension',
-  mult:highestAmount, pow:1, ignoresNerfPowers:false,
-  valueText:()=>`AD ${highestTier+1}, ${highestAmount.toDisplayString(2)}`
- });
- return contributors;
+ const allADMultiplier=tiers.reduce((value,tier)=>value.multiply(dimensionMultiplierBigNumber(tier)),BigNumber.from(1));
+ return [
+  {
+   id:'all-ad-multipliers',key:'AD_total',icon:'Ω',iconClass:'dimension-entry-icon',
+   label:'AD Multiplier',mult:allADMultiplier,pow:1,ignoresNerfPowers:false,
+   valueText:()=>`×${allADMultiplier.toDisplayString(2)}`,
+   childTitle:()=>`AD Multiplier: ×${allADMultiplier.toDisplayString(2)}`,
+   defaultOpen:true,
+   children:()=>getAggregatedADMultiplierContributors()
+  },
+  {
+   id:'highest-dimension-contribution',key:'AD_highestDim',icon:'Ω',
+   iconClass:'',label:'Amount of highest Dimension',
+   mult:highestAmount,pow:1,ignoresNerfPowers:false,
+   valueText:()=>`AD ${highestTier+1}, ${highestAmount.toDisplayString(2)}`
+  }
+ ];
 }
 function getADMultiplierContributors(tier){
  if(tier===0)return getAD1MultiplierContributors();
@@ -4569,14 +4604,15 @@ function getADMultiplierContributors(tier){
 }
 function getFlatBaseADProductionContributors(){
  const tiers=getActiveADProductionTiers();
- const entries=[];
- for(const tier of tiers){
-  if(tier===0)entries.push(...getAD1MultiplierContributors());
-  else entries.push(...getADMultiplierContributors(tier));
- }
  const highestTier=tiers[tiers.length-1];
  const highestAmount=dimensionAmountBig(highestTier);
- entries.push({id:'highest-dimension-contribution',key:'AD_highestDim',icon:'Ω',iconClass:'',label:'Amount of highest Dimension',mult:highestAmount,pow:1,ignoresNerfPowers:false,valueText:()=>`AD ${highestTier+1}, ${highestAmount.toDisplayString(2)}`});
+ const entries=getAggregatedADMultiplierContributors();
+ entries.push({
+  id:'highest-dimension-contribution',key:'AD_highestDim',icon:'Ω',
+  iconClass:'',label:'Amount of highest Dimension',
+  mult:highestAmount,pow:1,ignoresNerfPowers:false,
+  valueText:()=>`AD ${highestTier+1}, ${highestAmount.toDisplayString(2)}`
+ });
  return entries;
 }
 function getAD1MultiplierContributors(){
