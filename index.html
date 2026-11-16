@@ -3721,7 +3721,7 @@ function infinityUpgradeCurrentMultiplier(id){return '×'+(id==='unspentBonus'?g
 let infinitySubpage='upgrades';
 let eternitySubpage='upgrades';
 let statisticsSubpage='stats';
-let multiplierMode='production';
+let multiplierMode='dimensions';
 const multiplierCycles={dimensions:0};
 let lastReplicantiRender=0;
 let challengeSubpage='normal';
@@ -4478,14 +4478,8 @@ function getMultiplierCategoryDefinitions(context){
    emptyTitle:'No Active Effects',emptyDescription:'Total effect inactive, disabled, or reduced to ×1',
    description:'"Base AD Production" is the amount of Antimatter that you would be producing with your current AD upgrades as if you had waited a fixed amount of time (10-40 seconds depending on your AD count) after a Sacrifice. This may misrepresent your actual production if your ADs have been producing for a while, but the relative mismatch will become smaller as you progress further in the game and numbers become larger.',
    variants:[
-    {id:'ad1',barClass:'dimension-bar',barIcon:'Ω1',entries:[{
-     id:'ad1-multiplier',icon:'Ω1',iconClass:'dimension-entry-icon',color:'red',weight:100,
-     label:'AD 1 Multiplier',valueText:()=>`×${dimensionMultiplierBigNumber(0).toDisplayString(2)}`
-    }]},
-    {id:'achievement',barClass:'achievement-bar',barIcon:'🏆',entries:[{
-     id:'achievement-multiplier',icon:'🏆',iconClass:'achievement-entry-icon',color:'yellow',weight:100,
-     label:'Achievement Multiplier',valueText:()=>`×${fmtBig(BigNumber.from(achievementMultiplier()))}`
-    }]}
+    {id:'base-production-hierarchical',barClass:'dimension-bar',barIcon:'',hierarchicalBreakdown:true,entries:[]},
+    {id:'base-production-flat',barClass:'dimension-bar',barIcon:'',flatBreakdown:true,entries:[]}
    ]
   }
  };
@@ -4522,6 +4516,8 @@ function getBaseADProductionContributors(){
    // producing dimension amount. The displayed override intentionally shows only the multiplier.
    mult:contributionValue, pow:1, ignoresNerfPowers:false,
    valueText:()=>`×${multiplier.toDisplayString(2)}`,
+   childTitle:tier===0?()=>`AD ${tier+1} Multiplier: ×${multiplier.toDisplayString(2)}`:null,
+   defaultOpen:tier===0,
    children:()=>tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier)
   };
  });
@@ -4537,6 +4533,21 @@ function getADMultiplierContributors(tier){
  if(tier===0)return getAD1MultiplierContributors();
  const exact=dimensionMultiplierBigNumber(tier);
  return [{id:`ad${tier+1}-exact-multiplier`,key:`AD_base_${tier+1}`,icon:`Ω${tier+1}`,iconClass:'dimension-entry-icon',label:`AD ${tier+1} Multiplier`,mult:exact,pow:1,ignoresNerfPowers:false,valueText:()=>`×${exact.toDisplayString(2)}`}];
+}
+function getFlatBaseADProductionContributors(){
+ const tiers=getActiveADProductionTiers();
+ const entries=[];
+ for(const tier of tiers){
+  if(tier===0)entries.push(...getAD1MultiplierContributors());
+  else {
+   const mult=dimensionMultiplierBigNumber(tier);
+   entries.push({id:`ad${tier+1}-exact-multiplier`,key:`AD_base_${tier+1}`,icon:`Ω${tier+1}`,iconClass:'dimension-entry-icon',label:`AD ${tier+1} Multiplier`,mult,pow:1,ignoresNerfPowers:false,valueText:()=>`×${mult.toDisplayString(2)}`});
+  }
+ }
+ const highestTier=tiers[tiers.length-1];
+ const highestAmount=dimensionAmountBig(highestTier);
+ entries.push({id:'highest-dimension-contribution',key:'AD_highestDim',icon:'Ω',iconClass:'',label:'Amount of highest Dimension',mult:highestAmount,pow:1,ignoresNerfPowers:false,valueText:()=>`AD ${highestTier+1}, ${highestAmount.toDisplayString(2)}`});
+ return entries;
 }
 function getAD1MultiplierContributors(){
  // These are the independently identifiable factors used by the current AD1 multiplier formula.
@@ -4555,7 +4566,7 @@ function getAD1MultiplierContributors(){
  if(tsOwned(161))add('ad1-ts161','Time Study 161','1e616');
  add('ad1-infinity-power','Infinity Power',cachedDimensionMultiplierValue('infinityPower',infinityPowerDimensionMultiplierBigNumber));
  const tenBuy=(challengeRuleActive(7)?Math.min(2,1+0.2*state.boosts):(state.infinityUpgrades.includes('dimMult')?2.2:2))+(hasAchievement(58)?0.01:0);
- add('ad1-purchases','AD 1 Purchases',BigNumber.from(tenBuy).power(Math.floor(state.bought[i]/10)));
+ add('ad1-purchases','AD 1 Purchases',BigNumber.from(tenBuy).power(Math.floor(state.bought[i]/10)),'↗','dimension-entry-icon');
  if(state.activeInfinityChallenge===3||infinityChallengeEffectActive(3))add('ad1-ic3','Infinity Challenge 3',BigNumber.from(1.05+Math.max(0,Number(state.galaxies)||0)/200).power(state.tickspeed));
  if(state.activeInfinityChallenge===6&&state.amount[1]>0)add('ad1-ic6','Infinity Challenge 6',BigNumber.from(Math.max(1,state.icMatter)).power(-1));
  const achievementFactors=[
@@ -4643,7 +4654,8 @@ function renderMultiplierEntry(entry, depth=0, historyKey=''){
  if(!hasChildren)return `<div class="multiplier-entry" data-multiplier-entry="${entry.id}">${row}</div>`;
  const weighted=officialMultiplierPercents(children,`${historyKey}/${entry.id}`,entry.id==='base-ad-production'?baseADProductionBigNumber():null);
  const segments=weighted.map(child=>`<span class="multiplier-contribution-segment${child.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}" style="flex:0 0 ${Math.max(0,child.weight)}%;width:${Math.max(0,child.weight)}%">${child.iconClass==='achievement-entry-icon'?'':(child.icon||'Ω')}</span>`).join('');
- return `<details class="multiplier-entry multiplier-entry-expandable" data-multiplier-entry="${entry.id}"><summary>${row}<span class="multiplier-expand-indicator" aria-hidden="true">›</span></summary><div class="multiplier-entry-children"><div class="multiplier-total-bar multiplier-child-total multiplier-contribution-bar">${segments}</div>${weighted.map(child=>renderMultiplierEntry(child,depth+1,`${historyKey}/${entry.id}`)).join('')}</div></details>`;
+ const childTitle=entry.childTitle?`<div class="multiplier-child-heading">${typeof entry.childTitle==='function'?entry.childTitle():entry.childTitle}</div>`:'';
+ return `<details class="multiplier-entry multiplier-entry-expandable" data-multiplier-entry="${entry.id}"${entry.defaultOpen?' open':''}><summary>${row}<span class="multiplier-expand-indicator" aria-hidden="true">›</span></summary><div class="multiplier-entry-children">${childTitle}<div class="multiplier-total-bar multiplier-child-total multiplier-contribution-bar">${segments}</div>${weighted.map(child=>renderMultiplierEntry(child,depth+1,`${historyKey}/${entry.id}`)).join('')}</div></details>`;
 }
 function advanceMultiplierCycle(categoryId){
  const rate=productionRateBigNumber();
@@ -4663,9 +4675,20 @@ function renderMultiplierCategory(id,category,context){
  const heading=category.headingAction==='refresh'
   ?`<div class="multiplier-panel-heading"><h2>${category.panelTitle}</h2><button type="button" class="multiplier-refresh" data-multiplier-refresh="${id}" aria-label="Switch multiplier breakdown" title="Switch breakdown">↻</button></div>`
   :`<h2>${category.panelTitle}</h2>`;
+ const flatEntries=variant.flatBreakdown?getFlatBaseADProductionContributors():null;
+ const flatWeighted=flatEntries?officialMultiplierPercents(flatEntries,`flat/${id}`,baseADProductionBigNumber()):null;
+ const renderSegments=weighted=>weighted.map(entry=>`<span class="multiplier-contribution-segment${entry.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}" style="flex:0 0 ${Math.max(0,entry.weight)}%;width:${Math.max(0,entry.weight)}%">${entry.iconClass==='achievement-entry-icon'?'':(entry.icon||'Ω')}</span>`).join('');
+ const flatBar=flatWeighted?`<div class="multiplier-total-bar multiplier-contribution-bar ${variant.barClass||''}">${renderSegments(flatWeighted)}</div>`:'';
+ const flatRows=flatWeighted?flatWeighted.map(entry=>`<div class="multiplier-entry multiplier-entry-flat"><div class="multiplier-entry-row"><span class="multiplier-entry-icon${entry.iconClass?` ${entry.iconClass}`:''}">${entry.icon||'Ω'}</span><span><strong>${(Number(entry.weight)||0).toFixed(1)}%</strong> ${entry.label}${entry.valueText?` (${typeof entry.valueText==='function'?entry.valueText():entry.valueText})`:''}</span></div></div>`).join(''):'';
+ const hierarchyEntries=variant.hierarchicalBreakdown?getBaseADProductionContributors():null;
+ const hierarchyWeighted=hierarchyEntries?officialMultiplierPercents(hierarchyEntries,`hierarchy/${id}`,baseADProductionBigNumber()):null;
+ const hierarchyBar=hierarchyWeighted?`<div class="multiplier-total-bar multiplier-contribution-bar dimension-bar">${renderSegments(hierarchyWeighted)}</div>`:'';
+ const hierarchyRows=hierarchyWeighted?hierarchyWeighted.map(entry=>renderMultiplierEntry(entry,0,`hierarchy/${id}`)).join(''):'';
  const contents=category.emptyWhen()
   ?`<div class="multiplier-no-effects"><div>${category.emptyTitle}</div><div>${category.emptyDescription}</div></div>`
-  :`<div class="multiplier-total-bar ${variant.barClass||''}"><span>${variant.barIcon}</span></div>${variant.entries.map(renderMultiplierEntry).join('')}`;
+  :variant.flatBreakdown?`${flatBar}${flatRows}`
+  :variant.hierarchicalBreakdown?`${hierarchyBar}${hierarchyRows}`
+  :`${variant.barIcon?`<div class="multiplier-total-bar ${variant.barClass||''}"><span>${variant.barIcon}</span></div>`:''}${variant.entries.map(renderMultiplierEntry).join('')}`;
  const description=category.description?`<div class="multiplier-base-description">${category.description}</div>`:'';
  return `<section class="multiplier-panel" data-multiplier-panel="${id}" ${active?'':'hidden'}>${heading}${contents}${description}</section>`;
 }
@@ -6410,7 +6433,19 @@ function updateVisibleScreenRealtime(now){
  }
 }
 </style>
-\n</body>
+\n
+<style id="multiplier-hierarchical-toggle-layout">
+@media(max-width:700px){
+ body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-child-heading{
+  font-size:14px;font-weight:700;line-height:1.25;color:#bdbdc2;margin:0 0 7px;padding:0 2px;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-entry-children .multiplier-contribution-bar{
+  display:flex!important;gap:0!important;overflow:hidden!important;box-sizing:border-box!important;
+ }
+}
+</style>
+
+</body>
 </html>
 
 <style id="autobuyers-reference-exact-layout-final">
@@ -7614,3 +7649,34 @@ body[data-screen="achievements"] #achievementHideRows{quotes:none!important}
 }
 </style>
 
+
+<style id="omega-dimension-reference-flat-layout">
+@media(max-width:700px){
+ body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-contribution-bar{
+  display:flex!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;overflow:hidden!important;
+  box-sizing:border-box!important;padding:0!important;background:#a44352!important;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-contribution-segment{
+  display:flex!important;align-items:center!important;justify-content:center!important;min-width:0!important;height:100%!important;
+  box-sizing:border-box!important;border-right:1px solid #c4c4c4!important;background:#a44352!important;color:#17090b!important;
+  font-size:15px!important;font-weight:700!important;overflow:hidden!important;white-space:nowrap!important;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-contribution-segment.achievement-contribution-segment{
+  background:#c9b45f!important;color:#201b08!important;font-size:0!important;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-entry-flat{
+  border:1px solid #bdbdc2!important;border-radius:5px!important;margin:0 0 4px!important;overflow:hidden!important;background:transparent!important;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-entry-flat .multiplier-entry-row{
+  display:flex!important;align-items:center!important;gap:8px!important;min-height:24px!important;padding:3px 6px!important;
+  font-size:12px!important;line-height:1.2!important;cursor:default!important;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-entry-flat .multiplier-entry-row>span:last-child{min-width:0!important}
+ body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-entry-flat .multiplier-entry-icon{
+  flex:0 0 18px!important;width:18px!important;height:18px!important;border-radius:4px!important;font-size:12px!important;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-entry-flat .multiplier-entry-icon.achievement-entry-icon{
+  background:#c9b45f!important;color:#201b08!important;
+ }
+}
+</style>
