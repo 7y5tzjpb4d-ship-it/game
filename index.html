@@ -4509,9 +4509,12 @@ function getAggregatedADMultiplierContributors(){
   all.push(...(tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier)));
  }
  const groups=[
-  {id:'ad-all-purchases',label:'Purchases',icon:'↗',iconClass:'dimension-entry-icon',match:e=>/-purchases$/.test(e.id)},
-  {id:'ad-all-achievement-multiplier',label:'Achievement Multiplier',icon:'🏆',iconClass:'achievement-entry-icon',match:e=>/-achievement-multiplier$/.test(e.id)||/^ad\d+-ach/.test(e.id)},
-  {id:'ad-all-other-effects',label:'Other applicable effects',icon:'Ω',iconClass:'dimension-entry-icon',match:e=>!/-purchases$/.test(e.id)&&!/-achievement-multiplier$/.test(e.id)&&!/^ad\d+-ach/.test(e.id)}
+  {id:'ad-all-purchases',label:'Purchases',icon:'↗',iconClass:'dimension-entry-icon',
+   match:e=>/-purchases$/.test(e.id)||/^ad\d+-purchases$/.test(e.id)},
+  {id:'ad-all-achievement-multiplier',label:'Achievement Multiplier',icon:'🏆',iconClass:'achievement-entry-icon',
+   match:e=>/-achievement-multiplier$/.test(e.id)},
+  {id:'ad-all-other-effects',label:'Other applicable effects',icon:'Ω',iconClass:'dimension-entry-icon',
+   match:e=>!(/-purchases$/.test(e.id)||/^ad\d+-purchases$/.test(e.id)||/-achievement-multiplier$/.test(e.id))}
  ];
  const result=[];
  for(const group of groups){
@@ -4519,11 +4522,15 @@ function getAggregatedADMultiplierContributors(){
   if(!members.length)continue;
   const mult=members.reduce((value,e)=>value.multiply(e.mult.power(Number(e.pow??1))),BigNumber.from(1));
   if(mult.compare(1)===0||Math.abs(mult.log10())<1e-10||mult.toDisplayString(2)==='1.00')continue;
-  result.push({
+  const entry={
    id:group.id,key:group.id,icon:group.icon,iconClass:group.iconClass,
    label:group.label,mult,pow:1,ignoresNerfPowers:false,
    valueText:()=>`×${mult.toDisplayString(2)}`
-  });
+  };
+  if(group.id==='ad-all-purchases'){
+   entry.children=()=>members.map(member=>({...member,label:member.id==='ad1-purchases'?'AD 1 Purchases':member.id==='ad2-purchases'?'AD 2 Purchases':member.label}));
+  }
+  result.push(entry);
  }
  const exact=tiers.reduce((value,tier)=>value.multiply(dimensionMultiplierBigNumber(tier)),BigNumber.from(1));
  const grouped=result.reduce((value,e)=>value.multiply(e.mult.power(e.pow||1)),BigNumber.from(1));
@@ -4636,14 +4643,15 @@ function getADMultiplierContributors(tier){
 }
 function getFlatBaseADProductionContributors(){
  const tiers=getActiveADProductionTiers();
- const entries=[];
- for(const tier of tiers){
-  if(tier===0)entries.push(...getAD1MultiplierContributors());
-  else entries.push(...getADMultiplierContributors(tier));
- }
  const highestTier=tiers[tiers.length-1];
  const highestAmount=dimensionAmountBig(highestTier);
- entries.push({id:'highest-dimension-contribution',key:'AD_highestDim',icon:'Ω',iconClass:'',label:'Amount of highest Dimension',mult:highestAmount,pow:1,ignoresNerfPowers:false,valueText:()=>`AD ${highestTier+1}, ${highestAmount.toDisplayString(2)}`});
+ const entries=getAggregatedADMultiplierContributors();
+ entries.push({
+  id:'highest-dimension-contribution',key:'AD_highestDim',icon:'Ω',iconClass:'',
+  label:'Amount of highest Dimension',mult:highestAmount,pow:1,
+  ignoresNerfPowers:false,
+  valueText:()=>`AD ${highestTier+1}, ${highestAmount.toDisplayString(2)}`
+ });
  return entries;
 }
 function getAD1MultiplierContributors(){
@@ -4776,7 +4784,7 @@ function renderMultiplierCategory(id,category,context){
  const flatWeighted=flatEntries?officialMultiplierPercents(flatEntries,`flat/${id}`,baseADProductionBigNumber()):null;
  const renderSegments=weighted=>weighted.map(entry=>`<span class="multiplier-contribution-segment${entry.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}" style="flex:0 0 ${Math.max(0,entry.weight)}%;width:${Math.max(0,entry.weight)}%">${entry.icon||'Ω'}</span>`).join('');
  const flatBar=flatWeighted?`<div class="multiplier-total-bar multiplier-contribution-bar ${variant.barClass||''}">${renderSegments(flatWeighted)}</div>`:'';
- const flatRows=flatWeighted?flatWeighted.map(entry=>`<div class="multiplier-entry multiplier-entry-flat"><div class="multiplier-entry-row"><span class="multiplier-entry-icon${entry.iconClass?` ${entry.iconClass}`:''}">${entry.icon||'Ω'}</span><span><strong>${(Number(entry.weight)||0).toFixed(1)}%</strong> ${entry.label}${entry.valueText?` (${typeof entry.valueText==='function'?entry.valueText():entry.valueText})`:''}</span></div></div>`).join(''):'';
+ const flatRows=flatWeighted?flatWeighted.map(entry=>renderMultiplierEntry(entry,0,`flat/${id}`)).join(''):'';
  const hierarchyEntries=variant.hierarchicalBreakdown?getBaseADProductionContributors():null;
  const hierarchyWeighted=hierarchyEntries?officialMultiplierPercents(hierarchyEntries,`hierarchy/${id}`,baseADProductionBigNumber()):null;
  const hierarchyBar=hierarchyWeighted?`<div class="multiplier-total-bar multiplier-contribution-bar dimension-bar">${renderSegments(hierarchyWeighted)}</div>`:'';
