@@ -4599,20 +4599,10 @@ function baseADProductionBigNumber(){
  const tiers=getActiveADProductionTiers();
  const highestTier=tiers[tiers.length-1];
  const multiplierProduct=tiers.reduce((product,tier)=>product.multiply(dimensionMultiplierBigNumber(tier)),BigNumber.from(1));
- // Recompute the tickspeed multiplier directly for this display calculation.
- // The regular getter is cached during production ticks; reading that cache here
- // can leave the Ω◇ breakdown showing the multiplier product without tickspeed.
- let totalTickspeedMultiplier=BigNumber.from(1);
- if(state.activeInfinityChallenge!==3){
-  const tickspeedCount=Math.min(Math.max(0,Number(state.tickspeed)||0)+timeShardsFreeTickspeedInfo().count,1e9);
-  totalTickspeedMultiplier=BigNumber.from(tickspeedBase()).power(tickspeedCount)
-   .multiply(tickspeedAchievementRewardMultiplier());
-  if(hasAchievement(83))totalTickspeedMultiplier=totalTickspeedMultiplier
-   .multiply(BigNumber.from(Math.pow(0.95,-Math.max(0,Number(state.galaxies)||0))));
- }
- // Each producing AD tier receives the same tickspeed multiplier.
- return multiplierProduct.multiply(totalTickspeedMultiplier.power(tiers.length))
-  .multiply(dimensionAmountBig(highestTier)).max(1);
+ // Base AD Production is the product of producing AD multipliers and the
+ // amount of the highest producing Dimension. Tickspeed is a separate
+ // production contributor and must not be included in this base value.
+ return multiplierProduct.multiply(dimensionAmountBig(highestTier)).max(1);
 }
 function getAggregatedADMultiplierContributors(){
  const tiers=getActiveADProductionTiers();
