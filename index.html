@@ -4468,11 +4468,7 @@ function getMultiplierCategoryDefinitions(context){
    panelTitle:`Antimatter Production: ${rateText}/sec`,
    emptyWhen:()=>rate.compare(0)<=0,
    emptyTitle:'No Active Effects',emptyDescription:'Total effect inactive, disabled, or reduced to ×1',
-   variants:[{id:'base-production',barClass:'',barIcon:'Ω',entries:[{
-    id:'base-ad-production',icon:'Ω',iconClass:'',color:'red',weight:100,
-    label:'Base AD Production',valueText:()=>`${baseADProductionBigNumber().toDisplayString(2)}/sec`,
-    children:()=>getAntimatterProductionContributors()
-   }]}]
+   variants:[{id:'base-production',barClass:'',barIcon:'Ω',productionBreakdown:true,entries:[]} ]
   },
   ...(Math.max(0,Number(state.tickspeed)||0)>0?{
    tickspeed:{
@@ -4496,6 +4492,30 @@ function getMultiplierCategoryDefinitions(context){
    ]
   }
  };
+}
+function getAntimatterProductionRootContributors(){
+ const baseProduction=baseADProductionBigNumber();
+ const tiers=getActiveADProductionTiers();
+ const activeCount=tiers.length;
+ const entries=[{
+  id:'base-ad-production',key:'AM_base',icon:'Ω',iconClass:'dimension-entry-icon',
+  label:'Base AD Production',mult:baseProduction,pow:1,ignoresNerfPowers:false,
+  valueText:()=>`${baseProduction.toDisplayString(2)}/sec`,
+  children:()=>getAntimatterProductionContributors()
+ }];
+ // Tickspeed affects every producing Antimatter Dimension, so its total contribution
+ // is the per-Dimension speed multiplier raised to the number of producing tiers.
+ if(Math.max(0,Number(state.tickspeed)||0)>0){
+  const speed=tickspeedMultiplierBigNumber().max(1);
+  const totalSpeedEffect=speed.power(activeCount);
+  entries.push({
+   id:'total-tickspeed-production',key:'AM_tickspeed',icon:'◷',iconClass:'tickspeed-entry-icon',
+   label:'Total Tickspeed',mult:totalSpeedEffect,pow:1,ignoresNerfPowers:false,
+   valueText:()=>`${speed.toDisplayString(2)}/sec on ${activeCount} ${activeCount===1?'Dimension':'Dimensions'} ➜ ×${totalSpeedEffect.toDisplayString(2)}`,
+   children:()=>getTickspeedBreakdownEntries()
+  });
+ }
+ return entries;
 }
 function getTickspeedBreakdownEntries(){
  const totalSpeed=tickspeedMultiplierBigNumber().max(1);
@@ -4832,7 +4852,7 @@ function renderMultiplierEntry(entry, depth=0, historyKey=''){
  const value=typeof entry.valueText==='function'?entry.valueText():entry.valueText;
  const iconClass=entry.iconClass?` ${entry.iconClass}`:'';
  const children=typeof entry.children==='function'?entry.children():entry.children;
- const hasChildren=Array.isArray(children)&&children.length>0;
+ const hasChildren=entry.id!=='total-tickspeed-production'&&Array.isArray(children)&&children.length>0;
  const row=`<div class="multiplier-entry-row"><span class="multiplier-entry-icon${iconClass}">${entry.icon||'Ω'}</span><span><strong>${formatContributionPercent(entry.weight||0)}</strong> ${entry.label}${value?` (${value})`:''}</span></div>`;
  if(!hasChildren)return `<div class="multiplier-entry" data-multiplier-entry="${entry.id}">${row}</div>`;
  const weighted=officialMultiplierPercents(children,`${historyKey}/${entry.id}`,entry.id==='base-ad-production'?baseADProductionBigNumber():null);
@@ -4858,6 +4878,11 @@ function renderMultiplierCategory(id,category,context){
  const heading=category.headingAction==='refresh'
   ?`<div class="multiplier-panel-heading"><h2>${category.panelTitle}</h2><button type="button" class="multiplier-refresh" data-multiplier-refresh="${id}" aria-label="Switch multiplier breakdown" title="Switch breakdown">↻</button></div>`
   :`<h2>${category.panelTitle}</h2>`;
+ const productionEntries=variant.productionBreakdown?getAntimatterProductionRootContributors():null;
+ const productionTotal=productionEntries?productionEntries.reduce((product,entry)=>product.multiply(entry.mult.power(Number(entry.pow??1))),BigNumber.from(1)):null;
+ const productionWeighted=productionEntries?officialMultiplierPercents(productionEntries,`production-root/${id}`,productionTotal):null;
+ const productionBar=productionWeighted?`<div class="multiplier-total-bar multiplier-contribution-bar production-total-bar">${productionWeighted.map(entry=>`<span class="multiplier-contribution-segment${entry.iconClass==='tickspeed-entry-icon'?' tickspeed-contribution-segment':''}" style="flex:0 0 ${Math.max(0,entry.weight)}%;width:${Math.max(0,entry.weight)}%">${entry.icon||'Ω'}</span>`).join('')}</div>`:'';
+ const productionRows=productionWeighted?productionWeighted.map(entry=>renderMultiplierEntry(entry,0,`production-root/${id}`)).join(''):'';
  const flatEntries=variant.flatBreakdown?getFlatBaseADProductionContributors():null;
  const flatWeighted=flatEntries?officialMultiplierPercents(flatEntries,`flat/${id}`,baseADProductionBigNumber()):null;
  const renderSegments=(weighted,flatMode=false)=>weighted.map(entry=>`<span class="multiplier-contribution-segment${entry.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}" style="flex:0 0 ${Math.max(0,entry.weight)}%;width:${Math.max(0,entry.weight)}%">${flatMode&&entry.iconClass==='achievement-entry-icon'?'':(entry.icon||'Ω')}</span>`).join('');
@@ -4873,6 +4898,7 @@ function renderMultiplierCategory(id,category,context){
  const tickspeedRows=tickspeedWeighted?tickspeedWeighted.map(entry=>renderMultiplierEntry(entry,0,'tickspeed-breakdown')).join(''):'';
  const contents=category.emptyWhen()
   ?`<div class="multiplier-no-effects"><div>${category.emptyTitle}</div><div>${category.emptyDescription}</div></div>`
+  :variant.productionBreakdown?`${productionBar}${productionRows}`
   :variant.flatBreakdown?`${flatBar}${flatRows}`
   :variant.hierarchicalBreakdown?`${hierarchyBar}${hierarchyRows}`
   :variant.tickspeedBreakdown?`${tickspeedBar}${tickspeedRows}`
@@ -7866,5 +7892,12 @@ body[data-screen="achievements"] #achievementHideRows{quotes:none!important}
  body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="dimensions"] .multiplier-entry-flat .multiplier-entry-icon.achievement-entry-icon{
   background:#c9b45f!important;color:#201b08!important;
  }
+}
+</style>
+
+<style id="production-tickspeed-purple-contribution">
+@media(max-width:700px){
+ body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="production"] .tickspeed-entry-icon{background:#a447c7!important;color:#17091f!important}
+ body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="production"] .production-total-bar .tickspeed-contribution-segment{background:#a447c7!important;color:#17091f!important}
 }
 </style>
