@@ -4467,7 +4467,7 @@ function getMultiplierCategoryDefinitions(context){
    variants:[{id:'base-production',barClass:'',barIcon:'Ω',entries:[{
     id:'base-ad-production',icon:'Ω',iconClass:'',color:'red',weight:100,
     label:'Base AD Production',valueText:()=>`${baseADProductionBigNumber().toDisplayString(2)}/sec`,
-    children:()=>getBaseADProductionContributors()
+    children:()=>getAntimatterProductionContributors()
    }]}]
   },
   dimensions:{
@@ -4546,23 +4546,55 @@ function getBaseADProductionContributors(){
  const tiers=getActiveADProductionTiers();
  const highestTier=tiers[tiers.length-1];
  const highestAmount=dimensionAmountBig(highestTier);
- const allADMultiplier=tiers.reduce((value,tier)=>value.multiply(dimensionMultiplierBigNumber(tier)),BigNumber.from(1));
- return [
-  {
-   id:'all-ad-multipliers',key:'AD_total',icon:'Ω',iconClass:'dimension-entry-icon',
-   label:'AD Multiplier',mult:allADMultiplier,pow:1,ignoresNerfPowers:false,
-   valueText:()=>`×${allADMultiplier.toDisplayString(2)}`,
-   childTitle:()=>`AD Multiplier: ×${allADMultiplier.toDisplayString(2)}`,
-   defaultOpen:true,
-   children:()=>getAggregatedADMultiplierContributors()
-  },
-  {
-   id:'highest-dimension-contribution',key:'AD_highestDim',icon:'Ω',
-   iconClass:'',label:'Amount of highest Dimension',
-   mult:highestAmount,pow:1,ignoresNerfPowers:false,
-   valueText:()=>`AD ${highestTier+1}, ${highestAmount.toDisplayString(2)}`
-  }
- ];
+ const contributors=tiers.map(tier=>{
+  const multiplier=dimensionMultiplierBigNumber(tier);
+  const contributionValue=multiplier.multiply(highestAmount);
+  return {
+   id:`ad-multiplier-contribution-${tier+1}`, key:`AD_total_${tier+1}`, icon:`Ω${tier+1}`,
+   iconClass:'dimension-entry-icon', label:`AD ${tier+1} Multiplier`,
+   // Official AD.total_<tier> includes that tier's multiplier times the highest
+   // producing dimension amount. The displayed override intentionally shows only the multiplier.
+   mult:contributionValue, pow:1, ignoresNerfPowers:false,
+   valueText:()=>`×${multiplier.toDisplayString(2)}`,
+   childTitle:tier===0?()=>`AD ${tier+1} Multiplier: ×${multiplier.toDisplayString(2)}`:null,
+   defaultOpen:tier===0,
+   children:()=>tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier)
+  };
+ });
+ contributors.push({
+  id:'highest-dimension-contribution', key:'AD_highestDim', icon:'Ω',
+  iconClass:'', label:'Amount of highest Dimension',
+  mult:highestAmount, pow:1, ignoresNerfPowers:false,
+  valueText:()=>`AD ${highestTier+1}, ${highestAmount.toDisplayString(2)}`
+ });
+ return contributors;
+}
+function getAntimatterProductionContributors(){
+ const tiers=getActiveADProductionTiers();
+ const highestTier=tiers[tiers.length-1];
+ const highestAmount=dimensionAmountBig(highestTier);
+ const contributors=tiers.map(tier=>{
+  const multiplier=dimensionMultiplierBigNumber(tier);
+  const contributionValue=multiplier.multiply(highestAmount);
+  return {
+   id:`ad-multiplier-contribution-${tier+1}`, key:`AD_total_${tier+1}`, icon:`Ω${tier+1}`,
+   iconClass:'dimension-entry-icon', label:`AD ${tier+1} Multiplier`,
+   // Official AD.total_<tier> includes that tier's multiplier times the highest
+   // producing dimension amount. The displayed override intentionally shows only the multiplier.
+   mult:contributionValue, pow:1, ignoresNerfPowers:false,
+   valueText:()=>`×${multiplier.toDisplayString(2)}`,
+   childTitle:tier===0?()=>`AD ${tier+1} Multiplier: ×${multiplier.toDisplayString(2)}`:null,
+   defaultOpen:tier===0,
+   children:()=>tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier)
+  };
+ });
+ contributors.push({
+  id:'highest-dimension-contribution', key:'AD_highestDim', icon:'Ω',
+  iconClass:'', label:'Amount of highest Dimension',
+  mult:highestAmount, pow:1, ignoresNerfPowers:false,
+  valueText:()=>`AD ${highestTier+1}, ${highestAmount.toDisplayString(2)}`
+ });
+ return contributors;
 }
 function getADMultiplierContributors(tier){
  if(tier===0)return getAD1MultiplierContributors();
@@ -4604,15 +4636,14 @@ function getADMultiplierContributors(tier){
 }
 function getFlatBaseADProductionContributors(){
  const tiers=getActiveADProductionTiers();
+ const entries=[];
+ for(const tier of tiers){
+  if(tier===0)entries.push(...getAD1MultiplierContributors());
+  else entries.push(...getADMultiplierContributors(tier));
+ }
  const highestTier=tiers[tiers.length-1];
  const highestAmount=dimensionAmountBig(highestTier);
- const entries=getAggregatedADMultiplierContributors();
- entries.push({
-  id:'highest-dimension-contribution',key:'AD_highestDim',icon:'Ω',
-  iconClass:'',label:'Amount of highest Dimension',
-  mult:highestAmount,pow:1,ignoresNerfPowers:false,
-  valueText:()=>`AD ${highestTier+1}, ${highestAmount.toDisplayString(2)}`
- });
+ entries.push({id:'highest-dimension-contribution',key:'AD_highestDim',icon:'Ω',iconClass:'',label:'Amount of highest Dimension',mult:highestAmount,pow:1,ignoresNerfPowers:false,valueText:()=>`AD ${highestTier+1}, ${highestAmount.toDisplayString(2)}`});
  return entries;
 }
 function getAD1MultiplierContributors(){
