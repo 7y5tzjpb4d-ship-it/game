@@ -2175,6 +2175,10 @@ body[data-screen="autobuyers"] .initial-antimatter-display {
 }
 </style>
 
+<style id="tickspeed-multiplier-tab-icon">
+.tickspeed-clock-icon{display:inline-flex;align-items:center;justify-content:center;font-size:1.15em;line-height:1}
+.tickspeed-bar .multiplier-contribution-segment{font-size:0.9em}
+</style>
 </head>
 <body><main>
 <div class="sticky-tools">
@@ -4470,6 +4474,15 @@ function getMultiplierCategoryDefinitions(context){
     children:()=>getAntimatterProductionContributors()
    }]}]
   },
+  ...(Math.max(0,Number(state.tickspeed)||0)>0?{
+   tickspeed:{
+    title:'Tickspeed',buttonContent:'<span class="tickspeed-clock-icon">◷</span>',
+    panelTitle:(()=>{const speed=tickspeedMultiplierBigNumber();const active=getActiveADProductionTiers().length;return `Total Tickspeed: ${speed.toDisplayString(2)}/sec on ${active} ${active===1?'Dimension':'Dimensions'} ➜ ×${speed.power(active).toDisplayString(2)}`;})(),
+    emptyWhen:()=>tickspeedMultiplierBigNumber().compare(1)<=0,
+    emptyTitle:'No Active Effects',emptyDescription:'Tickspeed is inactive or reduced to ×1',
+    variants:[{id:'tickspeed-breakdown',tickspeedBreakdown:true,barClass:'tickspeed-bar',entries:[]}]
+   }
+  }:{ }),
   dimensions:{
    title:'Dimension Multipliers',buttonContent:'<span>Ω</span><span class="cube-symbol">⬡</span>',
    panelTitle:`Base AD Production: ${rateText}/sec`,
@@ -4483,6 +4496,72 @@ function getMultiplierCategoryDefinitions(context){
    ]
   }
  };
+}
+function getTickspeedBreakdownEntries(){
+ const totalSpeed=tickspeedMultiplierBigNumber().max(1);
+ const totalUpgrades=Math.max(0,Number(state.tickspeed)||0)+timeShardsFreeTickspeedInfo().count;
+ let effectiveCount=totalGalaxyCount();
+ const effects=galaxyStrength();
+ let galaxyFraction=0;
+ let upgradeFraction=0;
+ if(effectiveCount<3){
+  let baseMultiplier=1.1245;
+  if(state.galaxies===1)baseMultiplier=1.11888888;
+  if(state.galaxies===2)baseMultiplier=1.11267177;
+  if(challengeRuleActive(5)){
+   baseMultiplier=1.08;
+   if(state.galaxies===1)baseMultiplier=1.07632;
+   if(state.galaxies===2)baseMultiplier=1.072;
+  }
+  // Same normalization used by the official MultiplierTabHelper.decomposeTickspeed().
+  baseMultiplier/=Math.pow(0.965,2);
+  const logBase=Math.log10(baseMultiplier);
+  const perGalaxy=0.02*effects;
+  upgradeFraction=totalUpgrades*logBase;
+  galaxyFraction=-Math.log10(Math.max(0.01,1/baseMultiplier-effectiveCount*perGalaxy))/logBase;
+ }else{
+  effectiveCount-=2;
+  effectiveCount*=effects;
+  const baseMultiplier=Math.pow(0.965,2)/(challengeRuleActive(5)?0.83:0.8);
+  const logBase=Math.log10(baseMultiplier);
+  const logPerGalaxy=-Math.log10(0.965);
+  upgradeFraction=totalUpgrades*logBase;
+  galaxyFraction=1+effectiveCount/logBase*logPerGalaxy;
+ }
+ // The official source intentionally triples the galaxy portion to make the split
+ // between purchased tickspeed and galaxies more representative.
+ galaxyFraction*=3;
+ let achievementBase=1;
+ if(state.activeInfinityChallenge!==3){
+  achievementBase=tickspeedAchievementRewardMultiplier();
+  if(hasAchievement(83))achievementBase*=Math.pow(0.95,-Math.max(0,Number(state.galaxies)||0));
+ }
+ let baseFraction=achievementBase>1?Math.log10(achievementBase)/Math.max(1e-300,totalSpeed.log10()):0;
+ if(achievementBase===1)baseFraction=0;
+ if(effectiveCount===0)galaxyFraction=0;
+ const denominator=upgradeFraction+galaxyFraction;
+ let factor=denominator===0?0:(1-baseFraction)/denominator;
+ if(totalUpgrades===0)factor=0;
+ let fractions=[baseFraction,upgradeFraction*factor,galaxyFraction*factor];
+ fractions=fractions.map(v=>Number.isFinite(v)?Math.max(0,v):0);
+ const sum=fractions.reduce((a,b)=>a+b,0);
+ if(sum>0)fractions=fractions.map(v=>v/sum);
+ const entries=[];
+ const add=(id,label,icon,iconClass,fraction,valueText)=>{
+  if(!(fraction>0))return;
+  entries.push({
+   id,key:id,icon,iconClass,label,
+   mult:BigNumber.from(10).power(fraction*100),pow:1,
+   ignoresNerfPowers:false,weight:fraction*100,valueText
+  });
+ };
+ add('tickspeed-base','Base Tickspeed from Achievements','🏆','achievement-entry-icon',fractions[0],
+  `×${BigNumber.from(achievementBase).toDisplayString(2)}`);
+ add('tickspeed-upgrades','Tickspeed Upgrades','↗','dimension-entry-icon',fractions[1],
+  `${totalUpgrades} Total`);
+ add('tickspeed-galaxies','Galaxies','✿','dimension-entry-icon',fractions[2],
+  `${totalGalaxyCount()} Total`);
+ return entries;
 }
 const multiplierContributionHistory = new Map();
 function getActiveADProductionTiers(){
@@ -4508,13 +4587,12 @@ function getAggregatedADMultiplierContributors(){
  for(const tier of tiers){
   all.push(...(tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier)));
  }
+ const isPurchase=e=>/-purchases$/.test(e.id)||/^ad\d+-purchases$/.test(e.id)||/purchase/i.test(e.label||'');
+ const isAchievement=e=>e.iconClass==='achievement-entry-icon'||e.icon==='🏆'||/achievement/i.test(`${e.id||''} ${e.label||''}`);
  const groups=[
-  {id:'ad-all-purchases',label:'Purchases',icon:'↗',iconClass:'dimension-entry-icon',
-   match:e=>/-purchases$/.test(e.id)||/^ad\d+-purchases$/.test(e.id)},
-  {id:'ad-all-achievement-multiplier',label:'Achievement Multiplier',icon:'🏆',iconClass:'achievement-entry-icon',
-   match:e=>/-achievement-multiplier$/.test(e.id)},
-  {id:'ad-all-other-effects',label:'Other applicable effects',icon:'Ω',iconClass:'dimension-entry-icon',
-   match:e=>!(/-purchases$/.test(e.id)||/^ad\d+-purchases$/.test(e.id)||/-achievement-multiplier$/.test(e.id))}
+  {id:'ad-all-purchases',label:'Purchases',icon:'↗',iconClass:'dimension-entry-icon',match:isPurchase},
+  {id:'ad-all-achievement-multiplier',label:'Achievement Multiplier',icon:'🏆',iconClass:'achievement-entry-icon',match:isAchievement},
+  {id:'ad-all-other-effects',label:'Other applicable effects',icon:'Ω',iconClass:'dimension-entry-icon',match:e=>!isPurchase(e)&&!isAchievement(e)}
  ];
  const result=[];
  for(const group of groups){
@@ -4528,7 +4606,7 @@ function getAggregatedADMultiplierContributors(){
    valueText:()=>`×${mult.toDisplayString(2)}`
   };
   if(group.id==='ad-all-purchases'){
-   entry.children=()=>members.map(member=>({...member,label:member.id==='ad1-purchases'?'AD 1 Purchases':member.id==='ad2-purchases'?'AD 2 Purchases':member.label}));
+   entry.children=()=>members.map(member=>({...member,label:member.label?.match(/^AD \d+ Purchases$/)?member.label:member.id?.match(/^ad(\d+)-purchases$/)?`AD ${member.id.match(/^ad(\d+)-purchases$/)[1]} Purchases`:member.label}));
   }
   result.push(entry);
  }
@@ -4782,17 +4860,22 @@ function renderMultiplierCategory(id,category,context){
   :`<h2>${category.panelTitle}</h2>`;
  const flatEntries=variant.flatBreakdown?getFlatBaseADProductionContributors():null;
  const flatWeighted=flatEntries?officialMultiplierPercents(flatEntries,`flat/${id}`,baseADProductionBigNumber()):null;
- const renderSegments=weighted=>weighted.map(entry=>`<span class="multiplier-contribution-segment${entry.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}" style="flex:0 0 ${Math.max(0,entry.weight)}%;width:${Math.max(0,entry.weight)}%">${entry.icon||'Ω'}</span>`).join('');
- const flatBar=flatWeighted?`<div class="multiplier-total-bar multiplier-contribution-bar ${variant.barClass||''}">${renderSegments(flatWeighted)}</div>`:'';
+ const renderSegments=(weighted,flatMode=false)=>weighted.map(entry=>`<span class="multiplier-contribution-segment${entry.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}" style="flex:0 0 ${Math.max(0,entry.weight)}%;width:${Math.max(0,entry.weight)}%">${flatMode&&entry.iconClass==='achievement-entry-icon'?'':(entry.icon||'Ω')}</span>`).join('');
+ const flatBar=flatWeighted?`<div class="multiplier-total-bar multiplier-contribution-bar ${variant.barClass||''}">${renderSegments(flatWeighted,true)}</div>`:'';
  const flatRows=flatWeighted?flatWeighted.map(entry=>renderMultiplierEntry(entry,0,`flat/${id}`)).join(''):'';
  const hierarchyEntries=variant.hierarchicalBreakdown?getBaseADProductionContributors():null;
  const hierarchyWeighted=hierarchyEntries?officialMultiplierPercents(hierarchyEntries,`hierarchy/${id}`,baseADProductionBigNumber()):null;
  const hierarchyBar=hierarchyWeighted?`<div class="multiplier-total-bar multiplier-contribution-bar dimension-bar">${renderSegments(hierarchyWeighted)}</div>`:'';
  const hierarchyRows=hierarchyWeighted?hierarchyWeighted.map(entry=>renderMultiplierEntry(entry,0,`hierarchy/${id}`)).join(''):'';
+ const tickspeedEntries=variant.tickspeedBreakdown?getTickspeedBreakdownEntries():null;
+ const tickspeedWeighted=tickspeedEntries?officialMultiplierPercents(tickspeedEntries,'tickspeed-breakdown',BigNumber.from(10).power(100)):null;
+ const tickspeedBar=tickspeedWeighted?`<div class="multiplier-total-bar multiplier-contribution-bar tickspeed-bar">${renderSegments(tickspeedWeighted)}</div>`:'';
+ const tickspeedRows=tickspeedWeighted?tickspeedWeighted.map(entry=>renderMultiplierEntry(entry,0,'tickspeed-breakdown')).join(''):'';
  const contents=category.emptyWhen()
   ?`<div class="multiplier-no-effects"><div>${category.emptyTitle}</div><div>${category.emptyDescription}</div></div>`
   :variant.flatBreakdown?`${flatBar}${flatRows}`
   :variant.hierarchicalBreakdown?`${hierarchyBar}${hierarchyRows}`
+  :variant.tickspeedBreakdown?`${tickspeedBar}${tickspeedRows}`
   :`${variant.barIcon?`<div class="multiplier-total-bar ${variant.barClass||''}"><span>${variant.barIcon}</span></div>`:''}${variant.entries.map(renderMultiplierEntry).join('')}`;
  const description=category.description?`<div class="multiplier-base-description">${category.description}</div>`:'';
  return `<section class="multiplier-panel" data-multiplier-panel="${id}" ${active?'':'hidden'}>${heading}${contents}${description}</section>`;
