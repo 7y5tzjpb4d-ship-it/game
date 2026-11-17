@@ -4599,7 +4599,11 @@ function baseADProductionBigNumber(){
  const tiers=getActiveADProductionTiers();
  const highestTier=tiers[tiers.length-1];
  const multiplierProduct=tiers.reduce((product,tier)=>product.multiply(dimensionMultiplierBigNumber(tier)),BigNumber.from(1));
- return multiplierProduct.multiply(dimensionAmountBig(highestTier)).max(1);
+ // Base AD Production is the combined production of all producing AD tiers.
+ // Each producing tier receives the per-dimension tickspeed multiplier, so the
+ // total tickspeed contribution is raised to the number of producing tiers.
+ const totalTickspeedMultiplier=tickspeedMultiplierBigNumber().power(tiers.length);
+ return multiplierProduct.multiply(totalTickspeedMultiplier).multiply(dimensionAmountBig(highestTier)).max(1);
 }
 function getAggregatedADMultiplierContributors(){
  const tiers=getActiveADProductionTiers();
