@@ -4481,7 +4481,7 @@ function getMultiplierCategoryDefinitions(context){
   }:{ }),
   dimensions:{
    title:'Dimension Multipliers',buttonContent:'<span>Ω</span><span class="cube-symbol">⬡</span>',
-   panelTitle:`Base AD Production: ${rateText}/sec`,
+   panelTitle:`Base AD Production: ${baseADProductionBigNumber().toDisplayString(2)}/sec`,
    headingAction:'refresh',cycleKey:'dimensions',
    emptyWhen:()=>rate.compare(0)<=0,
    emptyTitle:'No Active Effects',emptyDescription:'Total effect inactive, disabled, or reduced to ×1',
