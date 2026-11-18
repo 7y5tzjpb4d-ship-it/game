@@ -4621,7 +4621,12 @@ function getAggregatedADMultiplierContributors(){
  ];
  const result=[];
  for(const group of groups){
-  const members=all.filter(group.match);
+  const members=group.id==='ad-all-dimension-boost'
+   ?tiers.map(tier=>{
+     const mult=BigNumber.from(challengeRuleActive(8)?1:dimensionBoostMult(tier));
+     return {id:`ad${tier+1}-dimboost`,key:`ad${tier+1}-dimboost`,icon:'<span class="boost-chevron-icon">≫</span>',iconClass:'boost-entry-icon',label:`Dimension Boost on AD ${tier+1}`,mult,pow:1,ignoresNerfPowers:false,valueText:()=>`×${mult.toDisplayString(2)}`};
+    }).filter(member=>member.mult.compare(1)!==0)
+   :all.filter(group.match);
   if(!members.length)continue;
   const mult=members.reduce((value,e)=>value.multiply(e.mult.power(Number(e.pow??1))),BigNumber.from(1));
   if(mult.compare(1)===0||Math.abs(mult.log10())<1e-10||mult.toDisplayString(2)==='1.00')continue;
@@ -4633,6 +4638,14 @@ function getAggregatedADMultiplierContributors(){
   if(group.id==='ad-all-purchases'){
    entry.children=()=>members.map(member=>({...member,label:member.label?.match(/^AD \d+ Purchases$/)?member.label:member.id?.match(/^ad(\d+)-purchases$/)?`AD ${member.id.match(/^ad(\d+)-purchases$/)[1]} Purchases`:member.label}));
   }
+  if(group.id==='ad-all-dimension-boost' && members.length>1 && Number(state.boosts)>=2){
+   entry.label='Dimension Boost';
+   entry.children=()=>members.map(member=>{
+    const tier=Number(member.id.match(/^ad(\d+)-dimboost$/)?.[1]||1);
+    return {...member,label:`Dimension Boost on AD ${tier}`};
+   });
+   entry.childTitle=()=>`Dimension Boost: ×${mult.toDisplayString(2)}`;
+  }
   result.push(entry);
  }
  const exact=tiers.reduce((value,tier)=>value.multiply(dimensionMultiplierBigNumber(tier)),BigNumber.from(1));
@@ -4643,6 +4656,9 @@ function getAggregatedADMultiplierContributors(){
   if(existing){
    existing.mult=existing.mult.multiply(residual);
    existing.valueText=()=>`×${existing.mult.toDisplayString(2)}`;
+   if(existing.mult.compare(1)===0||existing.mult.toDisplayString(2)==='1.00'){
+    result.splice(result.indexOf(existing),1);
+   }
   } else result.push({
    id:'ad-all-other-effects',key:'ad-all-other-effects',icon:'Ω',
    iconClass:'dimension-entry-icon',label:'Other applicable effects',
@@ -6674,6 +6690,20 @@ function updateVisibleScreenRealtime(now){
 }
 </style>
 
+<style id="multiplier-dimboosts-expand-green">
+@media(max-width:700px){
+ body[data-screen="statistics"] #tabContent .multiplier-entry[data-multiplier-entry="ad-all-dimension-boost"] .multiplier-entry-children{
+  border:2px solid #20a34a!important;
+  border-left:3px solid #20a34a!important;
+  border-radius:8px!important;
+  margin:4px 0 0 7px!important;
+  padding:6px 6px 7px 8px!important;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-entry[data-multiplier-entry="ad-all-dimension-boost"] .multiplier-child-heading{
+  color:#bdbdc2!important;
+ }
+}
+</style>
 </body>
 </html>
 
