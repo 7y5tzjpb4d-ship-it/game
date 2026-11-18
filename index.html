@@ -4823,7 +4823,8 @@ function getADMultiplierContributors(tier, atomTab=false){
  }
  const known=factors.reduce((acc,f)=>acc.multiply(f.mult.power(f.pow||1)),BigNumber.from(1));
  const residual=exact.divide(known);
- if(residual.compare(1)!==0){
+ // Match AD1's display rule: suppress residual rows that are effectively ×1.00.
+ if(residual.compare(1)!==0&&Math.abs(residual.log10())>=1e-10&&residual.toDisplayString(2)!=='1.00'){
   factors.push({
    id:`ad${tier+1}-other-effects`,key:`AD${tier+1}_other`,icon:`Ω${tier+1}`,
    iconClass:'dimension-entry-icon',label:'Other applicable effects',
@@ -4915,7 +4916,7 @@ function getAD1MultiplierContributors(){
  const known=factors.reduce((acc,f)=>acc.multiply(f.mult.power(f.pow||1)),BigNumber.from(1));
  const exact=dimensionMultiplierBigNumber(0);
  const residual=exact.divide(known);
- if(residual.compare(1)!==0)factors.push({id:'ad1-other-effects',key:'AD_other',icon:'Ω',iconClass:'dimension-entry-icon',label:'Other applicable effects',mult:residual,pow:1,ignoresNerfPowers:false,valueText:()=>`×${residual.toDisplayString(2)}`});
+ if(residual.compare(1)!==0&&Math.abs(residual.log10())>=1e-10&&residual.toDisplayString(2)!=='1.00')factors.push({id:'ad1-other-effects',key:'AD_other',icon:'Ω',iconClass:'dimension-entry-icon',label:'Other applicable effects',mult:residual,pow:1,ignoresNerfPowers:false,valueText:()=>`×${residual.toDisplayString(2)}`});
  return factors.length?factors:[{id:'ad1-base',key:'AD_base',icon:'Ω',iconClass:'dimension-entry-icon',label:'Base multiplier',mult:exact,pow:1,ignoresNerfPowers:false,valueText:()=>`×${exact.toDisplayString(2)}`}];
 }
 function officialMultiplierPercents(entries, historyKey, totalValue=null){
