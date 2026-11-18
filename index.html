@@ -4647,15 +4647,20 @@ function getAggregatedADMultiplierContributors(){
  const tiers=getActiveADProductionTiers();
  const all=[];
  for(const tier of tiers){
-  all.push(...(tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier)));
+  // Use the Ω◇-tab breakdown so achievement-derived factors are already
+  // consolidated into Achievement Rewards before the aggregate is grouped.
+  all.push(...(tier===0?getAD1MultiplierContributors(true):getADMultiplierContributors(tier,true)));
  }
  const isPurchase=e=>/-purchases$/.test(e.id)||/^ad\d+-purchases$/.test(e.id)||/purchase/i.test(e.label||'');
+ const isAchievementRewards=e=>/achievement-rewards$/.test(e.id||'')||/^achievement rewards$/i.test(e.label||'');
+ const isAchievementMultiplier=e=>/achievement-multiplier$/.test(e.id||'')||/^achievement multiplier$/i.test(e.label||'');
  const isAchievement=e=>e.iconClass==='achievement-entry-icon'||e.icon==='🏆'||/achievement/i.test(`${e.id||''} ${e.label||''}`);
  const isBoost=e=>/dimboost/i.test(e.id||'')||/^dimension boost$/i.test(e.label||'');
  const isSacrifice=e=>e.id==='ad8-sacrifice-multiplier'||/sacrifice multiplier/i.test(e.label||'');
  const groups=[
   {id:'ad-all-purchases',label:'Purchases',icon:'↗',iconClass:'dimension-entry-icon',match:isPurchase},
-  {id:'ad-all-achievement-multiplier',label:'Achievement Multiplier',icon:'🏆',iconClass:'achievement-entry-icon',match:isAchievement},
+  {id:'ad-all-achievement-multiplier',label:'Achievement Multiplier',icon:'🏆',iconClass:'achievement-entry-icon',match:isAchievementMultiplier},
+  {id:'ad-all-achievement-rewards',label:'Achievement Rewards',icon:'🏆',iconClass:'achievement-entry-icon',match:isAchievementRewards},
   {id:'ad-all-dimension-boost',label:'Dimension Boost',icon:'<span class="boost-chevron-icon">≫</span>',iconClass:'boost-entry-icon',match:isBoost},
   {id:'ad-all-sacrifice-multiplier',label:'Sacrifice Multiplier',icon:'Ω⤵︎',iconClass:'dimension-entry-icon',match:isSacrifice},
   {id:'ad-all-other-effects',label:'Other applicable effects',icon:'Ω',iconClass:'dimension-entry-icon',match:e=>!isPurchase(e)&&!isAchievement(e)&&!isBoost(e)&&!isSacrifice(e)}
@@ -4729,7 +4734,7 @@ function getBaseADProductionContributors(){
    valueText:()=>`×${multiplier.toDisplayString(2)}`,
    childTitle:tier===0?()=>`AD ${tier+1} Multiplier: ×${multiplier.toDisplayString(2)}`:null,
    defaultOpen:tier===0,
-   children:()=>tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier,true)
+   children:()=>tier===0?getAD1MultiplierContributors(true):getADMultiplierContributors(tier,true)
   };
  });
  contributors.push({
@@ -4756,7 +4761,7 @@ function getAntimatterProductionContributors(){
    valueText:()=>`×${multiplier.toDisplayString(2)}`,
    childTitle:tier===0?()=>`AD ${tier+1} Multiplier: ×${multiplier.toDisplayString(2)}`:null,
    defaultOpen:tier===0,
-   children:()=>tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier,true)
+   children:()=>tier===0?getAD1MultiplierContributors(true):getADMultiplierContributors(tier,true)
   };
  });
  contributors.push({
@@ -4852,7 +4857,7 @@ function getFlatBaseADProductionContributors(){
  });
  return entries;
 }
-function getAD1MultiplierContributors(){
+function getAD1MultiplierContributors(atomTab=false){
  // These are the independently identifiable factors used by the current AD1 multiplier formula.
  // The residual keeps the displayed factors mathematically equal to dimensionMultiplierBigNumber(0),
  // including effects which are not yet individually represented in this game's multiplier UI.
@@ -4901,8 +4906,17 @@ function getAD1MultiplierContributors(){
   ['ad1-ach65','Achievement 65',hasAchievement(65)&&(state.activeChallenge||state.activeInfinityChallenge)&&state.infinityTime<180?Math.max(4/(state.infinityTime/60+1),1):1],
   ['ad1-ach74','Achievement 74',hasAchievement(74)&&(state.activeChallenge||state.activeInfinityChallenge)?1.4:1]
  ];
- for(const [id,label,value] of achievementFactors)add(id,label,value,'🏆');
- add('ad1-achievement-rewards','Achievement Rewards',hasAchievement(76)?Math.max(1,Math.pow(Math.max(1,state.playTime/86400/2),0.05)):1,'🏆','achievement-entry-icon');
+ if(atomTab){
+  // In the Ω◇ tab, combine the individually modeled AD1 achievement effects
+  // into one Achievement Rewards contributor, matching the other AD tiers.
+  let achievementRewards=BigNumber.from(1);
+  for(const [, , value] of achievementFactors)achievementRewards=achievementRewards.multiply(value);
+  achievementRewards=achievementRewards.multiply(hasAchievement(76)?Math.max(1,Math.pow(Math.max(1,state.playTime/86400/2),0.05)):1);
+  add('ad1-achievement-rewards','Achievement Rewards',achievementRewards,'🏆','achievement-entry-icon');
+ }else{
+  for(const [id,label,value] of achievementFactors)add(id,label,value,'🏆');
+  add('ad1-achievement-rewards','Achievement Rewards',hasAchievement(76)?Math.max(1,Math.pow(Math.max(1,state.playTime/86400/2),0.05)):1,'🏆','achievement-entry-icon');
+ }
  add('ad1-achievement-multiplier','Achievement Multiplier',cachedDimensionMultiplierValue('achievementMultiplier',achievementMultiplier),'🏆','achievement-entry-icon');
  add('ad1-time-mult','Infinity Upgrade: Total Time',cachedDimensionMultiplierValue('timeMult',()=>infinityUpgradeMultiplierBigNumber('timeMult')));
  add('ad1-time-mult2','Infinity Upgrade: Current Infinity',cachedDimensionMultiplierValue('timeMult2',()=>infinityUpgradeMultiplierBigNumber('timeMult2')));
