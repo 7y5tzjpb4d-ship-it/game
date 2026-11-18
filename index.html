@@ -2616,7 +2616,7 @@ let previousDimAutobuyerUnlocks=Array(8).fill(false);
 let autobuyerUnlockAlert=false;
 function dimAutobuyerUnlocked(i){return Boolean(state.autobuyers.unlockedDims?.[i])||state.matter>=Math.pow(10,40+i*10);}
 function tickspeedAutobuyerUnlocked(){return Boolean(state.autobuyers.tickspeedUnlocked)||state.matter>=1e140;}
-function resetAutobuyerUnlocks(){state.autobuyers.unlockedDims=Array(8).fill(false);state.autobuyers.unlockedCards=Array(8).fill(false);state.autobuyers.tickspeedUnlocked=false;state.autobuyers.tickspeedCardUnlocked=false;state.autobuyers.dims=Array(8).fill(false);state.autobuyers.tickspeed=false;previousDimAutobuyerUnlocks=Array(8).fill(false);autobuyerUnlockAlert=false;}
+function resetAutobuyerUnlocks(){state.autobuyersTabUnlocked=false;state.autobuyers.unlockedDims=Array(8).fill(false);state.autobuyers.unlockedCards=Array(8).fill(false);state.autobuyers.tickspeedUnlocked=false;state.autobuyers.tickspeedCardUnlocked=false;state.autobuyers.dims=Array(8).fill(false);state.autobuyers.tickspeed=false;previousDimAutobuyerUnlocks=Array(8).fill(false);autobuyerUnlockAlert=false;}
 
 function updateAutobuyerUnlockAlert(){const now=Array.from({length:8},(_,i)=>state.matter>=Math.pow(10,40+i*10));let newlyUnlocked=false;state.autobuyers.unlockedDims=Array.isArray(state.autobuyers.unlockedDims)?state.autobuyers.unlockedDims:Array(8).fill(false);now.forEach((v,i)=>{if(v&&!state.autobuyers.unlockedDims[i]){state.autobuyers.unlockedDims[i]=true;newlyUnlocked=true;}});if(state.matter>=1e140&&!state.autobuyers.tickspeedUnlocked){state.autobuyers.tickspeedUnlocked=true;newlyUnlocked=true;}if(newlyUnlocked){autobuyerUnlockAlert=true;save();}previousDimAutobuyerUnlocks=now;const tab=document.querySelector('.screen-tabs button[data-screen="autobuyers"]');if(tab)tab.classList.toggle('unlock-alert',autobuyerUnlockAlert);}
 
@@ -3422,7 +3422,7 @@ function galaxy(silent=false){
  if(challengeRuleActive(8)||state.activeInfinityChallenge===7||!canGalaxy())return;
  autobuyerElapsed[10]=0;
  resetDimensionAutobuyerTicksAfterPrestige();
- state.galaxies++;state.hasEverGalaxy=true;if(state.activeChallenge===9){state.challenge9CostSteps=Array(8).fill(0);state.challenge9TickspeedCostBumps=0;}if(!state.sacrificedThisInfinity)unlockAchievement(38);checkAchievements();if(challengeRuleActive(3))state.challenge3TimeMult=1;if(state.activeInfinityChallenge===4)state.icLastBoughtDimension=-1;if(state.activeInfinityChallenge===5)state.ic5CostSteps=Array(8).fill(0);
+ state.galaxies++;state.hasEverGalaxy=true;resetAutobuyerUnlocks();if(state.activeChallenge===9){state.challenge9CostSteps=Array(8).fill(0);state.challenge9TickspeedCostBumps=0;}if(!state.sacrificedThisInfinity)unlockAchievement(38);checkAchievements();if(challengeRuleActive(3))state.challenge3TimeMult=1;if(state.activeInfinityChallenge===4)state.icLastBoughtDimension=-1;if(state.activeInfinityChallenge===5)state.ic5CostSteps=Array(8).fill(0);
  setMatterBigNumber(startingAntimatter());
  state.amount=Array(8).fill(0);
  state.amountBN=Array(8).fill(0).map(()=>({mantissa:0,exponent:0}));
