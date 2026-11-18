@@ -4898,6 +4898,8 @@ function getADMultiplierContributors(tier, atomTab=false){
   ])achievementRewards=achievementRewards.multiply(reward);
   if(infinityChallengeEffectActive(4))achievementRewards=achievementRewards.power(1.05);
   add(`ad${tier+1}-achievement-rewards`,'Achievement Rewards',achievementRewards,'🏆','achievement-entry-icon');
+  const achievementRewardsEntry=factors.find(entry=>entry.id===`ad${tier+1}-achievement-rewards`);
+  if(achievementRewardsEntry)achievementRewardsEntry.children=()=>getAchievementRewardBreakdown(tier);
  }
  // Sacrifice is an independent AD8 multiplier row.
  if(tier===7){
@@ -4991,6 +4993,8 @@ function getAD1MultiplierContributors(atomTab=false){
   for(const [, , value] of achievementFactors)achievementRewards=achievementRewards.multiply(value);
   achievementRewards=achievementRewards.multiply(hasAchievement(76)?Math.max(1,Math.pow(Math.max(1,state.playTime/86400/2),0.05)):1);
   add('ad1-achievement-rewards','Achievement Rewards',achievementRewards,'🏆','achievement-entry-icon');
+  const achievementRewardsEntry=factors.find(entry=>entry.id==='ad1-achievement-rewards');
+  if(achievementRewardsEntry)achievementRewardsEntry.children=()=>getAchievementRewardBreakdown(0);
  }else{
   for(const [id,label,value] of achievementFactors)add(id,label,value,'🏆');
   add('ad1-achievement-rewards','Achievement Rewards',hasAchievement(76)?Math.max(1,Math.pow(Math.max(1,state.playTime/86400/2),0.05)):1,'🏆','achievement-entry-icon');
