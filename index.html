@@ -6795,6 +6795,30 @@ function updateVisibleScreenRealtime(now){
  }
 }
 </style>
+
+<script id="multiplier-entry-expand-click-fix">
+(function(){
+ if(window.__multiplierEntryExpandClickFixInstalled)return;
+ window.__multiplierEntryExpandClickFixInstalled=true;
+ document.addEventListener('click',function(event){
+  const summary=event.target.closest('body[data-screen="statistics"] #tabContent details.multiplier-entry-expandable > summary');
+  if(!summary)return;
+  const details=summary.parentElement;
+  if(!details || details.tagName!=='DETAILS')return;
+  event.preventDefault();
+  details.open=!details.open;
+ },true);
+ document.addEventListener('keydown',function(event){
+  if(event.key!=='Enter'&&event.key!==' ')return;
+  const summary=event.target.closest('body[data-screen="statistics"] #tabContent details.multiplier-entry-expandable > summary');
+  if(!summary)return;
+  event.preventDefault();
+  const details=summary.parentElement;
+  if(details)details.open=!details.open;
+ },true);
+})();
+</script>
+
 </body>
 </html>
 
