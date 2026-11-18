@@ -2204,6 +2204,19 @@ body[data-screen="statistics"] #tabContent .multiplier-contribution-segment.gala
  color:#170b20!important;
 }
 </style>
+
+<style id="achievement-rewards-expandable-gold">
+body[data-screen="statistics"] #tabContent details[data-multiplier-entry="ad-all-achievement-rewards"]>summary{
+ border:2px solid #c9b45f!important;border-radius:8px!important;
+}
+body[data-screen="statistics"] #tabContent details[data-multiplier-entry="ad-all-achievement-rewards"]>.multiplier-entry-children{
+ border:2px solid #c9b45f!important;border-left:5px solid #c9b45f!important;
+ border-radius:8px!important;padding:8px!important;margin:5px 0 8px 7px!important;
+}
+body[data-screen="statistics"] #tabContent details[data-multiplier-entry="ad-all-achievement-rewards"] .multiplier-child-heading{
+ color:#c9b45f!important;font-weight:700;
+}
+</style>
 </head>
 <body><main>
 <div class="sticky-tools">
@@ -4654,6 +4667,49 @@ function baseADProductionBigNumber(){
  // production contributor and must not be included in this base value.
  return multiplierProduct.multiply(dimensionAmountBig(highestTier)).max(1);
 }
+function getAchievementRewardBreakdown(tier){
+ const entries=[];
+ const add=(number,value)=>{
+  const mult=BigNumber.from(value);
+  if(mult.compare(1)<=0)return;
+  entries.push({
+   id:`achievement-reward-${number}-ad${tier+1}`,
+   key:`achievement-reward-${number}`,
+   icon:'🏆',iconClass:'achievement-entry-icon',
+   label:`Achievement ${number} (AD)`,
+   mult,pow:1,ignoresNerfPowers:false,
+   valueText:()=>`×${mult.toDisplayString(2)}`
+  });
+ };
+ if(tier===0){
+  add(28,state.achievements[15]?1.1:1);
+  add(31,state.achievements[16]?1.05:1);
+  add(34,state.achievements[19]?1.02:1);
+  add(43,state.achievements[26]?1.01:1);
+  add(48,state.achievements[31]?1.1:1);
+  add(64,hasAchievement(64)?1.25:1);
+  add(68,hasAchievement(68)?1.5:1);
+  add(71,hasAchievement(71)?3:1);
+  add(72,hasAchievement(72)?1.1:1);
+  add(73,hasAchievement(73)?matterBigNumber().power(0.00002).add(1):1);
+  add(84,hasAchievement(84)?matterBigNumber().power(0.00002).add(1):1);
+ }else{
+  add(11,state.achievements[10]?1.1:1);
+  add(43,state.achievements[26]?1.08:1);
+  add(48,state.achievements[31]?1.1:1);
+  add(72,hasAchievement(72)?1.1:1);
+  add(73,hasAchievement(73)?matterBigNumber().power(0.00002).add(1):1);
+  add(84,hasAchievement(84)?matterBigNumber().power(0.00002).add(1):1);
+ }
+ add(76,hasAchievement(76)?Math.max(1,Math.pow(Math.max(1,state.playTime/86400/2),0.05)):1);
+ add(91,hasAchievement(91)&&state.infinityTime<5?Math.max((5-state.infinityTime)*60,1):1);
+ add(92,hasAchievement(92)&&state.infinityTime<60?Math.max((1-state.infinityTime/60)*100,1):1);
+ add(56,hasAchievement(56)&&state.infinityTime<180?Math.max(6/(state.infinityTime/60+3),1):1);
+ add(65,hasAchievement(65)&&(state.activeChallenge||state.activeInfinityChallenge)&&state.infinityTime<180?Math.max(4/(state.infinityTime/60+1),1):1);
+ add(74,hasAchievement(74)&&(state.activeChallenge||state.activeInfinityChallenge)?1.4:1);
+ if(infinityChallengeEffectActive(4))for(const entry of entries)entry.mult=entry.mult.power(1.05);
+ return entries;
+}
 function getAggregatedADMultiplierContributors(){
  const tiers=getActiveADProductionTiers();
  const all=[];
@@ -4698,6 +4754,21 @@ function getAggregatedADMultiplierContributors(){
   };
   if(group.id==='ad-all-purchases'){
    entry.children=()=>members.map(member=>({...member,label:member.label?.match(/^AD \d+ Purchases$/)?member.label:member.id?.match(/^ad(\d+)-purchases$/)?`AD ${member.id.match(/^ad(\d+)-purchases$/)[1]} Purchases`:member.label}));
+  }
+  if(group.id==='ad-all-achievement-rewards'){
+   entry.childTitle=()=>`Achievement Rewards: ×${mult.toDisplayString(2)}`;
+   entry.children=()=>{
+    const combined=new Map();
+    for(const tier of tiers){
+     for(const child of getAchievementRewardBreakdown(tier)){
+      const number=Number(child.key.match(/achievement-reward-(\d+)/)?.[1]);
+      if(!number)continue;
+      if(!combined.has(number))combined.set(number,{...child,id:`achievement-reward-${number}`,key:`achievement-reward-${number}`,mult:BigNumber.from(1)});
+      combined.get(number).mult=combined.get(number).mult.multiply(child.mult);
+     }
+    }
+    return [...combined.values()].map(child=>({...child,valueText:()=>`×${child.mult.toDisplayString(2)}`}));
+   };
   }
   if(group.id==='ad-all-dimension-boost' && members.length>=1 && Number(state.boosts)>=2){
    entry.label='Dimension Boost';
