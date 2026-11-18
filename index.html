@@ -2196,11 +2196,12 @@ body[data-screen="autobuyers"] .initial-antimatter-display {
 </style>
 
 <style id="tickspeed-galaxy-purple">
-body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="tickspeed"] .multiplier-entry-icon.galaxy-entry-icon{
- background:#944CC9!important;color:#170b20!important;
-}
-body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="tickspeed"] .multiplier-contribution-segment.galaxy-contribution-segment{
- background:#944CC9!important;color:#170b20!important;
+/* Galaxy contribution is rendered inside the expandable Total Tickspeed row
+   in the Antimatter Production panel, not as a separate top-level tab. */
+body[data-screen="statistics"] #tabContent .multiplier-entry-icon.galaxy-entry-icon,
+body[data-screen="statistics"] #tabContent .multiplier-contribution-segment.galaxy-contribution-segment{
+ background:#944CC9!important;
+ color:#170b20!important;
 }
 </style>
 </head>
