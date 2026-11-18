@@ -2172,6 +2172,7 @@ body[data-screen="autobuyers"] .initial-antimatter-display {
  body[data-screen="statistics"] #tabContent details.multiplier-entry-expandable[open]>summary>.multiplier-expand-indicator{
   transform:rotate(90deg);
  }
+ body[data-screen="statistics"] #tabContent details.multiplier-entry-expandable>summary>.boost-expand-indicator{flex-basis:25px;font-size:20px;letter-spacing:-3px}
 }
 </style>
 
@@ -3726,7 +3727,7 @@ let infinitySubpage='upgrades';
 let eternitySubpage='upgrades';
 let statisticsSubpage='stats';
 let multiplierMode='dimensions';
-const multiplierCycles={dimensions:0};
+const multiplierCycles={dimensions:1};
 let lastReplicantiRender=0;
 let challengeSubpage='normal';
 let mainSubpage='main';
@@ -4622,13 +4623,17 @@ function getAggregatedADMultiplierContributors(){
  const result=[];
  for(const group of groups){
   const members=group.id==='ad-all-dimension-boost'
-   ?tiers.map(tier=>{
+   ?Array.from({length:8},(_,tier)=>{
      const mult=BigNumber.from(challengeRuleActive(8)?1:dimensionBoostMult(tier));
      return {id:`ad${tier+1}-dimboost`,key:`ad${tier+1}-dimboost`,icon:'<span class="boost-chevron-icon">≫</span>',iconClass:'boost-entry-icon',label:`Dimension Boost on AD ${tier+1}`,mult,pow:1,ignoresNerfPowers:false,valueText:()=>`×${mult.toDisplayString(2)}`};
     }).filter(member=>member.mult.compare(1)!==0)
    :all.filter(group.match);
   if(!members.length)continue;
-  const mult=members.reduce((value,e)=>value.multiply(e.mult.power(Number(e.pow??1))),BigNumber.from(1));
+  // 親項目の実倍率は、実際に生産中のDimensionに適用されるBoost倍率の積。
+  // 子項目は所持数0のDimensionにも適用される倍率を含めて展開する。
+  const mult=group.id==='ad-all-dimension-boost'
+   ?tiers.reduce((value,tier)=>value.multiply(BigNumber.from(challengeRuleActive(8)?1:dimensionBoostMult(tier))),BigNumber.from(1))
+   :members.reduce((value,e)=>value.multiply(e.mult.power(Number(e.pow??1))),BigNumber.from(1));
   if(mult.compare(1)===0||Math.abs(mult.log10())<1e-10||mult.toDisplayString(2)==='1.00')continue;
   const entry={
    id:group.id,key:group.id,icon:group.icon,iconClass:group.iconClass,
@@ -4638,7 +4643,7 @@ function getAggregatedADMultiplierContributors(){
   if(group.id==='ad-all-purchases'){
    entry.children=()=>members.map(member=>({...member,label:member.label?.match(/^AD \d+ Purchases$/)?member.label:member.id?.match(/^ad(\d+)-purchases$/)?`AD ${member.id.match(/^ad(\d+)-purchases$/)[1]} Purchases`:member.label}));
   }
-  if(group.id==='ad-all-dimension-boost' && members.length>1 && Number(state.boosts)>=2){
+  if(group.id==='ad-all-dimension-boost' && members.length>=1 && Number(state.boosts)>=2){
    entry.label='Dimension Boost';
    entry.children=()=>members.map(member=>{
     const tier=Number(member.id.match(/^ad(\d+)-dimboost$/)?.[1]||1);
@@ -4785,20 +4790,22 @@ function getAD1MultiplierContributors(){
  };
  // Dimension BoostはBoostが2回以上なら、ADごとの寄与を1つの展開項目にまとめる。
  // 親の倍率はAD1に実際に適用される値を維持し、子項目は各ADへのBoost倍率を表示する。
+ // 本家と同様、所持数が0のDimensionにも適用されるBoost倍率を展開対象に含める。
+ // 例：AD1のみ所持・Boost2回なら、AD1×4とAD2×2の両方を表示する。
  const boostTiers=getActiveADProductionTiers();
- const boostMembers=boostTiers.map(tier=>{
+ const boostMembers=Array.from({length:8},(_,tier)=>{
   const mult=BigNumber.from(challengeRuleActive(8)?1:dimensionBoostMult(tier));
   return {id:`ad${tier+1}-dimboost`,key:`ad${tier+1}-dimboost`,icon:'<span class="boost-chevron-icon">≫</span>',iconClass:'boost-entry-icon',label:`Dimension Boost on AD ${tier+1}`,mult,pow:1,ignoresNerfPowers:false,valueText:()=>`×${mult.toDisplayString(2)}`};
  }).filter(member=>member.mult.compare(1)!==0);
  const ad1Boost=BigNumber.from(challengeRuleActive(8)?1:dimensionBoostMult(i));
  if(ad1Boost.compare(1)!==0){
   const boostEntry={id:'ad-all-dimension-boost',key:'ad-all-dimension-boost',icon:'<span class="boost-chevron-icon">≫</span>',iconClass:'boost-entry-icon',label:'Dimension Boost',mult:ad1Boost,pow:1,ignoresNerfPowers:false,valueText:()=>`×${ad1Boost.toDisplayString(2)}`};
-  if(Number(state.boosts)>=2&&boostMembers.length>1){
-   const combinedBoost=boostMembers.reduce((product,member)=>product.multiply(member.mult),BigNumber.from(1));
+  if(Number(state.boosts)>=2&&boostMembers.length>=1){
+   const combinedBoost=boostTiers.reduce((product,tier)=>product.multiply(BigNumber.from(challengeRuleActive(8)?1:dimensionBoostMult(tier))),BigNumber.from(1));
    boostEntry.children=()=>boostMembers.map(member=>({...member}));
    boostEntry.childTitle=()=>`Dimension Boost: ×${combinedBoost.toDisplayString(2)}`;
-   // The parent row summarizes the combined contribution across all producing ADs.
-   // Keep `mult` as AD1's actual factor for the mathematical contribution calculation.
+   // The parent multiplier is the product affecting currently producing ADs;
+   // the expanded children additionally show effects on currently unowned ADs.
    boostEntry.valueText=()=>`×${combinedBoost.toDisplayString(2)}`;
   }
   factors.push(boostEntry);
@@ -4898,7 +4905,7 @@ function renderMultiplierEntry(entry, depth=0, historyKey=''){
  const weighted=officialMultiplierPercents(children,`${historyKey}/${entry.id}`,entry.id==='base-ad-production'?baseADProductionBigNumber():null);
  const segments=weighted.map(child=>`<span class="multiplier-contribution-segment${child.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}${child.iconClass==='boost-entry-icon'?' boost-contribution-segment':''}" style="flex:0 0 ${Math.max(0,child.weight)}%;width:${Math.max(0,child.weight)}%">${child.icon||'Ω'}</span>`).join('');
  const childTitle=entry.childTitle?`<div class="multiplier-child-heading">${typeof entry.childTitle==='function'?entry.childTitle():entry.childTitle}</div>`:'';
- return `<details class="multiplier-entry multiplier-entry-expandable" data-multiplier-entry="${entry.id}"${entry.defaultOpen?' open':''}><summary>${row}<span class="multiplier-expand-indicator" aria-hidden="true">›</span></summary><div class="multiplier-entry-children">${childTitle}<div class="multiplier-total-bar multiplier-child-total multiplier-contribution-bar">${segments}</div>${weighted.map(child=>renderMultiplierEntry(child,depth+1,`${historyKey}/${entry.id}`)).join('')}</div></details>`;
+ return `<details class="multiplier-entry multiplier-entry-expandable" data-multiplier-entry="${entry.id}"${entry.defaultOpen?' open':''}><summary>${row}<span class="multiplier-expand-indicator${entry.id==='ad-all-dimension-boost'?' boost-expand-indicator':''}" aria-hidden="true">${entry.id==='ad-all-dimension-boost'?'≫':'›'}</span></summary><div class="multiplier-entry-children">${childTitle}<div class="multiplier-total-bar multiplier-child-total multiplier-contribution-bar">${segments}</div>${weighted.map(child=>renderMultiplierEntry(child,depth+1,`${historyKey}/${entry.id}`)).join('')}</div></details>`;
 }
 function advanceMultiplierCycle(categoryId){
  const rate=productionRateBigNumber();
