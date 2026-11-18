@@ -52,7 +52,7 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 140px;max-width:560p
  .dim .buy{grid-column:5;grid-row:1;width:100%;min-width:0;height:36px;min-height:36px!important;white-space:pre-line;overflow-wrap:normal;font-size:9px!important;line-height:1.15;padding:3px 2px!important}
 }
 
-.sacrifice-panel{display:none;margin:0 0 5px;padding:0;background:transparent;border:0;box-shadow:none;text-align:center}.sacrifice-buy{display:block;width:76%!important;min-width:0!important;height:30px!important;min-height:30px!important;margin:0 auto;padding:3px 5px!important;font-size:10px!important;line-height:1!important;white-space:nowrap;background:#242428!important;border:1px solid #777!important;border-radius:4px!important;color:var(--text)!important;opacity:1!important}.sacrifice-buy:disabled{opacity:1!important}.sacrifice-buy.sacrifice-ready{border:1px solid #00b34a!important}.sacrifice-buy.sacrifice-low-gain{border:1px solid #e34b91!important}
+.sacrifice-panel{display:none;margin:0 0 5px;padding:0;background:transparent;border:0;box-shadow:none;text-align:center}.sacrifice-buy{display:block;width:76%!important;min-width:0!important;height:30px!important;min-height:30px!important;margin:0 auto;padding:3px 5px!important;font-size:10px!important;line-height:1!important;white-space:nowrap;background:#244779!important;border:1px solid #777!important;border-radius:4px!important;color:var(--text)!important;opacity:1!important}.sacrifice-buy:disabled{opacity:1!important}.sacrifice-buy.sacrifice-ready{border:1px solid #00b34a!important}.sacrifice-buy.sacrifice-low-gain{border:1px solid #e34b91!important}
 
 /* Achievement notification: compact yellow banner at the bottom, matching the reference video. */
 .achievement-toast-container{position:fixed;left:50%;right:auto;bottom:calc(183px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:2000;display:flex;flex-direction:column-reverse;align-items:stretch;gap:6px;pointer-events:none;width:min(88vw,520px);max-height:30vh;overflow:hidden}
@@ -1413,7 +1413,7 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
     let caption = "Buy ten multiplier: ×2.00";
     if (visible && typeof sacrificeGainBigNumber === "function") {
       try {
-        caption += " | Sacrifice multiplier: ×" + sacrificeGainBigNumber().toDisplayString(2);
+        caption += " | Sacrifice multiplier: ×" + sacrificeMultiplierBigNumber().toDisplayString(2);
       } catch (_) {}
     }
     if (label.textContent !== caption) label.textContent = caption;
