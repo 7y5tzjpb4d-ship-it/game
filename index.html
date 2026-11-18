@@ -3119,7 +3119,7 @@ function render(){
  setText($('tickspeedMultiplier'),'購入 '+BigNumber.from(state.tickspeed).toDisplayString(0)+'回 · 倍率 ×'+tickspeedMultiplierBigNumber().toDisplayString(3));
  setText($('tickspeedDesc'),'');
  const sacrificeHasEighth=Number(state.bought?.[7]||0)>0||dimensionAmountBig(7).compare(0)>0;
- const sacrificePanelVisible=sacrificeHasEighth||state.boosts>=5;
+ const sacrificePanelVisible=sacrificeHasEighth||state.boosts>=5||state.hasEverGalaxy;
  const sacrificePanel=$('sacrificePanel');
  const sacrificeButton=$('sacrificeBtn');
  const sacrificeGain=sacrificeGainBigNumber();
