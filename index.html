@@ -4765,7 +4765,7 @@ function getAD1MultiplierContributors(){
   const v=BigNumber.from(value);
   if(v.compare(1)!==0) factors.push({id,key:id,icon,iconClass,label,mult:v,pow:1,ignoresNerfPowers:false,valueText:()=>`×${v.toDisplayString(2)}`});
  };
- add('ad1-dimboost','Dimension Boost',challengeRuleActive(8)?1:dimensionBoostMult(i));
+ add('ad1-dimboost','Dimension Boost',challengeRuleActive(8)?1:dimensionBoostMult(i),'<span class="boost-chevron-icon">≫</span>','boost-entry-icon');
  if(tsOwned(91)){const mins=Math.min(20,Math.max(0,Number(state.eternityTime)||0)/60);add('ad1-ts91','Time Study 91',BigNumber.from(10).power(15*mins).min('1e300'));}
  if(tsOwned(101)&&state.replicantiUnlocked)add('ad1-ts101','Time Study 101',replicantiBigNumber().max(1));
  if(tsOwned(193))add('ad1-ts193','Time Study 193',BigNumber.from('1e13000').power(Math.min(1,Math.max(0,Number(state.eternities)||0)/1e6)).min('1e13000'));
@@ -4859,7 +4859,7 @@ function renderMultiplierEntry(entry, depth=0, historyKey=''){
  const row=`<div class="multiplier-entry-row"><span class="multiplier-entry-icon${iconClass}">${entry.icon||'Ω'}</span><span><strong>${formatContributionPercent(entry.weight||0)}</strong> ${entry.label}${value?` (${value})`:''}</span></div>`;
  if(!hasChildren)return `<div class="multiplier-entry" data-multiplier-entry="${entry.id}">${row}</div>`;
  const weighted=officialMultiplierPercents(children,`${historyKey}/${entry.id}`,entry.id==='base-ad-production'?baseADProductionBigNumber():null);
- const segments=weighted.map(child=>`<span class="multiplier-contribution-segment${child.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}" style="flex:0 0 ${Math.max(0,child.weight)}%;width:${Math.max(0,child.weight)}%">${child.icon||'Ω'}</span>`).join('');
+ const segments=weighted.map(child=>`<span class="multiplier-contribution-segment${child.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}${child.iconClass==='boost-entry-icon'?' boost-contribution-segment':''}" style="flex:0 0 ${Math.max(0,child.weight)}%;width:${Math.max(0,child.weight)}%">${child.icon||'Ω'}</span>`).join('');
  const childTitle=entry.childTitle?`<div class="multiplier-child-heading">${typeof entry.childTitle==='function'?entry.childTitle():entry.childTitle}</div>`:'';
  return `<details class="multiplier-entry multiplier-entry-expandable" data-multiplier-entry="${entry.id}"${entry.defaultOpen?' open':''}><summary>${row}<span class="multiplier-expand-indicator" aria-hidden="true">›</span></summary><div class="multiplier-entry-children">${childTitle}<div class="multiplier-total-bar multiplier-child-total multiplier-contribution-bar">${segments}</div>${weighted.map(child=>renderMultiplierEntry(child,depth+1,`${historyKey}/${entry.id}`)).join('')}</div></details>`;
 }
@@ -4888,7 +4888,7 @@ function renderMultiplierCategory(id,category,context){
  const productionRows=productionWeighted?productionWeighted.map(entry=>renderMultiplierEntry(entry,0,`production-root/${id}`)).join(''):'';
  const flatEntries=variant.flatBreakdown?getFlatBaseADProductionContributors():null;
  const flatWeighted=flatEntries?officialMultiplierPercents(flatEntries,`flat/${id}`,baseADProductionBigNumber()):null;
- const renderSegments=(weighted,flatMode=false)=>weighted.map(entry=>`<span class="multiplier-contribution-segment${entry.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}" style="flex:0 0 ${Math.max(0,entry.weight)}%;width:${Math.max(0,entry.weight)}%">${flatMode&&entry.iconClass==='achievement-entry-icon'?'':(entry.icon||'Ω')}</span>`).join('');
+ const renderSegments=(weighted,flatMode=false)=>weighted.map(entry=>`<span class="multiplier-contribution-segment${entry.iconClass==='achievement-entry-icon'?' achievement-contribution-segment':''}${entry.iconClass==='boost-entry-icon'?' boost-contribution-segment':''}" style="flex:0 0 ${Math.max(0,entry.weight)}%;width:${Math.max(0,entry.weight)}%">${flatMode&&entry.iconClass==='achievement-entry-icon'?'':(entry.icon||'Ω')}</span>`).join('');
  const flatBar=flatWeighted?`<div class="multiplier-total-bar multiplier-contribution-bar ${variant.barClass||''}">${renderSegments(flatWeighted,true)}</div>`:'';
  const flatRows=flatWeighted?flatWeighted.map(entry=>renderMultiplierEntry(entry,0,`flat/${id}`)).join(''):'';
  const hierarchyEntries=variant.hierarchicalBreakdown?getBaseADProductionContributors():null;
@@ -7902,5 +7902,33 @@ body[data-screen="achievements"] #achievementHideRows{quotes:none!important}
 @media(max-width:700px){
  body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="production"] .tickspeed-entry-icon{background:#a447c7!important;color:#17091f!important}
  body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="production"] .production-total-bar .tickspeed-contribution-segment{background:#a447c7!important;color:#17091f!important}
+}
+</style>
+
+<style id="dimension-boost-green-contribution">
+@media(max-width:700px){
+ body[data-screen="statistics"] #tabContent .multiplier-entry-icon.boost-entry-icon,
+ body[data-screen="statistics"] #tabContent .multiplier-contribution-segment.boost-contribution-segment{
+  background:#20a34a!important;color:#071b0b!important;
+ }
+ body[data-screen="statistics"] #tabContent .multiplier-entry-icon.boost-entry-icon,
+ body[data-screen="statistics"] #tabContent .multiplier-contribution-segment.boost-contribution-segment{
+  text-shadow:none!important;
+  line-height:1!important;
+  vertical-align:middle;
+ }
+}
+</style>
+
+<style id="dimension-boost-icon-chevron-rotation">
+@media(max-width:700px){
+  /* The Boost mark is the original double-chevron glyph rotated 90 degrees counterclockwise. */
+  body[data-screen="statistics"] #tabContent .boost-chevron-icon{
+    display:inline-block!important;
+    transform:rotate(-90deg)!important;
+    transform-origin:center!important;
+    line-height:1!important;
+    vertical-align:middle!important;
+  }
 }
 </style>
