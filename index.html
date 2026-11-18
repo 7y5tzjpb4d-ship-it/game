@@ -4748,6 +4748,11 @@ function getADMultiplierContributors(tier){
    valueText:()=>`×${mult.toDisplayString(2)}`
   });
  };
+ // Dimension Boost is an explicit contributor for every AD tier, including
+ // tiers whose amount is currently zero. Keep it out of the residual so it is
+ // never mislabeled as "Other applicable effects" in the Atom tab.
+ const boostMultiplier=BigNumber.from(challengeRuleActive(8)?1:dimensionBoostMult(tier));
+ add(`ad${tier+1}-dimboost`,'Dimension Boost',boostMultiplier,'<span class="boost-chevron-icon">≫</span>','boost-entry-icon');
  add(`ad${tier+1}-purchases`,`AD ${tier+1} Purchases`,purchases,`↗${tier+1}`,'dimension-entry-icon');
  add(`ad${tier+1}-achievement-multiplier`,'Achievement Multiplier',achievements,'🏆','achievement-entry-icon');
  const known=factors.reduce((acc,f)=>acc.multiply(f.mult.power(f.pow||1)),BigNumber.from(1));
