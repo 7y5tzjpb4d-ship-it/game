@@ -52,8 +52,7 @@ body{background:#101014;font-size:14px}main{padding:6px 7px 140px;max-width:560p
  .dim .buy{grid-column:5;grid-row:1;width:100%;min-width:0;height:36px;min-height:36px!important;white-space:pre-line;overflow-wrap:normal;font-size:9px!important;line-height:1.15;padding:3px 2px!important}
 }
 
-.sacrifice-panel{margin:0 0 6px;padding:5px 7px;border-radius:4px;background:#211b25;border-color:#60435e;box-shadow:none}.sacrifice-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.sacrifice-row>div{min-width:0;flex:1}.sacrifice-panel .section-title{margin:0 0 1px;font-size:12px}.sacrifice-panel .section-title span{font-size:10px}.sacrifice-panel p{color:var(--muted);font-size:10px;margin:0}.sacrifice-buy{flex:0 0 auto;width:200px!important;min-width:200px!important;height:34px!important;min-height:34px!important;padding:3px!important;font-size:10px!important;background:#493047!important;border-color:#96658c!important;white-space:nowrap}.sacrifice-buy:disabled{opacity:.35!important}
-@media(max-width:540px){.sacrifice-panel{padding:4px 5px!important;margin-bottom:5px!important}.sacrifice-panel .section-title{font-size:11px!important}.sacrifice-panel p{font-size:9px!important}.sacrifice-buy{width:156px!important;min-width:156px!important;height:30px!important;min-height:30px!important;font-size:9px!important}}
+.sacrifice-panel{display:none;margin:0 0 5px;padding:0;background:transparent;border:0;box-shadow:none;text-align:center}.sacrifice-buy{display:block;width:76%!important;min-width:0!important;height:30px!important;min-height:30px!important;margin:0 auto;padding:3px 5px!important;font-size:10px!important;line-height:1!important;white-space:nowrap;background:#242428!important;border:1px solid #777!important;border-radius:4px!important;color:var(--text)!important;opacity:1!important}.sacrifice-buy:disabled{opacity:1!important}.sacrifice-buy.sacrifice-ready{border:1px solid #00b34a!important}.sacrifice-buy.sacrifice-low-gain{border:1px solid #e34b91!important}
 
 /* Achievement notification: compact yellow banner at the bottom, matching the reference video. */
 .achievement-toast-container{position:fixed;left:50%;right:auto;bottom:calc(183px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:2000;display:flex;flex-direction:column-reverse;align-items:stretch;gap:6px;pointer-events:none;width:min(88vw,520px);max-height:30vh;overflow:hidden}
@@ -797,7 +796,7 @@ body[data-screen="statistics"] .mobile-bottom-actions{display:flex!important}
  body[data-screen="main"] #rate{display:block;font-size:25px!important;font-weight:400!important;color:#888!important;margin-top:4px}
  body[data-screen="main"] #ipStat,body[data-screen="main"] #epStat{display:none!important}
  body[data-screen="main"] .quick-actions,body[data-screen="main"] .screen-tabs,body[data-screen="main"] #tabContent{display:none!important}
- body[data-screen="main"] .tickspeed-panel,body[data-screen="main"] #sacrificePanel{display:none!important}
+ body[data-screen="main"] .tickspeed-panel{display:none!important}
  body[data-screen="main"] main>section.panel:has(#dimensions){background:none!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important}
  body[data-screen="main"] main>section.panel:has(#dimensions)>.section-title{display:none!important}
  body[data-screen="main"] #dimensions{display:flex!important;flex-direction:column!important;gap:0!important}
@@ -1396,13 +1395,24 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
   function setup() {
     if (document.body.dataset.screen !== "main") return;
     const stats = document.querySelector("body[data-screen='main'] .sticky-tools .stats");
-    if (stats && !document.querySelector(".initial-buy-ten-label")) {
-      const label = document.createElement("div");
+    if (!stats) return;
+    let label = document.querySelector(".initial-buy-ten-label");
+    if (!label) {
+      label = document.createElement("div");
       label.className = "initial-buy-ten-label";
-      label.textContent = "Buy ten multiplier: ×2.00";
-      const tickPanel = document.getElementById("nd2TickspeedPanel");
-      (tickPanel || stats).after(label);
     }
+    const tickPanel = document.getElementById("nd2TickspeedPanel");
+    const sacrificePanel = document.getElementById("sacrificePanel");
+    const sacrificeVisible = !!(sacrificePanel && getComputedStyle(sacrificePanel).display !== "none");
+    let text = "Buy ten multiplier: ×2.00";
+    if (sacrificeVisible && typeof sacrificeGainBigNumber === "function") {
+      try {
+        text += " | Sacrifice multiplier: ×" + sacrificeGainBigNumber().toDisplayString(2);
+      } catch (_) {}
+    }
+    if (label.textContent !== text) label.textContent = text;
+    const anchor = sacrificePanel || tickPanel || stats;
+    if (label.previousElementSibling !== anchor) anchor.after(label);
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", setup, { once: true });
@@ -1410,7 +1420,7 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
     setup();
   }
   const observer = new MutationObserver(setup);
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["style", "class", "data-screen"] });
 })();
 </script>
 
@@ -2206,8 +2216,8 @@ body[data-screen="autobuyers"] .initial-antimatter-display {
 <section class="screen-placeholder" id="tabContent" hidden></section>
 <section class="panel tickspeed-panel"><div class="tickspeed-row"><div><h2 class="section-title">Tickspeed <span id="tickspeedMultiplier">倍率 ×1</span></h2><p id="tickspeedDesc" style="color:var(--muted);font-size:11px;margin:0">Tickspeedを上げると全次元の生産速度が上昇します。</p></div><div class="tickspeed-buttons"><button type="button" class="buy tickspeed-buy" id="tickspeedBtn">購入</button><button type="button" class="buy tickspeed-buy" id="tickspeedMaxBtn">Buy Max</button></div></div></section>
 <section class="panel" id="challenge11MatterPanel" style="display:none"><h2 class="section-title">Normal Matter <span id="challenge11MatterLabel">チャレンジ11</span></h2><strong id="challenge11MatterDisplay" style="font-size:20px">1</strong></section>
-<section class="panel sacrifice-panel" id="sacrificePanel">
- <div class="sacrifice-row"><div><h2 class="section-title">Dimensional Sacrifice <span id="sacrificeMultiplier">倍率 ×1</span></h2></div><button type="button" class="buy sacrifice-buy" id="sacrificeBtn" disabled>Sacrifice ×1</button></div>
+<section class="sacrifice-panel" id="sacrificePanel" aria-label="Dimensional Sacrifice">
+ <button type="button" class="buy sacrifice-buy" id="sacrificeBtn" disabled>Sacrifice disabled (requires 5 Dimboosts)</button>
 </section>
 <section class="panel">
  <h2 class="section-title">次元 <span>購入すると反物質を自動生産</span></h2>
@@ -3082,12 +3092,29 @@ function render(){
  setText($('ipCount'),getIPBigNumber().toDisplayString(3));setText($('infinityCount'),fmt(state.infinities));
  setText($('tickspeedMultiplier'),'購入 '+BigNumber.from(state.tickspeed).toDisplayString(0)+'回 · 倍率 ×'+tickspeedMultiplierBigNumber().toDisplayString(3));
  setText($('tickspeedDesc'),'');
- const sacrificeUnlocked=state.boosts>=5;
- $('sacrificeBtn').disabled=!sacrificeUnlocked||state.amount[state.activeChallenge===12?5:7]<1||dimensionAmountBig(0).compare(0)<=0||sacrificeGainBigNumber().compare(1.01)<0;
- setText($('sacrificeMultiplier'),'倍率 ×'+sacrificeMultiplierBigNumber().toDisplayString(2));
- $('sacrificePanel').style.opacity=sacrificeUnlocked?'1':'.65';
- const gain=sacrificeGainBigNumber();
- setText($('sacrificeBtn'),$('sacrificeBtn').disabled?'ロック中':'Sacrifice ×'+gain.toDisplayString(2));
+ const sacrificeHasEighth=Number(state.bought?.[7]||0)>0||dimensionAmountBig(7).compare(0)>0;
+ const sacrificePanelVisible=sacrificeHasEighth||state.boosts>=5;
+ const sacrificePanel=$('sacrificePanel');
+ const sacrificeButton=$('sacrificeBtn');
+ const sacrificeGain=sacrificeGainBigNumber();
+ sacrificePanel.style.display=sacrificePanelVisible&&document.body.dataset.screen==='main'?'block':'none';
+ sacrificeButton.classList.remove('sacrifice-ready','sacrifice-low-gain');
+ const sacrificeCanUse=canSacrificeNow();
+ if(state.boosts<5){
+  sacrificeButton.disabled=true;
+  setText(sacrificeButton,'Sacrifice disabled (requires 5 Dimboosts)');
+ }else if(!sacrificeHasEighth){
+  sacrificeButton.disabled=true;
+  setText(sacrificeButton,'Sacrifice disabled (no 8th ADs)');
+ }else if(sacrificeGain.compare(1.01)<0){
+  sacrificeButton.disabled=true;
+  sacrificeButton.classList.add('sacrifice-low-gain');
+  setText(sacrificeButton,'Sacrifice disabled (×1 multiplier)');
+ }else{
+  sacrificeButton.disabled=!sacrificeCanUse;
+  sacrificeButton.classList.add('sacrifice-ready');
+  setText(sacrificeButton,'Dimensional Sacrifice (×'+sacrificeGain.toDisplayString(2)+')');
+ }
  const tsCost=tickspeedCost();
  $('tickspeedBtn').disabled=matterBigNumber().compare(tickspeedCostBigNumber())<0;
  setText($('tickspeedBtn'),'購入 · '+tickspeedCostBigNumber().toDisplayString(0));
