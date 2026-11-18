@@ -2190,7 +2190,8 @@ body[data-screen="autobuyers"] .initial-antimatter-display {
 </style>
 
 <style id="tickspeed-multiplier-tab-icon">
-.tickspeed-clock-icon{display:inline-flex;align-items:center;justify-content:center;font-size:1.15em;line-height:1}
+.tickspeed-clock-icon,.galaxy-tab-icon{display:inline-flex;align-items:center;justify-content:center;font-size:1.15em;line-height:1}
+.galaxy-tab-icon{color:#944CC9}
 .tickspeed-bar .multiplier-contribution-segment{font-size:0.9em}
 </style>
 
@@ -2199,7 +2200,8 @@ body[data-screen="autobuyers"] .initial-antimatter-display {
  body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="tickspeed"] .multiplier-entry-icon.galaxy-entry-icon{
   background:#944CC9!important;color:#170b20!important;
  }
- body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="tickspeed"] .multiplier-contribution-segment.galaxy-contribution-segment{
+ body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="tickspeed"] .multiplier-contribution-segment.galaxy-contribution-segment,
+ body[data-screen="statistics"] #tabContent .multiplier-panel[data-multiplier-panel="galaxies"] .multiplier-contribution-segment.galaxy-contribution-segment{
   background:#944CC9!important;color:#170b20!important;
  }
 }
@@ -4990,7 +4992,7 @@ function renderMultiplierEntry(entry, depth=0, historyKey=''){
  const value=typeof entry.valueText==='function'?entry.valueText():entry.valueText;
  const iconClass=entry.iconClass?` ${entry.iconClass}`:'';
  const children=typeof entry.children==='function'?entry.children():entry.children;
- const hasChildren=entry.id!=='total-tickspeed-production'&&Array.isArray(children)&&children.length>0;
+ const hasChildren=Array.isArray(children)&&children.length>0;
  const row=`<div class="multiplier-entry-row"><span class="multiplier-entry-icon${iconClass}">${entry.icon||'Ω'}</span><span><strong>${formatContributionPercent(entry.weight||0)}</strong> ${entry.label}${value?` (${value})`:''}</span></div>`;
  if(!hasChildren)return `<div class="multiplier-entry" data-multiplier-entry="${entry.id}">${row}</div>`;
  const weighted=officialMultiplierPercents(children,`${historyKey}/${entry.id}`,entry.id==='base-ad-production'?baseADProductionBigNumber():null);
