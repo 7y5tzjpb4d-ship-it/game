@@ -2682,7 +2682,7 @@ function dimensionMultiplierBigNumber(i){
  if(state.activeInfinityChallenge===3||infinityChallengeEffectActive(3))m=m.multiply(BigNumber.from(1.05+Math.max(0,Number(state.galaxies)||0)/200).power(state.tickspeed));
  if(infinityChallengeEffectActive(8)&&i>=1&&i<=6)m=m.multiply(dimensionMultiplierBigNumber(0).multiply(dimensionMultiplierBigNumber(7)).power(0.02));
  if(state.activeInfinityChallenge===6&&state.amount[1]>0)m=m.divide(BigNumber.from(Math.max(1,state.icMatter)));
- for(const f of [(i===0&&state.achievements[15])?1.1:1,(i===7&&state.achievements[10])?1.1:1,(i===0&&state.achievements[16])?1.05:1,(i<7&&state.achievements[19])?1.02:1,state.achievements[26]?1+(i+1)*0.01:1,state.achievements[31]?1.1:1])m=m.multiply(f);
+ for(const f of [(i===0&&state.achievements[15])?1.1:1,1,(i===0&&state.achievements[16])?1.05:1,(i<7&&state.achievements[19])?1.02:1,state.achievements[26]?1+(i+1)*0.01:1,state.achievements[31]?1.1:1])m=m.multiply(f);
  m=m.multiply(cachedDimensionMultiplierValue('timeMult',()=>infinityUpgradeMultiplierBigNumber('timeMult'))).multiply(cachedDimensionMultiplierValue('timeMult2',()=>infinityUpgradeMultiplierBigNumber('timeMult2')));
  if(i===0)m=m.multiply(cachedDimensionMultiplierValue('unspentBonus',()=>infinityUpgradeMultiplierBigNumber('unspentBonus')));
  if(i===0||i===7)m=m.multiply(infinityUpgradeMultiplierBigNumber('18Mult'));
@@ -4693,7 +4693,6 @@ function getAchievementRewardBreakdown(tier){
   add(73,hasAchievement(73)?matterBigNumber().power(0.00002).add(1):1);
   add(84,hasAchievement(84)?matterBigNumber().power(0.00002).add(1):1);
  }else{
-  add(11,state.achievements[10]?1.1:1);
   add(43,state.achievements[26]?1.08:1);
   add(48,state.achievements[31]?1.1:1);
   add(72,hasAchievement(72)?1.1:1);
@@ -4885,7 +4884,7 @@ function getADMultiplierContributors(tier, atomTab=false){
  if(atomTab){
   let achievementRewards=BigNumber.from(1);
   for(const reward of [
-   state.achievements[10]?1.1:1,
+   1,
    state.achievements[26]?1.08:1,
    state.achievements[31]?1.1:1,
    hasAchievement(72)?1.1:1,
