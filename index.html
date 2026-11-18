@@ -4893,7 +4893,7 @@ function getAD1MultiplierContributors(){
   ['ad1-ach72','Achievement 72',hasAchievement(72)?1.1:1],
   ['ad1-ach73','Achievement 73',hasAchievement(73)?matterBigNumber().power(0.00002).add(1):1],
   ['ad1-ach84','Achievement 84',hasAchievement(84)?matterBigNumber().power(0.00002).add(1):1],
-  ['ad1-ach76','Achievement 76',hasAchievement(76)?Math.max(1,Math.pow(Math.max(1,state.playTime/86400/2),0.05)):1],
+
   ['ad1-ach91','Achievement 91',hasAchievement(91)&&state.infinityTime<5?Math.max((5-state.infinityTime)*60,1):1],
   ['ad1-ach92','Achievement 92',hasAchievement(92)&&state.infinityTime<60?Math.max((1-state.infinityTime/60)*100,1):1],
   ['ad1-ach56','Achievement 56',hasAchievement(56)&&state.infinityTime<180?Math.max(6/(state.infinityTime/60+3),1):1],
@@ -4901,6 +4901,7 @@ function getAD1MultiplierContributors(){
   ['ad1-ach74','Achievement 74',hasAchievement(74)&&(state.activeChallenge||state.activeInfinityChallenge)?1.4:1]
  ];
  for(const [id,label,value] of achievementFactors)add(id,label,value,'🏆');
+ add('ad1-achievement-rewards','Achievement Rewards',hasAchievement(76)?Math.max(1,Math.pow(Math.max(1,state.playTime/86400/2),0.05)):1,'🏆','achievement-entry-icon');
  add('ad1-achievement-multiplier','Achievement Multiplier',cachedDimensionMultiplierValue('achievementMultiplier',achievementMultiplier),'🏆','achievement-entry-icon');
  add('ad1-time-mult','Infinity Upgrade: Total Time',cachedDimensionMultiplierValue('timeMult',()=>infinityUpgradeMultiplierBigNumber('timeMult')));
  add('ad1-time-mult2','Infinity Upgrade: Current Infinity',cachedDimensionMultiplierValue('timeMult2',()=>infinityUpgradeMultiplierBigNumber('timeMult2')));
@@ -4954,7 +4955,9 @@ function officialMultiplierPercents(entries, historyKey, totalValue=null){
  return entries.map((entry,index)=>({...entry,weight:average[index]}));
 }
 function formatContributionPercent(value){
- const rounded=Math.round(Number(value)*10)/10;
+ const numeric=Number(value);
+ if(Number.isFinite(numeric)&&numeric<0.1)return '<0.1%';
+ const rounded=Math.round(numeric*10)/10;
  return `${Number.isInteger(rounded)?rounded.toFixed(0):rounded.toFixed(1)}%`;
 }
 function renderMultiplierEntry(entry, depth=0, historyKey=''){
