@@ -4727,7 +4727,7 @@ function getBaseADProductionContributors(){
    valueText:()=>`×${multiplier.toDisplayString(2)}`,
    childTitle:tier===0?()=>`AD ${tier+1} Multiplier: ×${multiplier.toDisplayString(2)}`:null,
    defaultOpen:tier===0,
-   children:()=>tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier)
+   children:()=>tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier,true)
   };
  });
  contributors.push({
@@ -4795,7 +4795,7 @@ function getADMultiplierContributors(tier, atomTab=false){
  add(`ad${tier+1}-achievement-multiplier`,'Achievement Multiplier',achievements,'🏆','achievement-entry-icon');
  // Atom tab: Sacrifice is its own independent AD8 multiplier row.
  // Keep all remaining effects in the separate "Other applicable effects" row.
- if(atomTab&&tier===7){
+ if(tier===7){
   const sacrifice=sacrificeMultiplierBigNumber();
   add('ad8-sacrifice-multiplier','Sacrifice Multiplier',sacrifice,'Ω⤵︎','dimension-entry-icon');
  }
