@@ -2206,15 +2206,12 @@ body[data-screen="statistics"] #tabContent .multiplier-contribution-segment.gala
 </style>
 
 <style id="achievement-rewards-expandable-gold">
-body[data-screen="statistics"] #tabContent details[data-multiplier-entry="ad-all-achievement-rewards"]>summary{
- border:2px solid #c9b45f!important;border-radius:8px!important;
+body[data-screen="statistics"] #tabContent details[data-multiplier-entry$="achievement-rewards"]>summary{
+ border:1px solid #c9b45f!important;border-radius:8px!important;
 }
-body[data-screen="statistics"] #tabContent details[data-multiplier-entry="ad-all-achievement-rewards"]>.multiplier-entry-children{
- border:2px solid #c9b45f!important;border-left:5px solid #c9b45f!important;
+body[data-screen="statistics"] #tabContent details[data-multiplier-entry$="achievement-rewards"]>.multiplier-entry-children{
+ border:1px solid #c9b45f!important;border-left:2px solid #c9b45f!important;
  border-radius:8px!important;padding:8px!important;margin:5px 0 8px 7px!important;
-}
-body[data-screen="statistics"] #tabContent details[data-multiplier-entry="ad-all-achievement-rewards"] .multiplier-child-heading{
- color:#c9b45f!important;font-weight:700;
 }
 </style>
 </head>
@@ -4756,7 +4753,6 @@ function getAggregatedADMultiplierContributors(){
    entry.children=()=>members.map(member=>({...member,label:member.label?.match(/^AD \d+ Purchases$/)?member.label:member.id?.match(/^ad(\d+)-purchases$/)?`AD ${member.id.match(/^ad(\d+)-purchases$/)[1]} Purchases`:member.label}));
   }
   if(group.id==='ad-all-achievement-rewards'){
-   entry.childTitle=()=>`Achievement Rewards: ×${mult.toDisplayString(2)}`;
    entry.children=()=>{
     const combined=new Map();
     for(const tier of tiers){
