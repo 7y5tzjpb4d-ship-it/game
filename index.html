@@ -4795,8 +4795,28 @@ function getADMultiplierContributors(tier, atomTab=false){
  add(`ad${tier+1}-dimboost`,'Dimension Boost',boostMultiplier,'<span class="boost-chevron-icon">≫</span>','boost-entry-icon');
  add(`ad${tier+1}-purchases`,`AD ${tier+1} Purchases`,purchases,`↗${tier+1}`,'dimension-entry-icon');
  add(`ad${tier+1}-achievement-multiplier`,'Achievement Multiplier',achievements,'🏆','achievement-entry-icon');
- // Atom tab: Sacrifice is its own independent AD8 multiplier row.
- // Keep all remaining effects in the separate "Other applicable effects" row.
+ // Atom tab AD8: show the direct achievement rewards separately from the
+ // global Achievement Multiplier, using the same trophy styling.
+ if(atomTab&&tier===7){
+  let achievementRewards=BigNumber.from(1);
+  for(const reward of [
+   state.achievements[10]?1.1:1,
+   state.achievements[26]?1.08:1,
+   state.achievements[31]?1.1:1,
+   hasAchievement(72)?1.1:1,
+   hasAchievement(73)?matterBigNumber().power(0.00002).add(1):1,
+   hasAchievement(84)?matterBigNumber().power(0.00002).add(1):1,
+   hasAchievement(76)?Math.max(1,Math.pow(Math.max(1,state.playTime/86400/2),0.05)):1,
+   hasAchievement(91)&&state.infinityTime<5?Math.max((5-state.infinityTime)*60,1):1,
+   hasAchievement(92)&&state.infinityTime<60?Math.max((1-state.infinityTime/60)*100,1):1,
+   hasAchievement(56)&&state.infinityTime<180?Math.max(6/(state.infinityTime/60+3),1):1,
+   hasAchievement(65)&&(state.activeChallenge||state.activeInfinityChallenge)&&state.infinityTime<180?Math.max(4/(state.infinityTime/60+1),1):1,
+   hasAchievement(74)&&(state.activeChallenge||state.activeInfinityChallenge)?1.4:1
+  ])achievementRewards=achievementRewards.multiply(reward);
+  if(infinityChallengeEffectActive(4))achievementRewards=achievementRewards.power(1.05);
+  add('ad8-achievement-rewards','Achievement Rewards',achievementRewards,'🏆','achievement-entry-icon');
+ }
+ // Sacrifice is an independent AD8 multiplier row.
  if(tier===7){
   const sacrifice=sacrificeMultiplierBigNumber();
   add('ad8-sacrifice-multiplier','Sacrifice Multiplier',sacrifice,'Ω⤵︎','dimension-entry-icon');
