@@ -4795,9 +4795,9 @@ function getADMultiplierContributors(tier, atomTab=false){
  add(`ad${tier+1}-dimboost`,'Dimension Boost',boostMultiplier,'<span class="boost-chevron-icon">≫</span>','boost-entry-icon');
  add(`ad${tier+1}-purchases`,`AD ${tier+1} Purchases`,purchases,`↗${tier+1}`,'dimension-entry-icon');
  add(`ad${tier+1}-achievement-multiplier`,'Achievement Multiplier',achievements,'🏆','achievement-entry-icon');
- // Atom tab AD8: show the direct achievement rewards separately from the
- // global Achievement Multiplier, using the same trophy styling.
- if(atomTab&&tier===7){
+ // In the Atom tab, show direct achievement rewards separately from the
+ // global Achievement Multiplier for every AD tier, using the same trophy styling.
+ if(atomTab){
   let achievementRewards=BigNumber.from(1);
   for(const reward of [
    state.achievements[10]?1.1:1,
@@ -4814,7 +4814,7 @@ function getADMultiplierContributors(tier, atomTab=false){
    hasAchievement(74)&&(state.activeChallenge||state.activeInfinityChallenge)?1.4:1
   ])achievementRewards=achievementRewards.multiply(reward);
   if(infinityChallengeEffectActive(4))achievementRewards=achievementRewards.power(1.05);
-  add('ad8-achievement-rewards','Achievement Rewards',achievementRewards,'🏆','achievement-entry-icon');
+  add(`ad${tier+1}-achievement-rewards`,'Achievement Rewards',achievementRewards,'🏆','achievement-entry-icon');
  }
  // Sacrifice is an independent AD8 multiplier row.
  if(tier===7){
