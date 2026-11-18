@@ -4652,11 +4652,13 @@ function getAggregatedADMultiplierContributors(){
  const isPurchase=e=>/-purchases$/.test(e.id)||/^ad\d+-purchases$/.test(e.id)||/purchase/i.test(e.label||'');
  const isAchievement=e=>e.iconClass==='achievement-entry-icon'||e.icon==='🏆'||/achievement/i.test(`${e.id||''} ${e.label||''}`);
  const isBoost=e=>/dimboost/i.test(e.id||'')||/^dimension boost$/i.test(e.label||'');
+ const isSacrifice=e=>e.id==='ad8-sacrifice-multiplier'||/sacrifice multiplier/i.test(e.label||'');
  const groups=[
   {id:'ad-all-purchases',label:'Purchases',icon:'↗',iconClass:'dimension-entry-icon',match:isPurchase},
   {id:'ad-all-achievement-multiplier',label:'Achievement Multiplier',icon:'🏆',iconClass:'achievement-entry-icon',match:isAchievement},
   {id:'ad-all-dimension-boost',label:'Dimension Boost',icon:'<span class="boost-chevron-icon">≫</span>',iconClass:'boost-entry-icon',match:isBoost},
-  {id:'ad-all-other-effects',label:'Other applicable effects',icon:'Ω',iconClass:'dimension-entry-icon',match:e=>!isPurchase(e)&&!isAchievement(e)&&!isBoost(e)}
+  {id:'ad-all-sacrifice-multiplier',label:'Sacrifice Multiplier',icon:'Ω⤵︎',iconClass:'dimension-entry-icon',match:isSacrifice},
+  {id:'ad-all-other-effects',label:'Other applicable effects',icon:'Ω',iconClass:'dimension-entry-icon',match:e=>!isPurchase(e)&&!isAchievement(e)&&!isBoost(e)&&!isSacrifice(e)}
  ];
  const result=[];
  for(const group of groups){
