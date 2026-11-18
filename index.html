@@ -4783,7 +4783,26 @@ function getAD1MultiplierContributors(){
   const v=BigNumber.from(value);
   if(v.compare(1)!==0) factors.push({id,key:id,icon,iconClass,label,mult:v,pow:1,ignoresNerfPowers:false,valueText:()=>`×${v.toDisplayString(2)}`});
  };
- add('ad1-dimboost','Dimension Boost',challengeRuleActive(8)?1:dimensionBoostMult(i),'<span class="boost-chevron-icon">≫</span>','boost-entry-icon');
+ // Dimension BoostはBoostが2回以上なら、ADごとの寄与を1つの展開項目にまとめる。
+ // 親の倍率はAD1に実際に適用される値を維持し、子項目は各ADへのBoost倍率を表示する。
+ const boostTiers=getActiveADProductionTiers();
+ const boostMembers=boostTiers.map(tier=>{
+  const mult=BigNumber.from(challengeRuleActive(8)?1:dimensionBoostMult(tier));
+  return {id:`ad${tier+1}-dimboost`,key:`ad${tier+1}-dimboost`,icon:'<span class="boost-chevron-icon">≫</span>',iconClass:'boost-entry-icon',label:`Dimension Boost on AD ${tier+1}`,mult,pow:1,ignoresNerfPowers:false,valueText:()=>`×${mult.toDisplayString(2)}`};
+ }).filter(member=>member.mult.compare(1)!==0);
+ const ad1Boost=BigNumber.from(challengeRuleActive(8)?1:dimensionBoostMult(i));
+ if(ad1Boost.compare(1)!==0){
+  const boostEntry={id:'ad-all-dimension-boost',key:'ad-all-dimension-boost',icon:'<span class="boost-chevron-icon">≫</span>',iconClass:'boost-entry-icon',label:'Dimension Boost',mult:ad1Boost,pow:1,ignoresNerfPowers:false,valueText:()=>`×${ad1Boost.toDisplayString(2)}`};
+  if(Number(state.boosts)>=2&&boostMembers.length>1){
+   const combinedBoost=boostMembers.reduce((product,member)=>product.multiply(member.mult),BigNumber.from(1));
+   boostEntry.children=()=>boostMembers.map(member=>({...member}));
+   boostEntry.childTitle=()=>`Dimension Boost: ×${combinedBoost.toDisplayString(2)}`;
+   // The parent row summarizes the combined contribution across all producing ADs.
+   // Keep `mult` as AD1's actual factor for the mathematical contribution calculation.
+   boostEntry.valueText=()=>`×${combinedBoost.toDisplayString(2)}`;
+  }
+  factors.push(boostEntry);
+ }
  if(tsOwned(91)){const mins=Math.min(20,Math.max(0,Number(state.eternityTime)||0)/60);add('ad1-ts91','Time Study 91',BigNumber.from(10).power(15*mins).min('1e300'));}
  if(tsOwned(101)&&state.replicantiUnlocked)add('ad1-ts101','Time Study 101',replicantiBigNumber().max(1));
  if(tsOwned(193))add('ad1-ts193','Time Study 193',BigNumber.from('1e13000').power(Math.min(1,Math.max(0,Number(state.eternities)||0)/1e6)).min('1e13000'));
