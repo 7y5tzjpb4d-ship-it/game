@@ -4754,7 +4754,7 @@ function getAntimatterProductionContributors(){
    valueText:()=>`×${multiplier.toDisplayString(2)}`,
    childTitle:tier===0?()=>`AD ${tier+1} Multiplier: ×${multiplier.toDisplayString(2)}`:null,
    defaultOpen:tier===0,
-   children:()=>tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier)
+   children:()=>tier===0?getAD1MultiplierContributors():getADMultiplierContributors(tier,true)
   };
  });
  contributors.push({
@@ -4765,7 +4765,7 @@ function getAntimatterProductionContributors(){
  });
  return contributors;
 }
-function getADMultiplierContributors(tier){
+function getADMultiplierContributors(tier, atomTab=false){
  if(tier===0)return getAD1MultiplierContributors();
 
  // AD2-8 use the same per-ten purchase factor and the global Achievement
@@ -4793,14 +4793,22 @@ function getADMultiplierContributors(tier){
  add(`ad${tier+1}-dimboost`,'Dimension Boost',boostMultiplier,'<span class="boost-chevron-icon">≫</span>','boost-entry-icon');
  add(`ad${tier+1}-purchases`,`AD ${tier+1} Purchases`,purchases,`↗${tier+1}`,'dimension-entry-icon');
  add(`ad${tier+1}-achievement-multiplier`,'Achievement Multiplier',achievements,'🏆','achievement-entry-icon');
+ // Atom tab: Sacrifice is its own independent AD8 multiplier row.
+ // Keep all remaining effects in the separate "Other applicable effects" row.
+ if(atomTab&&tier===7){
+  const sacrifice=sacrificeMultiplierBigNumber();
+  add('ad8-sacrifice-multiplier','Sacrifice Multiplier',sacrifice,'Ω⤵︎','dimension-entry-icon');
+ }
  const known=factors.reduce((acc,f)=>acc.multiply(f.mult.power(f.pow||1)),BigNumber.from(1));
  const residual=exact.divide(known);
- if(residual.compare(1)!==0)factors.push({
-  id:`ad${tier+1}-other-effects`,key:`AD${tier+1}_other`,icon:`Ω${tier+1}`,
-  iconClass:'dimension-entry-icon',label:'Other applicable effects',
-  mult:residual,pow:1,ignoresNerfPowers:false,
-  valueText:()=>`×${residual.toDisplayString(2)}`
- });
+ if(residual.compare(1)!==0){
+  factors.push({
+   id:`ad${tier+1}-other-effects`,key:`AD${tier+1}_other`,icon:`Ω${tier+1}`,
+   iconClass:'dimension-entry-icon',label:'Other applicable effects',
+   mult:residual,pow:1,ignoresNerfPowers:false,
+   valueText:()=>`×${residual.toDisplayString(2)}`
+  });
+ }
  return factors.length?factors:[{
   id:`ad${tier+1}-exact-multiplier`,key:`AD_base_${tier+1}`,
   icon:`Ω${tier+1}`,iconClass:'dimension-entry-icon',
