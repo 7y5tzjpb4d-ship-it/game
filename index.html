@@ -2206,11 +2206,13 @@ body[data-screen="statistics"] #tabContent .multiplier-contribution-segment.gala
 </style>
 
 <style id="achievement-rewards-expandable-gold">
+/* Keep the gold achievement bar and trophy icon, but use the normal neutral
+   row/container outlines instead of adding a gold outline around the entry. */
 body[data-screen="statistics"] #tabContent details[data-multiplier-entry$="achievement-rewards"]>summary{
- border:1px solid #c9b45f!important;border-radius:8px!important;
+ border-color:inherit!important;
 }
 body[data-screen="statistics"] #tabContent details[data-multiplier-entry$="achievement-rewards"]>.multiplier-entry-children{
- border:1px solid #c9b45f!important;border-left:2px solid #c9b45f!important;
+ border-color:inherit!important;border-left-color:inherit!important;
  border-radius:8px!important;padding:8px!important;margin:5px 0 8px 7px!important;
 }
 </style>
