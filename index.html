@@ -3188,9 +3188,19 @@ function render(){
   setText($('nd2TickspeedHeading'),'Increase Tickspeed by ×'+tickspeedBase().toFixed(3));
   const nd2Cost=tickspeedCostBigNumber();
   const nd2CostText=nd2Cost.toDisplayString(0);
-  setText($('nd2TickspeedBuy'),state.infinities>0?'Buy 2nd Dim':'Cost: '+nd2CostText);
-  $('nd2TickspeedBuy').disabled=!canAffordTickspeed();
-  $('nd2TickspeedMax').disabled=!canAffordTickspeed();
+  const needsSecondDimension=state.infinities>0 && Number(state.bought?.[1]||0)===0;
+  if(needsSecondDimension){
+   // Keep the post-Infinity prompt, but do not use either Tickspeed button
+   // to purchase AD2. Both controls remain unavailable until AD2 is bought
+   // through its own Dimension row.
+   setText($('nd2TickspeedBuy'),'Buy 2nd Dim');
+   $('nd2TickspeedBuy').disabled=true;
+   $('nd2TickspeedMax').disabled=true;
+  }else{
+   setText($('nd2TickspeedBuy'),'Cost: '+nd2CostText);
+   $('nd2TickspeedBuy').disabled=!canAffordTickspeed();
+   $('nd2TickspeedMax').disabled=!canAffordTickspeed();
+  }
   setText($('nd2TickspeedRate'),'Tickspeed: '+tickspeedMultiplierBigNumber().toDisplayString(3)+' / sec');
  }
  ['quickTickspeedBtn','mobileTickspeedBtn'].forEach(id=>{
