@@ -1306,7 +1306,7 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
         var found = text.match(/([0-9][0-9.,]*(?:e[+-]?\d+)?)/i);
         if (found) cost = found[1];
       }
-      if (cost) button.textContent = "Cost: " + cost;
+      if (cost && button.textContent !== "Cost: " + cost) button.textContent = "Cost: " + cost;
     });
   }
   if (document.readyState === "loading") {
@@ -1314,9 +1314,9 @@ body[data-screen="autobuyers"] .replicanti-autobuyer-option .ab-toggle {
   } else {
     updateMainBuyLabels();
   }
-  new MutationObserver(updateMainBuyLabels).observe(document.body, {
-    childList: true, subtree: true, characterData: true
-  });
+  const labelsObserver = new MutationObserver(updateMainBuyLabels);
+  const observeLabels = () => { if (document.body) labelsObserver.observe(document.body, { childList: true, subtree: true, characterData: true }); };
+  if (document.body) observeLabels(); else document.addEventListener('DOMContentLoaded', observeLabels, { once: true });
 })();
 </script>
 
@@ -1971,7 +1971,6 @@ body.crunch-ready .initial-game-header{display:flex!important;visibility:visible
   border:0!important;border-radius:50%!important;background:#000!important;color:#fff!important;
   font-size:12px!important;font-weight:700!important;white-space:nowrap!important;
  }
- body.crunch-ready #collapseQuickCrunch{order:0;}
  body.crunch-ready #collapseQuickBoost{order:1;}
  body.crunch-ready #collapseQuickGalaxy{order:2;}
  body.crunch-ready #collapseQuickMax{order:3;font-size:15px!important;}
@@ -2239,7 +2238,7 @@ body[data-screen="statistics"] #tabContent details[data-multiplier-entry$="achie
 <section class="panel infinity-panel" id="infinityPanel"><p hidden>反物質がInfinityに到達しました。<br>Infinity Point: <strong id="ipCount">0</strong> · Infinities: <strong id="infinityCount">0</strong></p></section>
 <div class="quick-actions"><button type="button" id="quickMaxAllBtn" class="quick-maxall">Max All</button><button type="button" id="quickBoostBtn" class="quick-boost">次元ブースト</button><button type="button" id="quickTickspeedBtn">Tickspeed購入</button><button type="button" id="quickBuyModeBtn">購入: 1個ずつ</button></div>
 </div>
-<nav class="mobile-bottom-actions" aria-label="クイック操作"><button type="button" class="mobile-dboost" id="mobileDboostBtn" hidden>D.Boost</button><button type="button" class="mobile-galaxy" id="mobileGalaxyQuickBtn" hidden>A.Galaxy</button><button type="button" class="mobile-max" id="mobileMaxAllBtn">Max</button><button type="button" id="mobileTickspeedBtn">Tickspeed</button><button type="button" id="mobileBuyModeBtn">最大購入</button><button type="button" id="mobileSaveBtn">リセット</button></nav>
+<nav class="mobile-bottom-actions" aria-label="クイック操作"><button type="button" class="mobile-crunch" id="mobileCrunchBtn" hidden>B.Crunch</button><button type="button" class="mobile-dboost" id="mobileDboostBtn" hidden>D.Boost</button><button type="button" class="mobile-galaxy" id="mobileGalaxyQuickBtn" hidden>A.Galaxy</button><button type="button" class="mobile-max" id="mobileMaxAllBtn">Max</button><button type="button" id="mobileTickspeedBtn">Tickspeed</button><button type="button" id="mobileBuyModeBtn">最大購入</button><button type="button" id="mobileSaveBtn">リセット</button></nav>
 <nav class="screen-tabs" id="screenTabs" aria-label="画面切り替え"><button class="active" data-screen="main">Main</button><button data-screen="autobuyers">Autobuyers</button><button data-screen="challenges">Challenges</button><button data-screen="infinity" style="display:none">Infinity</button><button data-screen="eternity">Eternity</button><button data-screen="achievements">実績</button><button data-screen="statistics">統計</button><button data-screen="options">設定</button><button data-screen="test">テスト</button></nav>
 <section class="screen-placeholder" id="tabContent" hidden></section>
 <section class="panel tickspeed-panel"><div class="tickspeed-row"><div><h2 class="section-title">Tickspeed <span id="tickspeedMultiplier">倍率 ×1</span></h2><p id="tickspeedDesc" style="color:var(--muted);font-size:11px;margin:0">Tickspeedを上げると全次元の生産速度が上昇します。</p></div><div class="tickspeed-buttons"><button type="button" class="buy tickspeed-buy" id="tickspeedBtn">購入</button><button type="button" class="buy tickspeed-buy" id="tickspeedMaxBtn">Buy Max</button></div></div></section>
@@ -3034,7 +3033,6 @@ function infinityCollapseView(){
   <p class="infinity-collapse-message">The world has collapsed due to excess of antimatter.</p>
   <button type="button" class="infinity-collapse-crunch" id="collapseBigCrunchBtn">Big Crunch</button>
   <div class="infinity-collapse-quick-actions">
-   <button type="button" id="collapseQuickCrunch">B.Crunch</button>
    <button type="button" id="collapseQuickBoost">D.Boost</button>
    <button type="button" id="collapseQuickGalaxy">A.Galaxy</button>
    <button type="button" id="collapseQuickMax">Max</button>
@@ -3132,7 +3130,7 @@ function render(){
  }
  document.querySelectorAll('[data-current-multiplier]').forEach(el=>{const id=el.dataset.currentMultiplier;el.textContent='現在の倍率：'+infinityUpgradeCurrentMultiplier(id)+(state.infinityUpgrades.includes(id)?'':'（未購入）');});
  document.querySelectorAll('[data-bi-current-multiplier]').forEach(el=>{el.textContent='現在の倍率：×'+fmtFixedBig(breakInfinityUpgradeEffectBigNumber(el.dataset.biCurrentMultiplier),2)+(breakInfinityUpgradeBought(el.dataset.biCurrentMultiplier)?'':'（未購入）');});
- const dBoostQuickButton=$('mobileDboostBtn');if(dBoostQuickButton)dBoostQuickButton.hidden=!state.hasEverBoosted;if(Number(state.galaxies)>0)state.hasEverGalaxy=true;const galaxyQuickButton=$('mobileGalaxyQuickBtn');if(galaxyQuickButton)galaxyQuickButton.hidden=!state.hasEverGalaxy;
+ const crunchQuickButton=$('mobileCrunchBtn');if(crunchQuickButton){crunchQuickButton.hidden=Number(state.infinities)<=0;crunchQuickButton.disabled=false;}const dBoostQuickButton=$('mobileDboostBtn');if(dBoostQuickButton)dBoostQuickButton.hidden=!state.hasEverBoosted;if(Number(state.galaxies)>0)state.hasEverGalaxy=true;const galaxyQuickButton=$('mobileGalaxyQuickBtn');if(galaxyQuickButton)galaxyQuickButton.hidden=!state.hasEverGalaxy;
  const wasCrunchReady=document.body.classList.contains('crunch-ready');
  if(atInfinity()&&!state.breakInfinityActive&&!state.infinityCollapseActive){state.infinityCollapseActive=true;save();}
  const infinityReady=Boolean(state.infinityCollapseActive);
@@ -3146,7 +3144,6 @@ function render(){
    if(!$('tabContent').querySelector('.infinity-collapse-view')){
     $('tabContent').innerHTML=infinityCollapseView();
     const crunch=$('collapseBigCrunchBtn');if(crunch)crunch.onclick=()=>state.activeChallenge?completeChallenge():bigCrunch();
-    $('collapseQuickCrunch')?.addEventListener('click',()=>state.activeChallenge?completeChallenge():bigCrunch());
     $('collapseQuickBoost')?.addEventListener('click',()=>boost());
     $('collapseQuickGalaxy')?.addEventListener('click',()=>galaxy());
     $('collapseQuickMax')?.addEventListener('click',()=>maxAll());
@@ -3824,7 +3821,7 @@ $('boostBtn').onclick=boost;
 $('sacrificeBtn').onclick=sacrifice;
 $('quickMaxAllBtn').onclick=maxAll;
 $('mobileMaxAllBtn').onclick=maxAll;
-$('mobileDboostBtn').onclick=()=>$('mobileBoostBtn')?.click();
+$('mobileCrunchBtn').onclick=()=>bigCrunch();$('mobileDboostBtn').onclick=()=>$('mobileBoostBtn')?.click();
 $('mobileBoostBtn').onclick=boost;
 $('mobileGalaxyBtn').onclick=galaxy;$('mobileGalaxyQuickBtn').onclick=galaxy;
 $('mobileSaveBtn').onclick=()=>$('resetBtn').click();
@@ -7994,7 +7991,7 @@ body[data-screen="main"] #initial-galaxy-card.can-execute .initial-reset-descrip
   }
   body:not(.crunch-ready) #mobileGalaxyQuickBtn[hidden]{display:none!important;}
   body:not(.crunch-ready) #mobileDboostBtn[hidden]{display:none!important;}
-  body:not(.crunch-ready) .mobile-bottom-actions>:not(#mobileMaxAllBtn):not(#mobileDboostBtn):not(#mobileGalaxyQuickBtn){display:none!important;}
+  body:not(.crunch-ready) .mobile-bottom-actions>:not(#mobileCrunchBtn):not(#mobileMaxAllBtn):not(#mobileDboostBtn):not(#mobileGalaxyQuickBtn){display:none!important;}
 }
 </style>
 
@@ -8038,7 +8035,7 @@ body[data-screen="main"] #initial-galaxy-card.can-execute .initial-reset-descrip
   body:not(.crunch-ready) #mobileGalaxyQuickBtn {order:2;font-size:12px!important;font-weight:700!important;white-space:nowrap!important;}
   body:not(.crunch-ready) #mobileMaxAllBtn {order:3;font-size:15px!important;font-weight:700!important;}
   body:not(.crunch-ready) .mobile-bottom-actions #mobileDboostBtn[hidden], body:not(.crunch-ready) .mobile-bottom-actions #mobileGalaxyQuickBtn[hidden] {display:none!important;}
-  body:not(.crunch-ready) .mobile-bottom-actions > :not(#mobileDboostBtn):not(#mobileGalaxyQuickBtn):not(#mobileMaxAllBtn) {display:none!important;}
+  body:not(.crunch-ready) .mobile-bottom-actions > :not(#mobileCrunchBtn):not(#mobileDboostBtn):not(#mobileGalaxyQuickBtn):not(#mobileMaxAllBtn) {display:none!important;}
 }
 </style>
 
@@ -8490,5 +8487,31 @@ body[data-screen="main"] #sacrificeBtn:not(:disabled) {
   html body[data-screen="main"] #dimensions.dimensions > .dim.post-infinity-visible > button.buy:disabled {
     border-color:#a33b50 !important;
   }
+}
+</style>
+<style id="mobile-crunch-quick-action-layout">
+@media (max-width:700px){
+ body:not(.crunch-ready)[data-screen] nav.mobile-bottom-actions[aria-label="クイック操作"]{
+  display:flex!important;position:fixed!important;left:auto!important;right:5px!important;bottom:111px!important;
+  width:max-content!important;height:58px!important;min-height:58px!important;gap:12px!important;
+  align-items:center!important;justify-content:flex-end!important;margin:0!important;padding:0!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible!important;z-index:120!important;
+ }
+ body:not(.crunch-ready)[data-screen] nav.mobile-bottom-actions > #mobileCrunchBtn,
+ body:not(.crunch-ready)[data-screen] nav.mobile-bottom-actions > #mobileDboostBtn,
+ body:not(.crunch-ready)[data-screen] nav.mobile-bottom-actions > #mobileGalaxyQuickBtn,
+ body:not(.crunch-ready)[data-screen] nav.mobile-bottom-actions > #mobileMaxAllBtn{
+  position:static!important;inset:auto!important;flex:0 0 58px!important;width:58px!important;min-width:58px!important;max-width:58px!important;
+  height:58px!important;min-height:58px!important;max-height:58px!important;margin:0!important;padding:0!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;border:0!important;border-radius:50%!important;
+  background:#000!important;color:#fff!important;box-sizing:border-box!important;
+ }
+ body:not(.crunch-ready)[data-screen] nav.mobile-bottom-actions > #mobileCrunchBtn[hidden],
+ body:not(.crunch-ready)[data-screen] nav.mobile-bottom-actions > #mobileDboostBtn[hidden],
+ body:not(.crunch-ready)[data-screen] nav.mobile-bottom-actions > #mobileGalaxyQuickBtn[hidden]{display:none!important}
+ body:not(.crunch-ready)[data-screen] #mobileCrunchBtn{font-size:12px!important;font-weight:700!important;white-space:nowrap!important}
+ body:not(.crunch-ready)[data-screen] #mobileDboostBtn,body:not(.crunch-ready)[data-screen] #mobileGalaxyQuickBtn{font-size:12px!important;font-weight:700!important;white-space:nowrap!important}
+ body:not(.crunch-ready)[data-screen] #mobileMaxAllBtn{font-size:15px!important;font-weight:700!important}
+ body:not(.crunch-ready)[data-screen] nav.mobile-bottom-actions > :not(#mobileCrunchBtn):not(#mobileDboostBtn):not(#mobileGalaxyQuickBtn):not(#mobileMaxAllBtn){display:none!important}
 }
 </style>
