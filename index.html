@@ -3210,14 +3210,27 @@ function render(){
  if(rows.length!==8||$('dimensions').children.length!==8)buildRows();
  for(let i=0;i<8;i++){
   const {d,det,amt,b}=rows[i],open=unlocked(i)&&!(challengeRuleActive(10)&&i>=6),c=costBigNumber(i);
-  d.className='dim'+(open?'':' locked');
-  const lockedReason=challengeRuleActive(10)&&i>=6?'チャレンジ制限':(i>=4&&state.boosts<i-3?'ブースト '+(i-3)+' 回':'未解禁');
-  setText(det,open?'×'+dimensionMultiplierBigNumber(i).toDisplayString(2):lockedReason);
-  setText(amt,BigNumber.from(state.amountBN?.[i]||state.amount[i]).toDisplayString(2));
   const max=state.buyMax?maxAffordable(i):null;
+  const affordable=open&&(state.buyMax?max.count>0:canAffordDimension(i,c));
   const costText=costBigNumber(i).toDisplayString(0);
-  b.disabled=!open||(state.buyMax?max.count===0:!canAffordDimension(i,c));
-  setText(b,!open?'ロック中':(state.buyMax?('コスト'+(max.count>0?BigNumber.from(max.spent).toDisplayString(0):costText)):('コスト'+costText)));
+  const infinityMain=Number(state.infinities)>0 && document.body.dataset.screen==='main';
+  // Post-Infinity rows reuse the exact existing unlocked-row layout and dimensions.
+  // Only the content/availability state changes; no per-row sizing or grid overrides.
+  d.className='dim'+(infinityMain?' post-infinity-visible':'')+(infinityMain?(affordable?' dim-can-afford':' dim-cannot-afford'):(open?'':' locked'));
+  const lockedReason=challengeRuleActive(10)&&i>=6?'チャレンジ制限':(i>=4&&state.boosts<i-3?'ブースト '+(i-3)+' 回':'未解禁');
+  const nameEl=d.querySelector('.dim-name');
+  if(infinityMain&&nameEl)nameEl.textContent=['1st Dimension','2nd Dimension','3rd Dimension','4th Dimension','5th Dimension','6th Dimension','7th Dimension','8th Dimension'][i];
+  setText(det,infinityMain?'×'+dimensionMultiplierBigNumber(i).toDisplayString(2):(open?'×'+dimensionMultiplierBigNumber(i).toDisplayString(2):lockedReason));
+  setText(amt,BigNumber.from(state.amountBN?.[i]||state.amount[i]).toDisplayString(2));
+  b.disabled=!open||!affordable;
+  if(infinityMain&&!affordable)b.style.setProperty('border-color','#a33b50','important');
+  else if(infinityMain)b.style.removeProperty('border-color');
+  if(infinityMain){
+   const infinityLabel=open?('Cost: '+(state.buyMax?(max.count>0?BigNumber.from(max.spent).toDisplayString(0):costText):costText)):(i>=4?'Reach Dimboost '+(i-3):(i===0?'Cost: '+costText:'Buy '+['1st','2nd','3rd'][i-1]+' Dim'));
+   setText(b,infinityLabel);
+  }else{
+   setText(b,!open?'ロック中':(state.buyMax?('コスト'+(max.count>0?BigNumber.from(max.spent).toDisplayString(0):costText)):('コスト'+costText)));
+  }
  }
  const n=state.boosts+1,req=boostRequirement(),tier=boostRequirementTier(),can=canBoost();
  const boostCard=document.getElementById('initial-boost-card');if(boostCard)boostCard.classList.toggle('can-execute',can);
@@ -8262,5 +8275,14 @@ body[data-screen="main"] #sacrificeBtn {
 }
 body[data-screen="main"] #sacrificeBtn:not(:disabled) {
   border-color: #008b28 !important;
+}
+</style>
+
+<style id="post-infinity-unaffordable-button-red-border">
+@media screen and (max-width:700px) {
+  html body[data-screen="main"] #dimensions.dimensions > .dim.post-infinity-visible.dim-cannot-afford > button.buy:disabled,
+  html body[data-screen="main"] #dimensions.dimensions > .dim.post-infinity-visible > button.buy:disabled {
+    border-color:#a33b50 !important;
+  }
 }
 </style>
