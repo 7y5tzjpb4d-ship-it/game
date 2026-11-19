@@ -6763,7 +6763,11 @@ function visibleScreenSignature(screen){
  if(screen==='achievements') return JSON.stringify([
   state.achievements,achievementMultiplier(),state.secretAchievements
  ]);
- if(screen==='challenges'||screen==='infinity'||screen==='eternity'||screen==='test')
+ if(screen==='challenges') return JSON.stringify([
+  state.activeChallenge,state.activeInfinityChallenge,state.completedChallenges,
+  state.completedInfinityChallenges,state.infinities,challengeSubpage
+ ]);
+ if(screen==='infinity'||screen==='eternity'||screen==='test')
   return JSON.stringify([common,state.activeChallenge,state.activeInfinityChallenge,
     state.challenge11Matter,state.icMatter,state.infinityCollapseActive,
     state.breakInfinityActive,state.replicantiUnlocked,state.replicantiChance,
@@ -6785,6 +6789,22 @@ function updateAchievementsLive(){
  root.querySelectorAll('.achievement-tile[data-achievement-id]').forEach(tile=>{
   tile.classList.toggle('unlocked',hasAchievement(Number(tile.dataset.achievementId)));
  });
+}
+function updateChallengesLive(){
+ const root=document.getElementById('tabContent');
+ if(!root)return;
+ const ip=root.querySelector('.nc-ip strong');
+ if(ip){const value=getIPBigNumber().toDisplayString(0);if(ip.textContent!==value)ip.textContent=value;}
+ const antimatter=root.querySelector('.nc-antimatter strong');
+ if(antimatter){const value=matterBigNumber().toDisplayString(2);if(antimatter.textContent!==value)antimatter.textContent=value;}
+ if(state.activeChallenge){
+  const active=Array.from(root.querySelectorAll('.challenge-description p')).find(el=>el.textContent.startsWith('Antimatter:'));
+  if(active){const value='Antimatter: '+matterBigNumber().toDisplayString(2)+' / Goal: 1.8e308';if(active.textContent!==value)active.textContent=value;}
+ }
+ if(state.activeInfinityChallenge){
+  const active=Array.from(root.querySelectorAll('.challenge-description p')).find(el=>el.textContent.startsWith('現在の反物質：'));
+  if(active){const value='現在の反物質：'+fmtBig(matterBigNumber())+' / 目標：'+infinityChallengeData[state.activeInfinityChallenge-1].goal;if(active.textContent!==value)active.textContent=value;}
+ }
 }
 function updateAutobuyersLiveIntervals(){
  const root=document.getElementById('tabContent');
@@ -6818,6 +6838,7 @@ function updateVisibleScreenRealtime(now){
  lastVisibleScreenRefresh=now;
  const screen=document.body.dataset.screen;
  if(screen==='statistics'){updateStatisticsLive();return;}
+ if(screen==='challenges')updateChallengesLive();
  if(screen==='main')return;
  if(screen==='achievements'){updateAchievementsLive();return;}
  if(screen==='autobuyers')updateAutobuyersLiveIntervals();
