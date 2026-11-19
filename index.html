@@ -3045,6 +3045,18 @@ function render(){
  setText($('statInfinityTime'),formatPlayTime(state.infinityTime));
  setText($('statFastestInfinity'),state.fastestInfinity>0?formatPlayTime(state.fastestInfinity):'未記録');
  document.querySelectorAll('[data-passive-ip-minute]').forEach(el=>{el.textContent='1分あたりの獲得量：'+(state.fastestInfinity>0?fmtBig(passiveIPRateBigNumber().multiply(60))+' IP':'最速Infinity記録後に表示');});document.querySelectorAll('[data-bi-generation-time]').forEach(el=>{el.textContent='生産時間：'+(state.fastestInfinity>0?Math.max(0.1,state.fastestInfinity*2).toFixed(1)+'秒':'未記録');});document.querySelectorAll('[data-ip-offline-minute]').forEach(el=>{el.textContent='オフライン時：'+fmtBig(bestIPPerMinuteBigNumber().multiply(0.5))+' IP/分（最高IP/分の50%）';});
+ const matterStat=$('matter')?.closest('.stat');
+ if(matterStat){
+  let universeLabel=$('universeUniverseLabel');
+  if(!universeLabel){
+   universeLabel=document.createElement('small');
+   universeLabel.id='universeUniverseLabel';
+   universeLabel.className='universe-universe-label';
+   universeLabel.textContent='You are currently in the Antimatter Universe';
+   matterStat.insertBefore(universeLabel,matterStat.firstChild);
+  }
+  universeLabel.style.display=state.infinities>0?'block':'none';
+ }
  setText($('matter'),matterDisplayBig().toDisplayString(2));if(state.activeChallenge===11||state.activeInfinityChallenge===6){const el=$('matter');if(el)el.title='Matter: '+fmtMatter(state.activeInfinityChallenge===6?state.icMatter:state.challenge11Matter);}
  const nc11MatterPanel=$('challenge11MatterPanel');if(nc11MatterPanel)nc11MatterPanel.style.display=(state.activeChallenge===11||state.activeInfinityChallenge===6)?'block':'none';setText($('challenge11MatterLabel'),state.activeInfinityChallenge===6?'インフィニティチャレンジ6':'チャレンジ11');setText($('challenge11MatterDisplay'),fmtMatter(state.activeInfinityChallenge===6?state.icMatter:state.challenge11Matter));
  const eternityTab=document.querySelector('.screen-tabs button[data-screen="eternity"]');if(eternityTab)eternityTab.style.display=state.eternities>0?'':'none';const infinityTab=document.querySelector('.screen-tabs button[data-screen="infinity"]');if(infinityTab)infinityTab.style.display=state.infinities>0?'':'none';const infinityFooterTab=document.querySelector('.initial-footer-icons [data-nav-screen="infinity"]');if(infinityFooterTab)infinityFooterTab.style.display=state.infinities>0?'':'none';
@@ -6917,7 +6929,15 @@ function updateVisibleScreenRealtime(now){
 })();
 </script>
 
-</body>
+
+<style id="universe-universe-label-style">
+#universeUniverseLabel{
+ display:block;
+ text-align:center;
+ margin:0 0 4px;
+}
+</style>
+\n</body>
 </html>
 
 <style id="autobuyers-reference-exact-layout-final">
