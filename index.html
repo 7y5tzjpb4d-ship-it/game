@@ -4619,7 +4619,16 @@ function getMultiplierCategoryDefinitions(context){
     {id:'base-production-hierarchical',barClass:'dimension-bar',barIcon:'',hierarchicalBreakdown:true,entries:[]},
     {id:'base-production-flat',barClass:'dimension-bar',barIcon:'',flatBreakdown:true,entries:[]}
    ]
-  }
+  },
+  ...(Number(state.infinities)>0?{
+   ip:{
+    title:'Infinity Point Gain',buttonContent:'<span class="ip-multiplier-tab-icon" aria-hidden="true"><span>∞</span><i></i></span>',
+    panelTitle:`Total IP Gained on Infinity: ${canCrunchNow()?ipGainBigNumber().toDisplayString(2)+' IP':'Cannot Crunch'}`,
+    emptyWhen:()=>!canCrunchNow()||ipGainBigNumber().compare(0)<=0,
+    emptyTitle:'No Active Effects',emptyDescription:'Total effect inactive, disabled, or reduced to ×1',
+    variants:[{id:'ip-gain-breakdown',ipBreakdown:true,entries:[]}]
+   }
+  }:{})
  };
 }
 function getAntimatterProductionRootContributors(){
@@ -4645,6 +4654,24 @@ function getAntimatterProductionRootContributors(){
   });
  }
  return entries;
+}
+function getIPGainBreakdownEntries(){
+ const base=ipGainBigNumber(false);
+ const total=ipGainBigNumber(true);
+ const entries=[{
+  id:'ip-base-gain',key:'IP_base',icon:'∞',iconClass:'ip-gain-entry-icon',
+  label:'Base IP Gain',mult:base,pow:1,ignoresNerfPowers:false,
+  valueText:()=>`${base.toDisplayString(2)} IP`
+ }];
+ if(base.compare(0)>0){
+  const rewards=total.divide(base);
+  if(rewards.compare(1)!==0)entries.push({
+   id:'ip-achievement-rewards',key:'IP_achievement',icon:'🏆',iconClass:'achievement-entry-icon',
+   label:'Achievement Rewards',mult:rewards,pow:1,ignoresNerfPowers:false,
+   valueText:()=>`×${rewards.toDisplayString(2)}`
+  });
+ }
+ return entries.filter(entry=>entry.mult.compare(0)>0);
 }
 function getTickspeedBreakdownEntries(){
  const totalSpeed=tickspeedMultiplierBigNumber().max(1);
@@ -5173,12 +5200,17 @@ function renderMultiplierCategory(id,category,context){
  const tickspeedWeighted=tickspeedEntries?officialMultiplierPercents(tickspeedEntries,'tickspeed-breakdown',BigNumber.from(10).power(100)):null;
  const tickspeedBar=tickspeedWeighted?`<div class="multiplier-total-bar multiplier-contribution-bar tickspeed-bar">${renderSegments(tickspeedWeighted)}</div>`:'';
  const tickspeedRows=tickspeedWeighted?tickspeedWeighted.map(entry=>renderMultiplierEntry(entry,0,'tickspeed-breakdown')).join(''):'';
+ const ipEntries=variant.ipBreakdown?getIPGainBreakdownEntries():null;
+ const ipWeighted=ipEntries?officialMultiplierPercents(ipEntries,`ip-gain/${id}`,ipGainBigNumber()):null;
+ const ipBar=ipWeighted?`<div class="multiplier-total-bar multiplier-contribution-bar ip-gain-total-bar">${renderSegments(ipWeighted)}</div>`:'';
+ const ipRows=ipWeighted?ipWeighted.map(entry=>renderMultiplierEntry(entry,0,`ip-gain/${id}`)).join(''):'';
  const contents=category.emptyWhen()
   ?`<div class="multiplier-no-effects"><div>${category.emptyTitle}</div><div>${category.emptyDescription}</div></div>`
   :variant.productionBreakdown?`${productionBar}${productionRows}`
   :variant.flatBreakdown?`${flatBar}${flatRows}`
   :variant.hierarchicalBreakdown?`${hierarchyBar}${hierarchyRows}`
   :variant.tickspeedBreakdown?`${tickspeedBar}${tickspeedRows}`
+  :variant.ipBreakdown?`${ipBar}${ipRows}`
   :`${variant.barIcon?`<div class="multiplier-total-bar ${variant.barClass||''}"><span>${variant.barIcon}</span></div>`:''}${variant.entries.map(renderMultiplierEntry).join('')}`;
  const description=category.description?`<div class="multiplier-base-description">${category.description}</div>`:'';
  return `<section class="multiplier-panel" data-multiplier-panel="${id}" ${active?'':'hidden'}>${heading}${contents}${description}</section>`;
@@ -7039,6 +7071,27 @@ body[data-screen="main"] #postInfinityScreenHeader{display:none!important}
 @media(max-width:700px){
  body[data-screen="achievements"] #postInfinityScreenHeader,
  body[data-screen="statistics"] #postInfinityScreenHeader{margin-top:32px!important}
+}
+</style>
+
+<style id="ip-multiplier-tab-style">
+body[data-screen="statistics"] #tabContent .ip-multiplier-tab-icon{
+ position:relative;display:inline-flex;flex-direction:row;align-items:center;justify-content:center;
+ gap:3px;width:42px;height:30px;line-height:1;color:currentColor;flex:none;
+}
+body[data-screen="statistics"] #tabContent .ip-multiplier-tab-icon>span{
+ font-size:24px;font-weight:800;line-height:1;letter-spacing:-2px;
+}
+body[data-screen="statistics"] #tabContent .ip-multiplier-tab-icon>i{
+ display:block;width:14px;height:13px;margin:0;
+ background:currentColor;clip-path:polygon(0 0,100% 0,82% 38%,100% 76%,0 76%,18% 38%);
+ opacity:.95;
+}
+body[data-screen="statistics"] #tabContent .ip-gain-total-bar .multiplier-contribution-segment{
+ background:#b67f33!important;color:#211607!important;border-color:#d4a85c!important;
+}
+body[data-screen="statistics"] #tabContent .ip-gain-entry-icon{
+ background:#b67f33!important;color:#211607!important;
 }
 </style>
 </body>
