@@ -7371,6 +7371,16 @@ body[data-screen="statistics"] #tabContent .stat-subnav{display:flex}
   font-size:25px!important;line-height:27px!important;
  }
 }
+
+ body[data-screen="challenges"] .initial-footer-icons button svg{
+  fill:none!important;stroke:currentColor!important;stroke-width:3.1!important;
+  stroke-linecap:round!important;stroke-linejoin:round!important;
+ }
+ body[data-screen="challenges"] .initial-footer-icons button svg path,
+ body[data-screen="challenges"] .initial-footer-icons button svg circle,
+ body[data-screen="challenges"] .initial-footer-icons button svg rect{
+  fill:none!important;stroke:currentColor!important;
+ }
 </style>
 
 
@@ -7390,6 +7400,39 @@ body[data-screen="statistics"] #tabContent .stat-subnav{display:flex}
  sync();
 })();
 </script>
+
+
+<style id="challenge-reference-finish">
+@media(max-width:700px){
+ 
+ /* Main-screen status typography and compact spacing. */
+ body[data-screen="challenges"] .nc-heading .nc-universe{
+  font-size:14px!important;line-height:1.3!important;margin:0 0 5px!important;
+ }
+ body[data-screen="challenges"] .nc-heading .nc-ip{
+  font-size:14px!important;line-height:1.3!important;margin:0 0 5px!important;
+ }
+ body[data-screen="challenges"] .nc-heading .nc-antimatter{
+  font-size:25px!important;line-height:1.2!important;margin:0 0 8px!important;
+ }
+ body[data-screen="challenges"] .nc-heading .nc-antimatter strong{
+  font-size:25px!important;
+ }
+ /* Keep reward text equal in size to the challenge descriptions. */
+ body[data-screen="challenges"] .nc-reward{
+  font-size:10px!important;line-height:1.25!important;font-weight:700!important;
+ }
+ /* Slightly wider buttons with smaller labels. */
+ body[data-screen="challenges"] .nc-action{
+  width:74%!important;min-height:36px!important;font-size:14px!important;
+  line-height:1.15!important;border-width:3px!important;
+ }
+ /* Match the footer title size used by Main. */
+ body[data-screen="challenges"] .initial-footer-title{
+  font-size:18px!important;
+ }
+}
+</style>
 
 </body>
 </html>
