@@ -3146,7 +3146,7 @@ function render(){
  setText($('tickspeedMultiplier'),'購入 '+BigNumber.from(state.tickspeed).toDisplayString(0)+'回 · 倍率 ×'+tickspeedMultiplierBigNumber().toDisplayString(3));
  setText($('tickspeedDesc'),'');
  const sacrificeHasEighth=Number(state.bought?.[7]||0)>0||dimensionAmountBig(7).compare(0)>0;
- const sacrificePanelVisible=sacrificeHasEighth||state.boosts>=5||state.hasEverGalaxy;
+ const sacrificePanelVisible=sacrificeHasEighth||state.boosts>=5||state.hasEverGalaxy||state.infinities>0;
  const sacrificePanel=$('sacrificePanel');
  const sacrificeButton=$('sacrificeBtn');
  const sacrificeGain=sacrificeGainBigNumber();
@@ -3178,7 +3178,7 @@ function render(){
  // Main-screen Tickspeed becomes available only after the player has bought
  // at least one 2nd Dimension. A Dimension Boost resets this purchase state,
  // so the Tickspeed controls stay hidden until AD2 is bought again.
- const showMainTickspeed=document.body.dataset.screen==='main' && Number(state.bought?.[1]||0)>0;
+ const showMainTickspeed=document.body.dataset.screen==='main' && (state.infinities>0 || Number(state.bought?.[1]||0)>0);
  if(nd2TickspeedPanel){
   // Keep the original Tickspeed slot height on Main even while its controls
   // are unavailable, so hiding its text/buttons never compresses other rows.
