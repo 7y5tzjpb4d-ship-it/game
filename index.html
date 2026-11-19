@@ -5567,7 +5567,7 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
    const amount=typeof boostRequirement==='function'?boostRequirement():20+15*Math.max(0,boosts-4);
    const next=boosts+1;
    req.textContent='Requires: '+amount+' '+tier+'th D';
-   if(boostDesc)boostDesc.textContent=`Reset your Dimensions to unlock the ${tier+1}th Dimension and give a ×2.0 multiplier to Dimensions 1–${next}`;
+   if(boostDesc)boostDesc.textContent=boosts===0?'Reset your Dimensions to unlock the 5th Dimension and give a ×2.0 multiplier to Dimension 1':boosts>=7?'Reset your Dimensions to unlock the '+(tier+1)+'th Dimension and give a ×2.0 multiplier to all Dimensions':`Reset your Dimensions to unlock the ${tier+1}th Dimension and give a ×2.0 multiplier to Dimensions 1–${next}`;
   }
   const greq=document.getElementById('initial-galaxy-requirement');
   if(greq&&stateObj)greq.textContent='Requires: '+(80+Math.max(0,Number(stateObj.galaxies)||0)*60)+' 8th D';
