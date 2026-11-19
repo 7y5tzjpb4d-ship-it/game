@@ -3243,7 +3243,7 @@ function render(){
   if(infinityMain&&!affordable)b.style.setProperty('border-color','#a33b50','important');
   else if(infinityMain)b.style.removeProperty('border-color');
   if(infinityMain){
-   const infinityLabel=open?('Cost: '+(state.buyMax?(max.count>0?BigNumber.from(max.spent).toDisplayString(0):costText):costText)):(i>=4?'Reach Dimboost '+(i-3):(i===0?'Cost: '+costText:'Buy '+['1st','2nd','3rd'][i-1]+' Dim'));
+   const infinityLabel=open?('Cost: '+(state.buyMax?(max.count>0?BigNumber.from(max.spent).toDisplayString(0):costText):costText)):(i>=4?(Number(state.boosts)<i-3?'Reach Dimboost '+(i-3):'Buy '+['1st','2nd','3rd','4th','5th','6th','7th'][i-1]+' Dim'):(i===0?'Cost: '+costText:'Buy '+['1st','2nd','3rd'][i-1]+' Dim'));
    setText(b,infinityLabel);
   }else{
    setText(b,!open?'ロック中':(state.buyMax?('コスト'+(max.count>0?BigNumber.from(max.spent).toDisplayString(0):costText)):('コスト'+costText)));
