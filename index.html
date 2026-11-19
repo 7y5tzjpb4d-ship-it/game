@@ -4137,6 +4137,19 @@ function breakInfinityView(){
  `<div class="infinity-upgrade-grid break-infinity-upgrade-grid">${oneTime}${repeatables}</div>`}`;
 }
 function infinityUpgradeView(){const unlocked=state.infinities>0;const cards=[0,4,8,12,1,5,9,13,2,6,10,14,3,7,11,15].map(i=>({u:infinityUpgradeData[i],i})).map(({u,i})=>{const bought=state.infinityUpgrades.includes(u[0]);const prerequisite=infinityUpgradePrerequisiteMet(i);const canBuy=unlocked&&!bought&&prerequisite&&hasIPAtLeast(u[3]);const showMultiplier=!['resetBoost','dimMult','galaxyBoost','resetMult','passiveGen','skipReset1','skipReset2','skipReset3','skipResetGalaxy'].includes(u[0]);return `<button type="button" class="infinity-upgrade-btn ${bought?'purchased':''}" data-infinity-upgrade="${u[0]}" ${canBuy?'':'disabled'}><strong>${u[1]}</strong><span>${u[2]}</span>${u[0]==='passiveGen'?`<span data-passive-ip-minute>1分あたりの獲得量：${state.fastestInfinity>0?fmtFixed(60*passiveIPRate(),3)+' IP':'最速Infinity記録後に表示'}</span>`:''}${showMultiplier?`<span data-current-multiplier="${u[0]}">現在の倍率：${infinityUpgradeCurrentMultiplier(u[0])}</span>`:''}<small>${bought?'購入済み':!prerequisite?'上のアップグレードが必要':`コスト：${u[3]} IP`}</small></button>`}).join('');return `<h2>Infinity Upgrades</h2><p>所持IP：<strong>${getIPBigNumber().toDisplayString(3)}</strong> · Infinity回数：${fmt(state.infinities)}</p><div class="infinity-upgrade-grid">${cards}</div>${state.achievements[achievementIndex(41)]?`<div class="infinity-extra-upgrades"><button type="button" class="infinity-upgrade-btn ${state.ipOffline?'purchased':''}" data-infinity-extra="ipOffline" ${unlocked&&!state.ipOffline&&hasIPAtLeast(1000)?'':'disabled'}><strong>Offline IP</strong><span>オフライン中のみ、最高IP/分の50%を獲得</span><span data-ip-offline-minute>オフライン時：${fmtBig(bestIPPerMinuteBigNumber().multiply(0.5))} IP/分（最高IP/分の50%）</span><small>${state.ipOffline?'購入済み':'コスト：1,000 IP'}</small></button><button type="button" class="infinity-upgrade-btn" data-infinity-extra="ipMult" ${unlocked&&hasIPAtLeast(ipMultiplierCostBigNumber())?'':'disabled'}><strong>IP Multiplier</strong><span>IP獲得量 ×${BigNumber.fromLog10((Math.max(0,Math.floor(Number(state.ipMultLevel)||0))+1)*Math.log10(2)).toDisplayString(2)}</span><small>コスト：${ipMultiplierCostBigNumber().toDisplayString(2)} IP</small></button></div>`:''}` }
+function formatStatsDuration(seconds){
+ const total=Math.max(0,Number(seconds)||0);
+ const years=Math.floor(total/(365*86400));
+ const days=Math.floor(total%(365*86400)/86400);
+ const hours=Math.floor(total%86400/3600);
+ const minutes=Math.floor(total%3600/60);
+ const parts=[];
+ if(years)parts.push(`${years} year${years===1?'':'s'}`);
+ if(days)parts.push(`${days} day${days===1?'':'s'}`);
+ if(hours)parts.push(`${hours} hour${hours===1?'':'s'}`);
+ parts.push(`${minutes} minute${minutes===1?'':'s'}`);
+ return parts.join(', ').replace(/, ([^,]*)$/, ' and $1');
+}
 function formatPlayTime(seconds){const total=Math.max(0,Math.round((Number(seconds)||0)*10)/10);const d=Math.floor(total/86400),h=Math.floor(total%86400/3600),m=Math.floor(total%3600/60),s=total%60;return (d?d+'日 ':'')+h+'時間 '+m+'分 '+s.toFixed(1)+'秒';}
 function formatChallengeClearTime(seconds){const value=Number(seconds);if(!Number.isFinite(value)||value<0)return '未記録';const d=Math.floor(value/86400),h=Math.floor(value%86400/3600),m=Math.floor(value%3600/60),sec=value%60;return (d?d+'日 ':'')+h+'時間 '+m+'分 '+sec.toFixed(2)+'秒';}
 
@@ -5235,7 +5248,21 @@ function statisticsView(){
    <p class="stat-line">You have made a total of: <strong id="statistics-total-am">${totalAM} antimatter</strong></p>
    <p class="stat-line stat-multiline">You have played for<br><strong id="statistics-play-time">${played}</strong></p>
    </section>
-   <p class="stat-proton">If every antimatter were ${proton||'4.46e6'} cubic attometers, you would have enough<br>to make a proton.</p>`;
+   <p class="stat-proton">If every antimatter were ${proton||'4.46e6'} cubic attometers, you would have enough<br>to make a proton.</p>
+   ${Number(state.infinities)>0?(()=>{
+    const infinityGain=infinityCountGainForRun(state.infinityTime);
+    const ipPerMinute=currentIPPerMinuteBigNumber();
+    const highestIP=BigNumber.from(getIPBigNumber()).max(state.lastCrunchIPGainBN||0);
+    return `<section class="stat-section stat-infinity-block">
+     <h2 class="stat-infinity">Infinity</h2>
+     <p class="stat-line">You have ${fmt(state.infinities)} ${Number(state.infinities)===1?'Infinity':'Infinities'}.</p>
+     <p class="stat-line">You will gain ${fmt(infinityGain)} ${infinityGain===1?'Infinity':'Infinities'} on Crunch (${ipPerMinute.toDisplayString(2)}/m).</p>
+     <p class="stat-line">Your fastest Infinity was ${state.fastestInfinity>0?formatStatsDuration(state.fastestInfinity):'未記録'}.</p>
+     <p class="stat-line">You have spent ${formatStatsDuration(infinityRealTimeSeconds())} in this Infinity.</p>
+     <p class="stat-line">Your best Infinity Points per minute is ${bestIPPerMinuteBigNumber().toDisplayString(2)}.</p>
+     <p class="stat-line">Your highest amount of Infinity Points is ${highestIP.toDisplayString(2)}.</p>
+    </section>`;
+   })():''}`;
  }
  else if(sub==='records'){body=`<h2>Records</h2><section class="stat-section stat-record-grid">${[['Fastest Infinity',state.fastestInfinity>0?formatPlayTime(state.fastestInfinity):'未記録'],['Fastest Eternity',state.fastestEternity>0?formatPlayTime(state.fastestEternity):'未記録'],['Best IP per minute',fmtBig(state.bestIPPerMinBN||0)],['Best EP per minute',fmtBig(state.bestEPPerMinBN||0)],['Peak IP gain',fmtBig(state.peakIPGainBN||0)],['Peak EP gain',fmtBig(state.peakEPGainBN||0)]].map(([a,b])=>`<div class="stat-record"><strong>${a}</strong><small>${b}</small></div>`).join('')}</section>`;}
  else if(sub==='pastRuns'){const rows=(state.lastTenIPPerMinBN||[]).map((v,i)=>`<div class="stat-record"><strong>Infinity #${i+1}</strong><small>IP/min: ${fmtBig(v)}</small></div>`).join('');body=`<h2>Past Runs</h2><section class="stat-section stat-record-grid">${rows||'<p>記録はありません。</p>'}</section>`;}
