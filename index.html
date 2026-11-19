@@ -3188,7 +3188,7 @@ function render(){
   setText($('nd2TickspeedHeading'),'Increase Tickspeed by ×'+tickspeedBase().toFixed(3));
   const nd2Cost=tickspeedCostBigNumber();
   const nd2CostText=nd2Cost.toDisplayString(0);
-  setText($('nd2TickspeedBuy'),'Cost: '+nd2CostText);
+  setText($('nd2TickspeedBuy'),state.infinities>0?'Buy 2nd Dim':'Cost: '+nd2CostText);
   $('nd2TickspeedBuy').disabled=!canAffordTickspeed();
   $('nd2TickspeedMax').disabled=!canAffordTickspeed();
   setText($('nd2TickspeedRate'),'Tickspeed: '+tickspeedMultiplierBigNumber().toDisplayString(3)+' / sec');
