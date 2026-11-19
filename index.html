@@ -2598,13 +2598,12 @@ function normalChallengeView(){
  }).join('');
  return `<section class="nc-heading">
   <div class="nc-universe">You are currently in the Antimatter Universe</div>
-  <div class="nc-ip">You have <strong>${getIPBigNumber().toDisplayString(2)}</strong> Infinity Points.</div>
-  <div class="nc-antimatter">You have <strong>${matterBigNumber().toDisplayString(3)}</strong> antimatter.</div>
-  <button type="button" class="nc-retry" data-challenge-retry>Automatically retry challenges: ${retry?'ON':'OFF'}</button>
+  <div class="nc-ip">You have <strong>${getIPBigNumber().toDisplayString(0)}</strong> Infinity Points.</div>
+  <div class="nc-antimatter">You have <strong>${matterBigNumber().toDisplayString(2)}</strong> antimatter.</div>
   <p>Complete challenges by reaching Infinite antimatter.<br>They might be too difficult if attempted too early.</p>
   <p>If you have an active Big Crunch Autobuyer, it will attempt to Crunch as soon as possible when reaching the Challenge's antimatter goal, regardless of settings.</p>
  </section>
- ${state.activeChallenge?`<div class="challenge-description"><strong>Active: C${state.activeChallenge} — ${challengeData[state.activeChallenge-1].name}</strong><p>${challengeData[state.activeChallenge-1].desc}</p><p>Antimatter: ${matterBigNumber().toDisplayString(3)} / Goal: 1.8e308</p><div class="challenge-controls"><button type="button" data-challenge-exit>Exit challenge</button></div></div>`:''}
+ ${state.activeChallenge?`<div class="challenge-description"><strong>Active: C${state.activeChallenge} — ${challengeData[state.activeChallenge-1].name}</strong><p>${challengeData[state.activeChallenge-1].desc}</p><p>Antimatter: ${matterBigNumber().toDisplayString(2)} / Goal: 1.8e308</p><div class="challenge-controls"><button type="button" data-challenge-exit>Exit challenge</button></div></div>`:''}
  <div class="challenge-grid nc-grid">${cards}</div>`;
 }
 
@@ -5702,6 +5701,8 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
  }
  function updateInitialMainUI(){
   const screen=document.body.dataset.screen||'main';
+  const postInfinityHeader=document.getElementById('postInfinityScreenHeader');
+  if(postInfinityHeader){if(screen==='challenges')postInfinityHeader.style.setProperty('display','none','important');else postInfinityHeader.style.removeProperty('display');}
   const stateObj=(typeof state!=='undefined'?state:null);
   const autobuyerTab=document.querySelector('.initial-footer-icons [data-nav-screen="autobuyers"]');
   let autobuyerUnlocked=Boolean(stateObj&&stateObj.autobuyersTabUnlocked);
@@ -7308,6 +7309,87 @@ body[data-screen="statistics"] #tabContent .stat-subnav{display:flex}
  body[data-screen="challenges"] #tabContent{padding-top:108px!important}
 }
 </style>
+
+
+<style id="challenge-screen-alignment-fix">
+@media(max-width:700px){
+ /* Match the compact hamburger/header used on the Main screen. */
+ body[data-screen="challenges"] .initial-game-header{
+  height:32px!important;min-height:32px!important;padding:0 16px!important;
+  box-sizing:border-box!important;align-items:flex-start!important;justify-content:flex-start!important;
+ }
+ body[data-screen="challenges"] .initial-menu-button{
+  width:28px!important;min-width:28px!important;height:28px!important;min-height:28px!important;
+  flex:0 0 28px!important;margin:0!important;padding:0!important;
+ }
+ body[data-screen="challenges"] .initial-menu-button:before{
+  font-size:25px!important;line-height:27px!important;
+ }
+ /* The autobuyer item must obey its hidden state on this screen too. */
+ body[data-screen="challenges"] .initial-footer-icons button[hidden]{
+  display:none!important;visibility:hidden!important;
+ }
+ /* Align the status block with Main: compact universe/IP lines and the same AM size. */
+ body[data-screen="challenges"] #tabContent{
+  padding:38px 5px 125px!important;
+  margin-left:0!important;width:100%!important;
+ }
+ body[data-screen="challenges"] .nc-heading{
+  padding:0 8px 8px!important;margin:0!important;
+ }
+ body[data-screen="challenges"] .nc-heading .nc-universe{
+  font-size:18px!important;line-height:1.3!important;margin:0 0 8px!important;
+ }
+ body[data-screen="challenges"] .nc-heading .nc-ip{
+  font-size:18px!important;line-height:1.3!important;margin:0 0 8px!important;
+ }
+ body[data-screen="challenges"] .nc-heading .nc-antimatter{
+  font-size:25px!important;line-height:1.2!important;margin:0 0 8px!important;
+  font-weight:700!important;
+ }
+ body[data-screen="challenges"] .nc-heading .nc-antimatter strong{
+  font-size:25px!important;font-weight:700!important;
+ }
+ body[data-screen="challenges"] .nc-heading p{
+  font-size:14px!important;line-height:1.3!important;margin:0 0 8px!important;
+ }
+ body[data-screen="challenges"] .challenge-grid.nc-grid{
+  margin-top:20px!important;
+ }
+}
+</style>
+
+
+<style id="challenge-final-header-status-correction">
+@media(max-width:700px){
+ body[data-screen="challenges"] #postInfinityScreenHeader{display:none!important}
+ body[data-screen="challenges"] .initial-game-header .initial-menu-button{
+  width:28px!important;min-width:28px!important;height:28px!important;min-height:28px!important;
+  flex:0 0 28px!important;
+ }
+ body[data-screen="challenges"] .initial-game-header .initial-menu-button:before{
+  font-size:25px!important;line-height:27px!important;
+ }
+}
+</style>
+
+
+<script id="challenge-hide-duplicate-status-header">
+(function(){
+ const sync=()=>{
+  const header=document.getElementById('postInfinityScreenHeader');
+  if(!header)return;
+  if(document.body.dataset.screen==='challenges'){
+   if(header.style.getPropertyValue('display')!=='none'||header.style.getPropertyPriority('display')!=='important'){
+    header.style.setProperty('display','none','important');
+   }
+  }
+ };
+ const observer=new MutationObserver(sync);
+ observer.observe(document.body,{attributes:true,attributeFilter:['data-screen'],childList:true,subtree:true});
+ sync();
+})();
+</script>
 
 </body>
 </html>
