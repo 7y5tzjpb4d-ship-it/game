@@ -1971,6 +1971,7 @@ body.crunch-ready .initial-game-header{display:flex!important;visibility:visible
   border:0!important;border-radius:50%!important;background:#000!important;color:#fff!important;
   font-size:12px!important;font-weight:700!important;white-space:nowrap!important;
  }
+ body.crunch-ready #collapseQuickCrunch{order:0;}
  body.crunch-ready #collapseQuickBoost{order:1;}
  body.crunch-ready #collapseQuickGalaxy{order:2;}
  body.crunch-ready #collapseQuickMax{order:3;font-size:15px!important;}
@@ -3033,6 +3034,7 @@ function infinityCollapseView(){
   <p class="infinity-collapse-message">The world has collapsed due to excess of antimatter.</p>
   <button type="button" class="infinity-collapse-crunch" id="collapseBigCrunchBtn">Big Crunch</button>
   <div class="infinity-collapse-quick-actions">
+   <button type="button" id="collapseQuickCrunch">B.Crunch</button>
    <button type="button" id="collapseQuickBoost">D.Boost</button>
    <button type="button" id="collapseQuickGalaxy">A.Galaxy</button>
    <button type="button" id="collapseQuickMax">Max</button>
@@ -3144,6 +3146,7 @@ function render(){
    if(!$('tabContent').querySelector('.infinity-collapse-view')){
     $('tabContent').innerHTML=infinityCollapseView();
     const crunch=$('collapseBigCrunchBtn');if(crunch)crunch.onclick=()=>state.activeChallenge?completeChallenge():bigCrunch();
+    $('collapseQuickCrunch')?.addEventListener('click',()=>state.activeChallenge?completeChallenge():bigCrunch());
     $('collapseQuickBoost')?.addEventListener('click',()=>boost());
     $('collapseQuickGalaxy')?.addEventListener('click',()=>galaxy());
     $('collapseQuickMax')?.addEventListener('click',()=>maxAll());
