@@ -2218,6 +2218,7 @@ body[data-screen="statistics"] #tabContent details[data-multiplier-entry$="achie
 </style>
 </head>
 <body><main>
+<div id="postInfinityScreenHeader" aria-live="off"></div>
 <div class="sticky-tools">
 <div id="mainBigCrunchWrap" style="display:none"><button type="button" id="mainEternityBtn" style="display:none">Eternity</button><button type="button" id="mainBigCrunchBtn" class="main-big-crunch-btn">Big Crunch for 0 IP</button></div>
 <section class="stats">
@@ -3054,7 +3055,7 @@ function render(){
    universeLabel.textContent='You are currently in the Antimatter Universe';
    stickyTools.insertBefore(universeLabel,stickyTools.querySelector('.stats'));
   }
-  universeLabel.style.setProperty('display',state.infinities>0?'block':'none','important');
+  universeLabel.style.setProperty('display',state.infinities>0&&document.body.dataset.screen==='main'?'block':'none','important');
   let ipLine=$('postInfinityIpLine');
   if(!ipLine){
    ipLine=document.createElement('div');
@@ -3070,7 +3071,23 @@ function render(){
   }
   const ipValue=$('postInfinityIpValue');
   if(ipValue)ipValue.textContent=getIPBigNumber().toDisplayString(0);
-  ipLine.style.setProperty('display',state.infinities>0?'block':'none','important');
+  ipLine.style.setProperty('display',state.infinities>0&&document.body.dataset.screen==='main'?'block':'none','important');
+  const sharedHeader=$('postInfinityScreenHeader');
+  if(sharedHeader){
+   sharedHeader.innerHTML='';
+   const makeLine=(id,text)=>{const el=document.createElement('div');el.id=id;el.textContent=text;return el;};
+   const universe=makeLine('postInfinityScreenUniverse','You are currently in the Antimatter Universe');
+   const ip=document.createElement('div');ip.id='postInfinityScreenIP';
+   ip.append(document.createTextNode('You have '));
+   const ipStrong=document.createElement('strong');ipStrong.id='postInfinityScreenIPValue';ipStrong.textContent=getIPBigNumber().toDisplayString(0);ipStrong.style.color='#B67F33';ipStrong.style.fontWeight='700';
+   ip.append(ipStrong,document.createTextNode(' Infinity Points.'));
+   const am=document.createElement('div');am.id='postInfinityScreenAM';
+   am.append(document.createTextNode('You have '));
+   const amStrong=document.createElement('strong');amStrong.id='postInfinityScreenAMValue';amStrong.textContent=matterDisplayBig().toDisplayString(2);
+   am.append(amStrong,document.createTextNode(' antimatter.'));
+   sharedHeader.append(universe,ip,am);
+   sharedHeader.style.setProperty('display',state.infinities>0&&document.body.dataset.screen!=='main'?'block':'none','important');
+  }
  }
  setText($('matter'),matterDisplayBig().toDisplayString(2));if(state.activeChallenge===11||state.activeInfinityChallenge===6){const el=$('matter');if(el)el.title='Matter: '+fmtMatter(state.activeInfinityChallenge===6?state.icMatter:state.challenge11Matter);}
  const nc11MatterPanel=$('challenge11MatterPanel');if(nc11MatterPanel)nc11MatterPanel.style.display=(state.activeChallenge===11||state.activeInfinityChallenge===6)?'block':'none';setText($('challenge11MatterLabel'),state.activeInfinityChallenge===6?'インフィニティチャレンジ6':'チャレンジ11');setText($('challenge11MatterDisplay'),fmtMatter(state.activeInfinityChallenge===6?state.icMatter:state.challenge11Matter));
@@ -6996,6 +7013,32 @@ function updateVisibleScreenRealtime(now){
 #postInfinityIpValue{
  color:#B67F33;
  font-weight:700;
+}
+</style>
+
+<style id="post-infinity-shared-screen-header-style">
+#postInfinityScreenHeader{display:none;width:100%;box-sizing:border-box;text-align:center;color:#888;font-size:14px;font-weight:400;line-height:1.2;padding:0 8px 8px;margin:0;background:#1b1b20}
+#postInfinityScreenHeader #postInfinityScreenUniverse{margin:0 0 5px}
+#postInfinityScreenHeader #postInfinityScreenIP{margin:0 0 3px}
+#postInfinityScreenHeader #postInfinityScreenIPValue{color:#B67F33;font-weight:700}
+#postInfinityScreenHeader #postInfinityScreenAM{margin:0}
+#postInfinityScreenHeader #postInfinityScreenAMValue{color:#bdbdc2;font-size:20px;font-weight:700}
+body[data-screen="statistics"] #postInfinityScreenHeader{display:block!important;padding-top:0}
+body[data-screen="statistics"] #tabContent{padding-top:10px!important}
+body[data-screen="autobuyers"] main > :not(#postInfinityScreenHeader):not(.sticky-tools):not(.mobile-bottom-actions):not(.screen-tabs):not(#tabContent),
+body[data-screen="challenges"] main > :not(#postInfinityScreenHeader):not(.sticky-tools):not(.mobile-bottom-actions):not(.screen-tabs):not(#tabContent),
+body[data-screen="infinity"] main > :not(#postInfinityScreenHeader):not(.sticky-tools):not(.mobile-bottom-actions):not(.screen-tabs):not(#tabContent),
+body[data-screen="achievements"] main > :not(#postInfinityScreenHeader):not(.sticky-tools):not(.mobile-bottom-actions):not(.screen-tabs):not(#tabContent),
+body[data-screen="statistics"] main > :not(#postInfinityScreenHeader):not(.sticky-tools):not(.mobile-bottom-actions):not(.screen-tabs):not(#tabContent),
+body[data-screen="options"] main > :not(#postInfinityScreenHeader):not(.sticky-tools):not(.mobile-bottom-actions):not(.screen-tabs):not(#tabContent),
+body[data-screen="test"] main > :not(#postInfinityScreenHeader):not(.sticky-tools):not(.mobile-bottom-actions):not(.screen-tabs):not(#tabContent){display:none!important}
+body[data-screen="main"] #postInfinityScreenHeader{display:none!important}
+</style>
+
+<style id="post-infinity-header-clear-fixed-menu">
+@media(max-width:700px){
+ body[data-screen="achievements"] #postInfinityScreenHeader,
+ body[data-screen="statistics"] #postInfinityScreenHeader{margin-top:32px!important}
 }
 </style>
 </body>
