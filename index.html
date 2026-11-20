@@ -2369,6 +2369,42 @@ body[data-screen="infinity"] main{padding-bottom:145px!important}
  body[data-screen="infinity"] .infinity-upgrade-btn{min-height:106px!important}
 }
 </style>
+
+<style id="infinity-header-no-overlap-fix">
+@media(max-width:700px){
+ body[data-screen="infinity"] main{padding-top:74px!important;}
+ body[data-screen="infinity"] #postInfinityScreenHeader{
+  display:block!important;position:relative!important;inset:auto!important;
+  width:100%!important;height:auto!important;min-height:0!important;
+  box-sizing:border-box!important;overflow:visible!important;
+  margin:0 0 12px!important;padding:0 8px 8px!important;
+  line-height:1.45!important;text-align:center!important;
+  background:transparent!important;
+ }
+ body[data-screen="infinity"] #postInfinityScreenHeader #postInfinityScreenUniverse,
+ body[data-screen="infinity"] #postInfinityScreenHeader #postInfinityScreenIP,
+ body[data-screen="infinity"] #postInfinityScreenHeader #postInfinityScreenAM{
+  display:block!important;position:static!important;float:none!important;
+  width:auto!important;height:auto!important;min-height:0!important;
+  margin:0 0 4px!important;padding:0!important;
+  line-height:1.45!important;white-space:normal!important;
+ }
+ body[data-screen="infinity"] #postInfinityScreenHeader #postInfinityScreenAM{margin-bottom:0!important;}
+ body[data-screen="infinity"] #tabContent{
+  position:relative!important;inset:auto!important;float:none!important;
+  clear:both!important;margin:0!important;padding:0 5px 12px!important;
+  box-sizing:border-box!important;
+ }
+ body[data-screen="infinity"] .infinity-upgrade-instructions{
+  display:block!important;position:static!important;
+  margin:0 auto 12px!important;padding:0 12px!important;
+  line-height:1.4!important;
+ }
+ body[data-screen="infinity"] .infinity-upgrade-columns{margin-top:0!important;}
+ body[data-screen="infinity"] .infinity-upgrade-grid > .infinity-upgrade-btn:nth-child(3),
+ body[data-screen="infinity"] .infinity-upgrade-grid > .infinity-upgrade-btn:nth-child(4){margin-top:0!important;}
+}
+</style>
 </head>
 <body><main>
 <div id="postInfinityScreenHeader" aria-live="off"></div>
@@ -5584,7 +5620,7 @@ function switchScreen(name){
   document.querySelectorAll('.initial-footer-icons [data-nav-screen]').forEach(b=>b.classList.toggle('active',b.dataset.navScreen===name));
   return;
  }
- if(name==='infinity'&&!(Number(state.infinities)>0)){name='main';}if(!document.body.classList.contains('crunch-ready'))lastRegularScreen=name;if(name!=='main'){document.body.classList.remove('id-screen-active');tabContent.hidden=false;}else if(mainSubpage==='infinityDimensions'){document.body.classList.add('id-screen-active');tabContent.hidden=false;tabContent.innerHTML=infinityDimensionView();lastInfinityDimensionRender=performance.now();tabContent.querySelectorAll('[data-buy-id]').forEach(el=>el.addEventListener('click',()=>{buyInfinityDimension(Number(el.dataset.buyId));switchScreen('main');}));const maxAllID=tabContent.querySelector('[data-maxall-id]');if(maxAllID)maxAllID.addEventListener('click',()=>{maxAllInfinityDimensions();switchScreen('main');});}else if(mainSubpage==='timeDimensions'){document.body.classList.add('id-screen-active');tabContent.hidden=false;tabContent.innerHTML=timeDimensionView();tabContent.querySelectorAll('[data-buy-td]').forEach(el=>el.addEventListener('click',()=>{buyTimeDimension(Number(el.dataset.buyTd));switchScreen('main');}));const maxAllTD=tabContent.querySelector('[data-maxall-td]');if(maxAllTD)maxAllTD.addEventListener('click',()=>{maxAllTimeDimensions();switchScreen('main');});}else{document.body.classList.remove('id-screen-active');tabContent.hidden=true;tabContent.innerHTML='';}if(name==='autobuyers'){autobuyerUnlockAlert=false;const alertTab=document.querySelector('.screen-tabs button[data-screen="autobuyers"]');if(alertTab)alertTab.classList.remove('unlock-alert');}document.body.dataset.screen=name;document.querySelectorAll('.screen-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));if(name!=='main'){tabContent.innerHTML=tabViews[name]();if(name==='autobuyers'){const grid=tabContent.querySelector('.ab-grid'),ts=tabContent.querySelector('.ab-tickspeed-card'),all=tabContent.querySelector('#abToggleAll'),buy10=tabContent.querySelector('#abToggleBuyUntil10');if(grid&&ts){grid.insertBefore(ts,grid.firstChild);ts.style.setProperty('grid-column','1 / -1','important');ts.style.setProperty('grid-row','1','important');ts.style.setProperty('width','calc((100% - 7px) / 2)','important');ts.style.setProperty('justify-self','center','important');}if(all&&buy10){const bar=document.createElement('div');bar.className='ab-top-controls';const status=document.createElement('button');status.type='button';status.className='ab-top-status';status.textContent=state.autobuyers.enabled===false?'Autobuyers disabled':'Autobuyers enabled';status.setAttribute('aria-pressed',String(state.autobuyers.enabled!==false));status.addEventListener('click',()=>{state.autobuyers.enabled=state.autobuyers.enabled===false;save();updateAutobuyersLiveIntervals();});all.textContent='Toggle all autobuyers';buy10.textContent='Toggle buy until 10';bar.append(status,all,buy10);tabContent.insertBefore(bar,grid);tabContent.classList.toggle('autobuyers-globally-disabled',state.autobuyers.enabled===false);}}tabContent.querySelectorAll('[data-stat-page]').forEach(el=>el.addEventListener('click',()=>{statisticsSubpage=el.dataset.statPage;switchScreen('statistics');}));const pastRunsCollapse=tabContent.querySelector('#pastRunsCollapse');if(pastRunsCollapse)pastRunsCollapse.addEventListener('click',()=>{const content=tabContent.querySelector('#pastRunsContent');const open=pastRunsCollapse.getAttribute('aria-expanded')==='true';pastRunsCollapse.setAttribute('aria-expanded',String(!open));content.hidden=open;pastRunsCollapse.querySelector('.past-runs-collapse-icon').textContent=open?'⊞':'⊟';});tabContent.querySelectorAll('[data-multiplier-mode]').forEach(el=>el.addEventListener('click',()=>{const mode=el.dataset.multiplierMode;multiplierMode=mode;tabContent.querySelectorAll('[data-multiplier-mode]').forEach(b=>{const active=b===el;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});tabContent.querySelectorAll('[data-multiplier-panel]').forEach(panel=>panel.hidden=panel.dataset.multiplierPanel!==mode);}));tabContent.querySelectorAll('[data-multiplier-refresh]').forEach(el=>el.addEventListener('click',()=>advanceMultiplierCycle(el.dataset.multiplierRefresh)));tabContent.querySelectorAll('.achievement-tile').forEach(tile=>tile.addEventListener('click',()=>{const modal=document.createElement('div');modal.className='achievement-modal';modal.innerHTML=`<div class="achievement-modal-box"><h3>${tile.dataset.achievementId}. ${tile.dataset.achievementName}</h3><p>${tile.dataset.achievementDesc.replace('報酬：','<br>報酬：')}</p><button type="button">閉じる</button></div>`;modal.addEventListener('click',e=>{if(e.target===modal||e.target.tagName==='BUTTON')modal.remove();});document.body.appendChild(modal);}));tabContent.querySelectorAll('[data-ab-dim-unlock]').forEach(el=>el.addEventListener('click',()=>{const i=Number(el.dataset.abDimUnlock);if(dimAutobuyerUnlocked(i)){state.autobuyers.unlockedCards=Array.isArray(state.autobuyers.unlockedCards)?state.autobuyers.unlockedCards:Array(8).fill(false);state.autobuyers.unlockedCards[i]=true;state.autobuyers.dims[i]=true;save();switchScreen('autobuyers');}}));tabContent.querySelector('[data-ab-tickspeed-unlock]')?.addEventListener('click',()=>{if(!tickspeedAutobuyerUnlocked())return;state.autobuyers.tickspeedCardUnlocked=true;state.autobuyers.tickspeed=true;save();switchScreen('autobuyers');});tabContent.querySelectorAll('[data-ab-dim]').forEach(el=>el.addEventListener('change',()=>{state.autobuyers.dims[Number(el.dataset.abDim)]=el.checked;save();}));tabContent.querySelectorAll('[data-ab-id]').forEach(el=>el.addEventListener('change',()=>{const i=Number(el.dataset.abId);state.autobuyers.infinityDims=Array.isArray(state.autobuyers.infinityDims)?state.autobuyers.infinityDims:Array(8).fill(false);state.autobuyers.infinityDims[i]=el.checked;save();}));tabContent.querySelectorAll('[data-ab-dim-mode-toggle]').forEach(el=>el.addEventListener('click',()=>{const i=Number(el.dataset.abDimModeToggle);state.autobuyers.dimModes=Array.isArray(state.autobuyers.dimModes)?state.autobuyers.dimModes:Array(8).fill(state.autobuyers.dimMode||'10');state.autobuyers.dimModes[i]=(state.autobuyers.dimModes[i]||state.autobuyers.dimMode||'10')==='10'?'1':'10';save();updateAutobuyersLiveIntervals();}));tabContent.querySelectorAll('[data-ab]').forEach(el=>el.addEventListener('change',()=>{const key=el.dataset.ab;if(key==='eternity')state.eternityAutobuyer=el.checked;else state.autobuyers[key]=el.checked;save();updateAutobuyersLiveIntervals();}));const tsModeToggle=tabContent.querySelector('[data-ab-tickspeed-mode-toggle]');if(tsModeToggle)tsModeToggle.addEventListener('click',()=>{state.autobuyers.tickspeedMode=state.autobuyers.tickspeedMode==='max'?'single':'max';save();updateAutobuyersLiveIntervals();});const toggleBuyUntil10=tabContent.querySelector('#abToggleBuyUntil10');if(toggleBuyUntil10)toggleBuyUntil10.addEventListener('click',()=>{
+ if(name==='infinity'&&!(Number(state.infinities)>0)){name='main';}if(!document.body.classList.contains('crunch-ready'))lastRegularScreen=name;if(name!=='main'){document.body.classList.remove('id-screen-active');tabContent.hidden=false;}else if(mainSubpage==='infinityDimensions'){document.body.classList.add('id-screen-active');tabContent.hidden=false;tabContent.innerHTML=infinityDimensionView();lastInfinityDimensionRender=performance.now();tabContent.querySelectorAll('[data-buy-id]').forEach(el=>el.addEventListener('click',()=>{buyInfinityDimension(Number(el.dataset.buyId));switchScreen('main');}));const maxAllID=tabContent.querySelector('[data-maxall-id]');if(maxAllID)maxAllID.addEventListener('click',()=>{maxAllInfinityDimensions();switchScreen('main');});}else if(mainSubpage==='timeDimensions'){document.body.classList.add('id-screen-active');tabContent.hidden=false;tabContent.innerHTML=timeDimensionView();tabContent.querySelectorAll('[data-buy-td]').forEach(el=>el.addEventListener('click',()=>{buyTimeDimension(Number(el.dataset.buyTd));switchScreen('main');}));const maxAllTD=tabContent.querySelector('[data-maxall-td]');if(maxAllTD)maxAllTD.addEventListener('click',()=>{maxAllTimeDimensions();switchScreen('main');});}else{document.body.classList.remove('id-screen-active');tabContent.hidden=true;tabContent.innerHTML='';}if(name==='autobuyers'){autobuyerUnlockAlert=false;const alertTab=document.querySelector('.screen-tabs button[data-screen="autobuyers"]');if(alertTab)alertTab.classList.remove('unlock-alert');}document.body.dataset.screen=name;document.querySelectorAll('.initial-infinity-subnav [data-infinity-footer-page]').forEach(button=>button.classList.toggle('active',button.dataset.infinityFooterPage===infinitySubpage));document.querySelectorAll('.screen-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));if(name!=='main'){tabContent.innerHTML=tabViews[name]();if(name==='autobuyers'){const grid=tabContent.querySelector('.ab-grid'),ts=tabContent.querySelector('.ab-tickspeed-card'),all=tabContent.querySelector('#abToggleAll'),buy10=tabContent.querySelector('#abToggleBuyUntil10');if(grid&&ts){grid.insertBefore(ts,grid.firstChild);ts.style.setProperty('grid-column','1 / -1','important');ts.style.setProperty('grid-row','1','important');ts.style.setProperty('width','calc((100% - 7px) / 2)','important');ts.style.setProperty('justify-self','center','important');}if(all&&buy10){const bar=document.createElement('div');bar.className='ab-top-controls';const status=document.createElement('button');status.type='button';status.className='ab-top-status';status.textContent=state.autobuyers.enabled===false?'Autobuyers disabled':'Autobuyers enabled';status.setAttribute('aria-pressed',String(state.autobuyers.enabled!==false));status.addEventListener('click',()=>{state.autobuyers.enabled=state.autobuyers.enabled===false;save();updateAutobuyersLiveIntervals();});all.textContent='Toggle all autobuyers';buy10.textContent='Toggle buy until 10';bar.append(status,all,buy10);tabContent.insertBefore(bar,grid);tabContent.classList.toggle('autobuyers-globally-disabled',state.autobuyers.enabled===false);}}tabContent.querySelectorAll('[data-stat-page]').forEach(el=>el.addEventListener('click',()=>{statisticsSubpage=el.dataset.statPage;switchScreen('statistics');}));const pastRunsCollapse=tabContent.querySelector('#pastRunsCollapse');if(pastRunsCollapse)pastRunsCollapse.addEventListener('click',()=>{const content=tabContent.querySelector('#pastRunsContent');const open=pastRunsCollapse.getAttribute('aria-expanded')==='true';pastRunsCollapse.setAttribute('aria-expanded',String(!open));content.hidden=open;pastRunsCollapse.querySelector('.past-runs-collapse-icon').textContent=open?'⊞':'⊟';});tabContent.querySelectorAll('[data-multiplier-mode]').forEach(el=>el.addEventListener('click',()=>{const mode=el.dataset.multiplierMode;multiplierMode=mode;tabContent.querySelectorAll('[data-multiplier-mode]').forEach(b=>{const active=b===el;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));});tabContent.querySelectorAll('[data-multiplier-panel]').forEach(panel=>panel.hidden=panel.dataset.multiplierPanel!==mode);}));tabContent.querySelectorAll('[data-multiplier-refresh]').forEach(el=>el.addEventListener('click',()=>advanceMultiplierCycle(el.dataset.multiplierRefresh)));tabContent.querySelectorAll('.achievement-tile').forEach(tile=>tile.addEventListener('click',()=>{const modal=document.createElement('div');modal.className='achievement-modal';modal.innerHTML=`<div class="achievement-modal-box"><h3>${tile.dataset.achievementId}. ${tile.dataset.achievementName}</h3><p>${tile.dataset.achievementDesc.replace('報酬：','<br>報酬：')}</p><button type="button">閉じる</button></div>`;modal.addEventListener('click',e=>{if(e.target===modal||e.target.tagName==='BUTTON')modal.remove();});document.body.appendChild(modal);}));tabContent.querySelectorAll('[data-ab-dim-unlock]').forEach(el=>el.addEventListener('click',()=>{const i=Number(el.dataset.abDimUnlock);if(dimAutobuyerUnlocked(i)){state.autobuyers.unlockedCards=Array.isArray(state.autobuyers.unlockedCards)?state.autobuyers.unlockedCards:Array(8).fill(false);state.autobuyers.unlockedCards[i]=true;state.autobuyers.dims[i]=true;save();switchScreen('autobuyers');}}));tabContent.querySelector('[data-ab-tickspeed-unlock]')?.addEventListener('click',()=>{if(!tickspeedAutobuyerUnlocked())return;state.autobuyers.tickspeedCardUnlocked=true;state.autobuyers.tickspeed=true;save();switchScreen('autobuyers');});tabContent.querySelectorAll('[data-ab-dim]').forEach(el=>el.addEventListener('change',()=>{state.autobuyers.dims[Number(el.dataset.abDim)]=el.checked;save();}));tabContent.querySelectorAll('[data-ab-id]').forEach(el=>el.addEventListener('change',()=>{const i=Number(el.dataset.abId);state.autobuyers.infinityDims=Array.isArray(state.autobuyers.infinityDims)?state.autobuyers.infinityDims:Array(8).fill(false);state.autobuyers.infinityDims[i]=el.checked;save();}));tabContent.querySelectorAll('[data-ab-dim-mode-toggle]').forEach(el=>el.addEventListener('click',()=>{const i=Number(el.dataset.abDimModeToggle);state.autobuyers.dimModes=Array.isArray(state.autobuyers.dimModes)?state.autobuyers.dimModes:Array(8).fill(state.autobuyers.dimMode||'10');state.autobuyers.dimModes[i]=(state.autobuyers.dimModes[i]||state.autobuyers.dimMode||'10')==='10'?'1':'10';save();updateAutobuyersLiveIntervals();}));tabContent.querySelectorAll('[data-ab]').forEach(el=>el.addEventListener('change',()=>{const key=el.dataset.ab;if(key==='eternity')state.eternityAutobuyer=el.checked;else state.autobuyers[key]=el.checked;save();updateAutobuyersLiveIntervals();}));const tsModeToggle=tabContent.querySelector('[data-ab-tickspeed-mode-toggle]');if(tsModeToggle)tsModeToggle.addEventListener('click',()=>{state.autobuyers.tickspeedMode=state.autobuyers.tickspeedMode==='max'?'single':'max';save();updateAutobuyersLiveIntervals();});const toggleBuyUntil10=tabContent.querySelector('#abToggleBuyUntil10');if(toggleBuyUntil10)toggleBuyUntil10.addEventListener('click',()=>{
  // This is a settings toggle, not an Autobuyer ON/OFF toggle. Apply it to
  // every unlocked Dimension Autobuyer even when that Autobuyer is currently OFF.
  const modes=Array.isArray(state.autobuyers.dimModes)?state.autobuyers.dimModes.slice():Array(8).fill(state.autobuyers.dimMode||'10');
@@ -6980,7 +7016,14 @@ function visibleScreenSignature(screen){
   state.activeChallenge,state.activeInfinityChallenge,state.completedChallenges,
   state.completedInfinityChallenges,state.infinities,challengeSubpage
  ]);
- if(screen==='infinity'||screen==='eternity'||screen==='test')
+ if(screen==='infinity') return JSON.stringify([
+  infinitySubpage,state.infinities,state.infinityUpgrades,state.achievements[achievementIndex(41)],
+  state.ipOffline,state.ipMultLevel,state.breakInfinityUnlocked,state.breakInfinityActive,
+  state.breakInfinityUpgrades,state.breakInfinityRepeatables,state.replicantiUnlocked,
+  state.replicantiChanceUpgrades,state.replicantiInterval,state.replicantiGalaxyUpgrades,
+  state.replicantiGalaxies,state.replicantiChance
+ ]);
+ if(screen==='eternity'||screen==='test')
   return JSON.stringify([common,state.activeChallenge,state.activeInfinityChallenge,
     state.challenge11Matter,state.icMatter,state.infinityCollapseActive,
     state.breakInfinityActive,state.replicantiUnlocked,state.replicantiChance,
@@ -7051,6 +7094,74 @@ function updateAutobuyersLiveIntervals(){
   root.classList.toggle('autobuyers-globally-disabled',!enabled);
  }
 }
+function updateInfinityLive(){
+ const root=document.getElementById('tabContent');
+ if(!root||document.body.dataset.screen!=='infinity')return;
+ if(infinitySubpage==='upgrades'){
+  root.querySelectorAll('[data-infinity-upgrade]').forEach(button=>{
+   const id=button.dataset.infinityUpgrade;
+   const index=infinityUpgradeData.findIndex(item=>item[0]===id);
+   if(index<0)return;
+   const item=infinityUpgradeData[index];
+   const bought=state.infinityUpgrades.includes(id);
+   const prerequisite=infinityUpgradePrerequisiteMet(index);
+   const enoughIP=hasIPAtLeast(item[3]);
+   const canBuy=state.infinities>0&&!bought&&prerequisite&&enoughIP;
+   button.classList.toggle('purchased',bought);
+   button.classList.toggle('unavailable',!bought&&!prerequisite);
+   button.classList.toggle('insufficient',!bought&&prerequisite&&!enoughIP);
+   button.classList.toggle('affordable',canBuy);
+   button.disabled=!canBuy;
+   const multiplier=button.querySelector('[data-current-multiplier]');
+   if(multiplier)multiplier.textContent='Currently: '+infinityUpgradeCurrentMultiplier(id);
+   const passive=button.querySelector('[data-passive-ip-minute]');
+   if(passive)passive.textContent=state.fastestInfinity>0?'Currently: '+formatStatsDuration(state.fastestInfinity*10):'Currently: not yet available';
+  });
+  const offline=root.querySelector('[data-infinity-extra="ipOffline"]');
+  if(offline){
+   const can=state.infinities>0&&!state.ipOffline&&hasIPAtLeast(1000);
+   offline.classList.toggle('purchased',!!state.ipOffline);
+   offline.classList.toggle('affordable',can);
+   offline.classList.toggle('insufficient',!state.ipOffline&&!can);
+   offline.disabled=!can;
+   const rate=offline.querySelector('[data-ip-offline-minute]');
+   if(rate)rate.textContent='オフライン時：'+fmtBig(bestIPPerMinuteBigNumber().multiply(0.5))+' IP/分（最高IP/分の50%）';
+   const small=offline.querySelector('small');
+   if(small)small.textContent=state.ipOffline?'購入済み':'コスト：1,000 IP';
+  }
+  const ipMult=root.querySelector('[data-infinity-extra="ipMult"]');
+  if(ipMult){
+   const can=state.infinities>0&&hasIPAtLeast(ipMultiplierCostBigNumber());
+   ipMult.classList.toggle('affordable',can);
+   ipMult.classList.toggle('insufficient',!can);
+   ipMult.disabled=!can;
+   const spans=ipMult.querySelectorAll('span');
+   if(spans[0])spans[0].textContent='IP獲得量 ×'+BigNumber.fromLog10((Math.max(0,Math.floor(Number(state.ipMultLevel)||0))+1)*Math.log10(2)).toDisplayString(2);
+   const small=ipMult.querySelector('small');
+   if(small)small.textContent='コスト：'+ipMultiplierCostBigNumber().toDisplayString(2)+' IP';
+  }
+ }else if(infinitySubpage==='break'){
+  root.querySelectorAll('[data-bi-upgrade]').forEach(button=>{
+   const id=button.dataset.biUpgrade;
+   const bought=breakInfinityUpgradeBought(id);
+   const cost=breakInfinityUpgradeData().find(item=>item[0]===id)?.[3]||0;
+   const can=!!state.breakInfinityActive&&!bought&&hasIPAtLeast(cost);
+   button.classList.toggle('purchased',bought);
+   button.disabled=!can;
+   const current=button.querySelector('[data-bi-current-multiplier]');
+   if(current)current.textContent='現在の倍率：×'+fmtFixedBig(breakInfinityUpgradeEffectBigNumber(id),2);
+  });
+  root.querySelectorAll('[data-bi-repeat]').forEach(button=>{
+   const index=Number(button.dataset.biRepeat);
+   const data=breakInfinityRepeatableData()[index];
+   if(!data)return;
+   const level=state.breakInfinityRepeatables[index]||0;
+   const cost=data[3]*Math.pow(data[4],level);
+   const max=index===2?10:index===0?8:7;
+   button.disabled=!state.breakInfinityActive||level>=max||!hasIPAtLeast(cost);
+  });
+ }
+}
 function updateVisibleScreenRealtime(now){
  if(now-lastVisibleScreenRefresh<100)return;
  lastVisibleScreenRefresh=now;
@@ -7058,6 +7169,7 @@ function updateVisibleScreenRealtime(now){
  if(screen!=='autobuyers')lastAutobuyerStructuralSignature='';
  if(screen==='statistics'){updateStatisticsLive();return;}
  if(screen==='challenges')updateChallengesLive();
+ if(screen==='infinity')updateInfinityLive();
  if(screen==='main')return;
  if(screen==='achievements'){updateAchievementsLive();return;}
  if(screen==='autobuyers'){
