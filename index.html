@@ -5932,12 +5932,24 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
    footer.querySelectorAll('[data-infinity-footer-page]').forEach(b=>b.classList.toggle('active',b===btn));
   }));
   footer.querySelectorAll('[data-nav-screen]').forEach(btn=>btn.addEventListener('click',()=>{
-   const target=document.querySelector('#screenTabs [data-screen="'+btn.dataset.navScreen+'"]');
-   if(target)target.click();
+   const targetScreen=btn.dataset.navScreen;
+   // Infinityタブを押すたびに Upgrades → Break Infinity → Replicanti の順で切り替える。
+   // Infinity画面以外から押した場合はUpgradesを開く。
+   if(targetScreen==='infinity'){
+    if(Number(state.infinities)>0){
+     const pages=['upgrades','break','replicanti'];
+     const current=document.body.dataset.screen==='infinity'?pages.indexOf(infinitySubpage):-1;
+     infinitySubpage=pages[(current+1)%pages.length];
+     switchScreen('infinity');
+    }
+   }else{
+    const target=document.querySelector('#screenTabs [data-screen="'+targetScreen+'"]');
+    if(target)target.click();
+   }
    document.body.classList.remove('initial-menu-open');
-   footer.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
+   footer.querySelectorAll('[data-nav-screen]').forEach(b=>b.classList.toggle('active',b.dataset.navScreen===document.body.dataset.screen));
    const footerTitle=footer.querySelector('.initial-footer-title');
-   if(footerTitle)footerTitle.textContent=({main:'Antimatter',autobuyers:'Autobuyers',challenges:'Normal',infinity:'Infinity',achievements:'Achievements',statistics:'Statistics',options:'Options'})[btn.dataset.navScreen]||'Antimatter';
+   if(footerTitle)footerTitle.textContent=({main:'Antimatter',autobuyers:'Autobuyers',challenges:'Normal',infinity:'Infinity',achievements:'Achievements',statistics:'Statistics',options:'Options'})[document.body.dataset.screen]||'Antimatter';
   }));
   const dimensions=document.getElementById('dimensions');
   if(dimensions){
