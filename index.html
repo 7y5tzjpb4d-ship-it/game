@@ -9243,3 +9243,57 @@ html body[data-screen="autobuyers"] #tabContent .ab-grid > .ab-card.ab-boost-car
 html body[data-screen="autobuyers"] #tabContent .ab-grid > .ab-card.ab-galaxy-card,
 html body[data-screen="autobuyers"] #tabContent .ab-grid > .ab-card.ab-crunch-card { display:flex !important; }
 </style>
+
+<style id="infinity-mobile-chrome-size-alignment">
+/* Infinity画面のヘッダーと下部ナビをMain画面と同じ寸法体系に揃える */
+@media(max-width:700px){
+  body[data-screen="infinity"] .initial-game-header{
+    position:fixed!important;top:0!important;left:0!important;right:0!important;
+    z-index:300!important;height:32px!important;min-height:32px!important;
+    padding:0 16px!important;box-sizing:border-box!important;
+    display:flex!important;align-items:flex-start!important;justify-content:flex-start!important;
+    overflow:hidden!important;background:#000!important;
+  }
+  body[data-screen="infinity"] .initial-menu-button{
+    display:block!important;position:relative!important;inset:auto!important;
+    flex:0 0 28px!important;width:28px!important;min-width:28px!important;
+    height:28px!important;min-height:28px!important;margin:0!important;padding:0!important;
+    border:0!important;border-radius:0!important;background:none!important;
+    color:#bbb!important;font-size:0!important;
+  }
+  body[data-screen="infinity"] .initial-menu-button:before{
+    content:"☰"!important;display:block!important;font-size:25px!important;
+    line-height:27px!important;font-weight:300!important;color:#bbb!important;
+  }
+  body[data-screen="infinity"] .initial-main-footer{
+    position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:300!important;
+    display:flex!important;flex-direction:column!important;width:100%!important;
+    height:105px!important;min-height:105px!important;max-height:105px!important;
+    padding:0 0 env(safe-area-inset-bottom)!important;box-sizing:content-box!important;
+    margin:0!important;background:#000!important;
+  }
+  body[data-screen="infinity"] .initial-footer-icons{
+    display:flex!important;flex:0 0 62px!important;width:100%!important;
+    height:62px!important;min-height:62px!important;max-height:62px!important;
+    align-items:center!important;justify-content:space-around!important;
+    box-sizing:border-box!important;margin:0!important;padding:0!important;
+  }
+  body[data-screen="infinity"] .initial-footer-icons button{
+    height:60px!important;min-height:60px!important;max-height:60px!important;
+  }
+  body[data-screen="infinity"] .initial-infinity-subnav{
+    display:flex!important;flex:0 0 43px!important;width:100%!important;
+    height:43px!important;min-height:43px!important;max-height:43px!important;
+    align-items:stretch!important;box-sizing:border-box!important;
+    margin:0!important;padding:0!important;
+  }
+  body[data-screen="infinity"] .initial-infinity-subnav button{
+    height:43px!important;min-height:43px!important;max-height:43px!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    padding:0 2px!important;font-size:17px!important;line-height:1!important;
+    border-bottom-width:4px!important;
+  }
+  body[data-screen="infinity"] .initial-footer-title{display:none!important}
+  body[data-screen="infinity"] main{padding-bottom:125px!important}
+}
+</style>
