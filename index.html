@@ -3313,7 +3313,7 @@ function render(){
    const universe=makeLine('postInfinityScreenUniverse','You are currently in the Antimatter Universe');
    const ip=document.createElement('div');ip.id='postInfinityScreenIP';
    ip.append(document.createTextNode('You have '));
-   const ipStrong=document.createElement('strong');ipStrong.id='postInfinityScreenIPValue';ipStrong.textContent=getIPBigNumber().toDisplayString(0);ipStrong.style.color='#B67F33';ipStrong.style.fontWeight='700';
+   const ipStrong=document.createElement('strong');ipStrong.id='postInfinityScreenIPValue';ipStrong.textContent=getIPBigNumber().toDisplayString(0);ipStrong.style.color='#B67E33';ipStrong.style.fontWeight='700';
    ip.append(ipStrong,document.createTextNode(' Infinity Points.'));
    const am=document.createElement('div');am.id='postInfinityScreenAM';
    am.append(document.createTextNode('You have '));
@@ -7624,7 +7624,7 @@ function updateVisibleScreenRealtime(now){
 #postInfinityScreenHeader{display:none;width:100%;box-sizing:border-box;text-align:center;color:#888;font-size:14px;font-weight:400;line-height:1.2;padding:0 8px 8px;margin:0;background:#1b1b20}
 #postInfinityScreenHeader #postInfinityScreenUniverse{margin:0 0 5px}
 #postInfinityScreenHeader #postInfinityScreenIP{margin:0 0 3px}
-#postInfinityScreenHeader #postInfinityScreenIPValue{color:#B67F33;font-weight:700}
+#postInfinityScreenHeader #postInfinityScreenIPValue{color:#B67E33;font-weight:700}
 #postInfinityScreenHeader #postInfinityScreenAM{margin:0}
 #postInfinityScreenHeader #postInfinityScreenAMValue{color:#bdbdc2;font-size:20px;font-weight:700}
 body[data-screen="statistics"] #postInfinityScreenHeader{display:block!important;padding-top:0}
