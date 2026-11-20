@@ -2401,6 +2401,23 @@ body[data-screen="infinity"] main{padding-bottom:145px!important}
  body[data-screen="infinity"] .infinity-upgrade-grid > .infinity-upgrade-btn:nth-child(4){margin-top:0!important;}
 }
 </style>
+
+<style id="break-infinity-locked-reference-layout">
+.break-infinity-locked-state{width:100%;box-sizing:border-box;text-align:center;color:#888;font-size:16px;font-weight:400;line-height:1.4;padding:0 10px;margin:8px auto 0;}
+@media(max-width:700px){
+ body[data-screen="infinity"] #tabContent:has(.break-infinity-locked-state){
+  min-height:calc(100dvh - 260px)!important;height:auto!important;
+  padding:0 5px 12px!important;margin:0!important;box-sizing:border-box!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+ }
+ body[data-screen="infinity"] .break-infinity-locked-state{
+  margin:8px auto 0!important;padding:0 10px!important;
+  font-size:16px!important;line-height:1.4!important;color:#888!important;
+  text-align:center!important;max-width:100%!important;
+ }
+}
+</style>
+
 </head>
 <body><main>
 <div id="postInfinityScreenHeader" aria-live="off"></div>
@@ -4360,6 +4377,9 @@ function breakInfinityView(){
   const currentScaling=index===0?Math.max(2,10-level):index===1?Math.max(3,10-level):null;
   return `<button type="button" class="infinity-upgrade-btn ${level>=max?'purchased':''}" data-bi-repeat="${index}" ${!active||level>=max||!hasIPAtLeast(cost)?'disabled':''}><strong>${name}</strong><span>${desc}</span>${currentScaling!==null?`<span>現在倍率：×${currentScaling}</span>`:''}${index===2?`<span data-bi-ip-generation-minute>現在の生成量：${fmtBig(bestRecentIPPerMinuteBigNumber().multiply(level*0.05))} IP/分</span>`:''}<small>${level>=max?'最大レベル':`コスト：${fmt(cost)} IP`}</small></button>`;
  }).join('');
+ if(!state.breakInfinityUnlocked&&!breakInfinityCanUnlock()){
+  return `<div class="break-infinity-locked-state">You need to get Automated Big Crunch interval to 0.1 to be able to Break Infinity</div>`;
+ }
  return `<h2>Break Infinity</h2>
  <p>所持IP：<strong>${getIPBigNumber().toDisplayString(3)}</strong> · Infinity回数：${fmt(state.infinities)}</p>
  ${!state.breakInfinityUnlocked?`<div class="infinity-upgrade-grid" style="grid-template-columns:1fr"><button type="button" class="infinity-upgrade-btn" id="biUnlockPanel" style="width:100%;grid-column:1/-1" ${breakInfinityCanUnlock()?'':'disabled'}><strong>Break Infinity：ロック中</strong><span>解禁条件：Auto Crunchの購入間隔を0.1秒まで強化する</span> <small>${breakInfinityCanUnlock()?'パネルを押して解禁':'ロック中'}</small></button></div>`:
