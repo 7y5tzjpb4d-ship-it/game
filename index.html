@@ -2805,6 +2805,9 @@ function normalChallengeView(){
   return `<div class="nc-item"><div class="nc-label">C${c.id}</div><article class="challenge-card ${done?'completed':''} ${active?'active':''}"><p class="nc-description">${c.desc}</p>${button}<p class="nc-reward">Reward: ${c.reward}</p></article></div>`;
  }).join('');
  return `<section class="nc-heading">
+  <div class="nc-universe">You are currently in the Antimatter Universe</div>
+  <div class="nc-ip">You have <strong>${getIPBigNumber().toDisplayString(0)}</strong> Infinity Points.</div>
+  <div class="nc-antimatter">You have <strong>${matterBigNumber().toDisplayString(2)}</strong> antimatter.</div>
   <p>Complete challenges by reaching Infinite antimatter.<br>They might be too difficult if attempted too early.</p>
   <p>If you have an active Big Crunch Autobuyer, it will attempt to Crunch as soon as possible when reaching the Challenge's antimatter goal, regardless of settings.</p>
  </section>
@@ -3307,12 +3310,12 @@ function render(){
   if(sharedHeader){
    sharedHeader.innerHTML='';
    const makeLine=(id,text)=>{const el=document.createElement('div');el.id=id;el.textContent=text;return el;};
-   const isPostInfinity=Number(state.infinities)>0||getIPBigNumber().compare(0)>0;
+   const isPostInfinity=Number(state.infinities)>0;
    if(isPostInfinity){
     const universe=makeLine('postInfinityScreenUniverse','You are currently in the Antimatter Universe');
     const ip=document.createElement('div');ip.id='postInfinityScreenIP';
     ip.append(document.createTextNode('You have '));
-    const ipStrong=document.createElement('strong');ipStrong.id='postInfinityScreenIPValue';ipStrong.textContent=getIPBigNumber().toDisplayString(0);ipStrong.style.color='#B67E33';ipStrong.style.fontWeight='700';
+    const ipStrong=document.createElement('strong');ipStrong.id='postInfinityScreenIPValue';ipStrong.textContent=getIPBigNumber().toDisplayString(0);ipStrong.style.color='#B67F33';ipStrong.style.fontWeight='700';
     ip.append(ipStrong,document.createTextNode(' Infinity Points.'));
     sharedHeader.append(universe,ip);
    }
@@ -6028,7 +6031,7 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
  function updateInitialMainUI(){
   const screen=document.body.dataset.screen||'main';
   const postInfinityHeader=document.getElementById('postInfinityScreenHeader');
-  if(postInfinityHeader){postInfinityHeader.style.removeProperty('display');}
+  if(postInfinityHeader){if(screen==='challenges')postInfinityHeader.style.setProperty('display','none','important');else postInfinityHeader.style.removeProperty('display');}
   const stateObj=(typeof state!=='undefined'?state:null);
   const autobuyerTab=document.querySelector('.initial-footer-icons [data-nav-screen="autobuyers"]');
   let autobuyerUnlocked=Boolean(stateObj&&stateObj.autobuyersTabUnlocked);
@@ -7878,8 +7881,7 @@ body[data-screen="statistics"] #tabContent .stat-subnav{display:flex}
  const sync=()=>{
   const header=document.getElementById('postInfinityScreenHeader');
   if(!header)return;
-  const screen=document.body.dataset.screen||'main';
-  header.style.setProperty('display',screen==='main'?'none':'block','important');
+  header.style.setProperty('display',document.body.dataset.screen==='main'?'none':'block','important');
  };
  const observer=new MutationObserver(sync);
  observer.observe(document.body,{attributes:true,attributeFilter:['data-screen']});
@@ -8007,7 +8009,81 @@ body[data-screen="infinity"] #tabContent .infinity-upgrade-btn[data-infinity-upg
  }
 }
 </style>
-</body>
+<style id="replicanti-reference-layout">
+@media(max-width:700px){
+ body[data-screen="infinity"]{background:#1b1b1f!important;color:#bdbdc2!important}
+ body[data-screen="infinity"] main{
+  width:100%!important;max-width:none!important;margin:0!important;
+  padding:74px 8px 160px!important;box-sizing:border-box!important;
+  min-height:100vh!important;
+ }
+ body[data-screen="infinity"] #postInfinityScreenHeader{
+  display:block!important;width:100%!important;text-align:center!important;
+  margin:0 auto!important;padding:0!important;color:#858589!important;
+  font-size:clamp(15px,3.5vw,28px)!important;line-height:1.65!important;
+ }
+ body[data-screen="infinity"] #postInfinityScreenHeader #postInfinityScreenUniverse,
+ body[data-screen="infinity"] #postInfinityScreenHeader #postInfinityScreenIP,
+ body[data-screen="infinity"] #postInfinityScreenHeader #postInfinityScreenAM{
+  margin:0!important;white-space:normal!important;
+ }
+ body[data-screen="infinity"] #postInfinityScreenHeader #postInfinityScreenIP strong,
+ body[data-screen="infinity"] #postInfinityScreenHeader #postInfinityScreenAM strong{
+  font-size:1.45em!important;color:#c4c4c8!important;font-weight:700!important;
+ }
+ body[data-screen="infinity"] #tabContent{
+  width:100%!important;max-width:none!important;margin:0!important;
+  padding:0!important;background:transparent!important;border:0!important;
+  border-radius:0!important;box-shadow:none!important;text-align:center!important;
+ }
+ body[data-screen="infinity"] .replicanti-screen{padding:0!important;margin:0!important;color:#bdbdc2!important}
+ body[data-screen="infinity"] .replicanti-screen h2{display:none!important}
+ body[data-screen="infinity"] .replicanti-screen > .replicanti-primary[data-rep-action="unlock"]{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  flex-direction:column!important;width:min(49vw,405px)!important;max-width:calc(100vw - 32px)!important;
+  min-height:207px!important;height:207px!important;margin:17px auto 0!important;
+  padding:14px!important;box-sizing:border-box!important;text-align:center!important;
+  white-space:normal!important;background:#262626!important;color:#bdbdc2!important;
+  border:2px solid #b83e63!important;border-radius:7px!important;
+  font-size:clamp(16px,3.4vw,28px)!important;font-weight:400!important;line-height:1.25!important;
+  opacity:1!important;
+ }
+ body[data-screen="infinity"] .replicanti-screen > .replicanti-primary[data-rep-action="unlock"]:disabled{opacity:1!important}
+ body[data-screen="infinity"] .replicanti-count,
+ body[data-screen="infinity"] .replicanti-time-estimate,
+ body[data-screen="infinity"] .replicanti-upgrades,
+ body[data-screen="infinity"] .replicanti-galaxy{max-width:680px!important;margin-left:auto!important;margin-right:auto!important}
+ body[data-screen="infinity"] .mobile-bottom-actions{
+  display:flex!important;position:fixed!important;z-index:105!important;
+  left:auto!important;right:10px!important;bottom:calc(124px + env(safe-area-inset-bottom))!important;
+  width:auto!important;max-width:calc(100vw - 20px)!important;
+  justify-content:flex-end!important;align-items:center!important;gap:clamp(5px,1.2vw,12px)!important;
+  margin:0!important;padding:0!important;background:transparent!important;
+ }
+ body[data-screen="infinity"] .mobile-bottom-actions button{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  flex:0 1 clamp(64px,14vw,116px)!important;width:clamp(64px,14vw,116px)!important;
+  height:clamp(64px,14vw,116px)!important;min-width:0!important;min-height:0!important;
+  padding:4px!important;border:0!important;border-radius:50%!important;
+  background:#000!important;color:#fff!important;font-size:clamp(11px,2.4vw,21px)!important;
+  font-weight:700!important;white-space:nowrap!important;box-shadow:none!important;
+ }
+ body[data-screen="infinity"] .mobile-bottom-actions button[hidden]{display:none!important}
+ body[data-screen="infinity"] .mobile-bottom-actions #mobileTickspeedBtn,
+ body[data-screen="infinity"] .mobile-bottom-actions #mobileBuyModeBtn,
+ body[data-screen="infinity"] .mobile-bottom-actions #mobileSaveBtn{display:none!important}
+ body[data-screen="infinity"] .initial-main-footer{
+  position:fixed!important;z-index:110!important;left:0!important;right:0!important;bottom:0!important;
+  height:124px!important;min-height:124px!important;padding-bottom:env(safe-area-inset-bottom)!important;
+  box-sizing:content-box!important;background:#000!important;
+ }
+ body[data-screen="infinity"] .initial-footer-icons{height:62px!important;min-height:62px!important}
+ body[data-screen="infinity"] .initial-infinity-subnav{height:62px!important;min-height:62px!important}
+}
+@media(max-width:540px){
+ body[data-screen="infinity"] .replicanti-screen > .replicanti-primary[data-rep-action="unlock"]{width:min(49vw,405px)!important}
+}
+</style>\n</body>
 </html>
 
 <style id="autobuyers-reference-exact-layout-final">
