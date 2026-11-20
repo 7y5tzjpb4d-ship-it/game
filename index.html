@@ -5579,7 +5579,7 @@ function switchScreen(name){
   document.querySelectorAll('.screen-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));
   document.querySelectorAll('.initial-infinity-subnav [data-infinity-footer-page]').forEach(button=>button.classList.toggle('active',button.dataset.infinityFooterPage===infinitySubpage));
   const footerTitle=document.querySelector('.initial-footer-title');
-  const navName={main:'Antimatter',autobuyers:'Autobuyers',challenges:'Challenges',infinity:'Infinity',achievements:'Achievements',statistics:'Statistics',options:'Options',challenges:'Normal'};
+  const navName={main:'Antimatter',autobuyers:'Autobuyers',challenges:'Normal',infinity:'Infinity',achievements:'Achievements',statistics:'Statistics',options:'Options'};
   if(footerTitle&&navName[name])footerTitle.textContent=navName[name];
   document.querySelectorAll('.initial-footer-icons [data-nav-screen]').forEach(b=>b.classList.toggle('active',b.dataset.navScreen===name));
   return;
@@ -5890,7 +5890,7 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
    document.body.classList.remove('initial-menu-open');
    footer.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
    const footerTitle=footer.querySelector('.initial-footer-title');
-   if(footerTitle)footerTitle.textContent=({main:'Antimatter',autobuyers:'Autobuyers',challenges:'Challenges',infinity:'Infinity',achievements:'Achievements',statistics:'Statistics',options:'Options'})[btn.dataset.navScreen]||'Antimatter';
+   if(footerTitle)footerTitle.textContent=({main:'Antimatter',autobuyers:'Autobuyers',challenges:'Normal',infinity:'Infinity',achievements:'Achievements',statistics:'Statistics',options:'Options'})[btn.dataset.navScreen]||'Antimatter';
   }));
   const dimensions=document.getElementById('dimensions');
   if(dimensions){
@@ -5933,7 +5933,7 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
   const activeNav=screen==='main'?'main':screen==='autobuyers'?'autobuyers':screen==='challenges'?'challenges':screen==='infinity'?'infinity':screen==='achievements'?'achievements':screen==='statistics'?'statistics':screen==='options'?'options':null;
   document.querySelectorAll('.initial-footer-icons [data-nav-screen]').forEach(button=>button.classList.toggle('active',button.dataset.navScreen===activeNav));
   const footerTitle=document.querySelector('.initial-footer-title');
-  if(footerTitle&&activeNav)footerTitle.textContent=({main:'Antimatter',autobuyers:'Autobuyers',challenges:'Challenges',infinity:'Infinity',achievements:'Achievements',statistics:'Statistics',options:'Options'})[activeNav]||'Antimatter';
+  if(footerTitle&&activeNav)footerTitle.textContent=({main:'Antimatter',autobuyers:'Autobuyers',challenges:'Normal',infinity:'Infinity',achievements:'Achievements',statistics:'Statistics',options:'Options'})[activeNav]||'Antimatter';
   if(screen!=='main')return;
   const boost=document.getElementById('initial-boost-count'),galaxy=document.getElementById('initial-galaxy-count');
   const boostCard=document.getElementById('initial-boost-card');if(boostCard&&stateObj)boostCard.classList.toggle('can-execute',canBoost());
