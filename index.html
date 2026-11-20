@@ -2805,9 +2805,6 @@ function normalChallengeView(){
   return `<div class="nc-item"><div class="nc-label">C${c.id}</div><article class="challenge-card ${done?'completed':''} ${active?'active':''}"><p class="nc-description">${c.desc}</p>${button}<p class="nc-reward">Reward: ${c.reward}</p></article></div>`;
  }).join('');
  return `<section class="nc-heading">
-  <div class="nc-universe">You are currently in the Antimatter Universe</div>
-  <div class="nc-ip">You have <strong>${getIPBigNumber().toDisplayString(0)}</strong> Infinity Points.</div>
-  <div class="nc-antimatter">You have <strong>${matterBigNumber().toDisplayString(2)}</strong> antimatter.</div>
   <p>Complete challenges by reaching Infinite antimatter.<br>They might be too difficult if attempted too early.</p>
   <p>If you have an active Big Crunch Autobuyer, it will attempt to Crunch as soon as possible when reaching the Challenge's antimatter goal, regardless of settings.</p>
  </section>
@@ -3310,7 +3307,7 @@ function render(){
   if(sharedHeader){
    sharedHeader.innerHTML='';
    const makeLine=(id,text)=>{const el=document.createElement('div');el.id=id;el.textContent=text;return el;};
-   const isPostInfinity=Number(state.infinities)>0;
+   const isPostInfinity=Number(state.infinities)>0||getIPBigNumber().compare(0)>0;
    if(isPostInfinity){
     const universe=makeLine('postInfinityScreenUniverse','You are currently in the Antimatter Universe');
     const ip=document.createElement('div');ip.id='postInfinityScreenIP';
@@ -6031,7 +6028,7 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
  function updateInitialMainUI(){
   const screen=document.body.dataset.screen||'main';
   const postInfinityHeader=document.getElementById('postInfinityScreenHeader');
-  if(postInfinityHeader){if(screen==='challenges')postInfinityHeader.style.setProperty('display','none','important');else postInfinityHeader.style.removeProperty('display');}
+  if(postInfinityHeader){postInfinityHeader.style.removeProperty('display');}
   const stateObj=(typeof state!=='undefined'?state:null);
   const autobuyerTab=document.querySelector('.initial-footer-icons [data-nav-screen="autobuyers"]');
   let autobuyerUnlocked=Boolean(stateObj&&stateObj.autobuyersTabUnlocked);
