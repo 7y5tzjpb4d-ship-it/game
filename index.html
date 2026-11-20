@@ -8084,6 +8084,18 @@ body[data-screen="infinity"] #tabContent .infinity-upgrade-btn[data-infinity-upg
 }
 </style>
 
+
+<style id="infinity-header-and-replicanti-unlock-size-adjustment">
+@media(max-width:700px){
+  /* Infinity各サブ画面共通：Universe / IP / AM表示を7px上へ */
+  body[data-screen="infinity"] main{padding-top:67px!important;}
+  /* Replicanti未解放ボタン：縦幅を約半分に */
+  body[data-screen="infinity"] .replicanti-screen > .replicanti-primary[data-rep-action="unlock"]{
+    min-height:103px!important;height:103px!important;margin-top:17px!important;padding:10px 14px!important;
+  }
+}
+</style>
+
 </body>
 </html>
 
