@@ -3262,7 +3262,7 @@ function render(){
  setText($('statPlayTime'),formatPlayTime(state.playTime));
  setText($('statInfinityTime'),formatPlayTime(state.infinityTime));
  setText($('statFastestInfinity'),state.fastestInfinity>0?formatPlayTime(state.fastestInfinity):'未記録');
- document.querySelectorAll('[data-passive-ip-minute]').forEach(el=>{el.textContent='Currently: '+(state.fastestInfinity>0?'1 every '+formatStatsDuration(state.fastestInfinity*10):'not yet available');});document.querySelectorAll('[data-bi-generation-time]').forEach(el=>{el.textContent='生産時間：'+(state.fastestInfinity>0?Math.max(0.1,state.fastestInfinity*2).toFixed(1)+'秒':'未記録');});document.querySelectorAll('[data-ip-offline-minute]').forEach(el=>{el.textContent='オフライン時：'+fmtBig(bestIPPerMinuteBigNumber().multiply(0.5))+' IP/分（最高IP/分の50%）';});
+ document.querySelectorAll('[data-passive-ip-minute]').forEach(el=>{setText(el,'Currently: '+(state.fastestInfinity>0?'1 every '+formatStatsDuration(state.fastestInfinity*10):'not yet available'));});document.querySelectorAll('[data-bi-generation-time]').forEach(el=>{setText(el,'生産時間：'+(state.fastestInfinity>0?Math.max(0.1,state.fastestInfinity*2).toFixed(1)+'秒':'未記録'));});document.querySelectorAll('[data-ip-offline-minute]').forEach(el=>{setText(el,'オフライン時：'+fmtBig(bestIPPerMinuteBigNumber().multiply(0.5))+' IP/分（最高IP/分の50%）');});
  const stickyTools=document.querySelector('.sticky-tools');
  if(stickyTools){
   let universeLabel=$('universeUniverseLabel');
@@ -3345,8 +3345,8 @@ function render(){
   mainCrunchBtn.innerHTML='Big Crunch for '+fmtBig(canManualCrunch?ipGainBigNumber():1)+' IP'+crunchEfficiencyMarkup();
   mainEternityBtn.innerHTML='Eternity for '+fmtBig(eternityReady?eternityPointGain():BigNumber.from(0))+' EP'+eternityEfficiencyMarkup();
  }
- document.querySelectorAll('[data-current-multiplier]').forEach(el=>{const id=el.dataset.currentMultiplier;el.textContent='Currently: '+infinityUpgradeCurrentMultiplier(id);});
- document.querySelectorAll('[data-bi-current-multiplier]').forEach(el=>{el.textContent='現在の倍率：×'+fmtFixedBig(breakInfinityUpgradeEffectBigNumber(el.dataset.biCurrentMultiplier),2)+(breakInfinityUpgradeBought(el.dataset.biCurrentMultiplier)?'':'（未購入）');});
+ document.querySelectorAll('[data-current-multiplier]').forEach(el=>{const id=el.dataset.currentMultiplier;setText(el,'Currently: '+infinityUpgradeCurrentMultiplier(id));});
+ document.querySelectorAll('[data-bi-current-multiplier]').forEach(el=>{setText(el,'現在の倍率：×'+fmtFixedBig(breakInfinityUpgradeEffectBigNumber(el.dataset.biCurrentMultiplier),2)+(breakInfinityUpgradeBought(el.dataset.biCurrentMultiplier)?'':'（未購入）'));});
  const crunchQuickButton=$('mobileCrunchBtn');if(crunchQuickButton){crunchQuickButton.hidden=Number(state.infinities)<=0;crunchQuickButton.disabled=false;}const dBoostQuickButton=$('mobileDboostBtn');if(dBoostQuickButton)dBoostQuickButton.hidden=!state.hasEverBoosted;if(Number(state.galaxies)>0)state.hasEverGalaxy=true;const galaxyQuickButton=$('mobileGalaxyQuickBtn');if(galaxyQuickButton)galaxyQuickButton.hidden=!state.hasEverGalaxy;
  const wasCrunchReady=document.body.classList.contains('crunch-ready');
  if(atInfinity()&&!state.breakInfinityActive&&!state.infinityCollapseActive){state.infinityCollapseActive=true;save();}
@@ -4376,7 +4376,7 @@ function infinityUpgradeView(){
   const canBuy=unlocked&&!bought&&prerequisite&&enoughIP;
   const statusClass=bought?'purchased':(!unlocked||!prerequisite)?'unavailable':(!enoughIP?'insufficient-ip':'affordable');
   const showMultiplier=!['resetBoost','galaxyBoost','passiveGen','skipReset1','skipReset2','skipReset3','skipResetGalaxy'].includes(u[0]);
-  return `<button type="button" class="infinity-upgrade-btn ${statusClass}" data-infinity-upgrade="${u[0]}" ${canBuy?'':'disabled'}><strong>${u[1]}</strong>${u[2]?`<span>${u[2]}</span>`:''}${u[0]==='passiveGen'?`<span data-passive-ip-minute>${state.fastestInfinity>0?`Currently: ${formatStatsDuration(state.fastestInfinity*10)}`:'Currently: not yet available'}</span>`:''}${showMultiplier?`<span data-current-multiplier="${u[0]}">Currently: ${infinityUpgradeCurrentMultiplier(u[0])}</span>`:''}<small>Cost: ${u[3]} IP</small></button>`;
+  return `<button type="button" class="infinity-upgrade-btn ${statusClass}" data-infinity-upgrade="${u[0]}" ${canBuy?'':'disabled'}><strong>${u[1]}</strong>${u[2]?`<span>${u[2]}</span>`:''}${u[0]==='passiveGen'?`<span data-passive-ip-minute>${state.fastestInfinity>0?`Currently: 1 every ${formatStatsDuration(state.fastestInfinity*10)}`:'Currently: not yet available'}</span>`:''}${showMultiplier?`<span data-current-multiplier="${u[0]}">Currently: ${infinityUpgradeCurrentMultiplier(u[0])}</span>`:''}<small>Cost: ${u[3]} IP</small></button>`;
  };
  const pair=(left,right)=>`<div class="infinity-upgrade-grid"><h3 class="infinity-upgrade-column-title">Column ${left+1}</h3><h3 class="infinity-upgrade-column-title">Column ${right+1}</h3>${columnIndexes[left].flatMap((li,row)=>[renderCard(li),renderCard(columnIndexes[right][row])]).join('')}</div>`;
  const upgrades=`<div class="infinity-upgrade-columns">${pair(0,1)}${pair(2,3)}</div>`;
@@ -7144,6 +7144,12 @@ function updateAutobuyersLiveIntervals(){
   root.classList.toggle('autobuyers-globally-disabled',!enabled);
  }
 }
+function setInfinityLiveTextIfChanged(element,value){
+ if(element&&element.textContent!==value)element.textContent=value;
+}
+function setInfinityLiveClassIfChanged(element,className,enabled){
+ if(element&&element.classList.contains(className)!==!!enabled)element.classList.toggle(className,!!enabled);
+}
 function updateInfinityLive(){
  const root=document.getElementById('tabContent');
  if(!root||document.body.dataset.screen!=='infinity')return;
@@ -7157,36 +7163,36 @@ function updateInfinityLive(){
    const prerequisite=infinityUpgradePrerequisiteMet(index);
    const enoughIP=hasIPAtLeast(item[3]);
    const canBuy=state.infinities>0&&!bought&&prerequisite&&enoughIP;
-   button.classList.toggle('purchased',bought);
-   button.classList.toggle('affordable',canBuy);
-   button.classList.toggle('insufficient-ip',!bought&&state.infinities>0&&prerequisite&&!enoughIP);
-   button.classList.toggle('unavailable',!bought&&(!state.infinities||!prerequisite));
-   button.disabled=!canBuy;
+   setInfinityLiveClassIfChanged(button,'purchased',bought);
+   setInfinityLiveClassIfChanged(button,'affordable',canBuy);
+   setInfinityLiveClassIfChanged(button,'insufficient-ip',!bought&&state.infinities>0&&prerequisite&&!enoughIP);
+   setInfinityLiveClassIfChanged(button,'unavailable',!bought&&(!state.infinities||!prerequisite));
+   if(button.disabled===canBuy)button.disabled=!canBuy;
    const multiplier=button.querySelector('[data-current-multiplier]');
-   if(multiplier)multiplier.textContent='Currently: '+infinityUpgradeCurrentMultiplier(id);
+   if(multiplier)setInfinityLiveTextIfChanged(multiplier,'Currently: '+infinityUpgradeCurrentMultiplier(id));
    const passive=button.querySelector('[data-passive-ip-minute]');
-   if(passive)passive.textContent=state.fastestInfinity>0?'Currently: '+formatStatsDuration(state.fastestInfinity*10):'Currently: not yet available';
+   if(passive)setInfinityLiveTextIfChanged(passive,state.fastestInfinity>0?'Currently: 1 every '+formatStatsDuration(state.fastestInfinity*10):'Currently: not yet available');
   });
   const offline=root.querySelector('[data-infinity-extra="ipOffline"]');
   if(offline){
    const can=state.infinities>0&&!state.ipOffline&&hasIPAtLeast(1000);
-   offline.classList.toggle('purchased',!!state.ipOffline);
-   offline.disabled=!can;
+   setInfinityLiveClassIfChanged(offline,'purchased',!!state.ipOffline);
+   if(offline.disabled===can)offline.disabled=!can;
    const rate=offline.querySelector('[data-ip-offline-minute]');
-   if(rate)rate.textContent='オフライン時：'+fmtBig(bestIPPerMinuteBigNumber().multiply(0.5))+' IP/分（最高IP/分の50%）';
+   setInfinityLiveTextIfChanged(rate,'オフライン時：'+fmtBig(bestIPPerMinuteBigNumber().multiply(0.5))+' IP/分（最高IP/分の50%）');
    const small=offline.querySelector('small');
-   if(small)small.textContent=state.ipOffline?'購入済み':'コスト：1,000 IP';
+   setInfinityLiveTextIfChanged(small,state.ipOffline?'購入済み':'コスト：1,000 IP');
   }
   const ipMult=root.querySelector('[data-infinity-extra="ipMult"]');
   if(ipMult){
    const can=state.infinities>0&&hasIPAtLeast(ipMultiplierCostBigNumber());
-   ipMult.classList.toggle('affordable',can);
-   ipMult.classList.toggle('insufficient',!can);
-   ipMult.disabled=!can;
+   setInfinityLiveClassIfChanged(ipMult,'affordable',can);
+   setInfinityLiveClassIfChanged(ipMult,'insufficient',!can);
+   if(ipMult.disabled===can)ipMult.disabled=!can;
    const spans=ipMult.querySelectorAll('span');
-   if(spans[0])spans[0].textContent='IP獲得量 ×'+BigNumber.fromLog10((Math.max(0,Math.floor(Number(state.ipMultLevel)||0))+1)*Math.log10(2)).toDisplayString(2);
+   if(spans[0])setInfinityLiveTextIfChanged(spans[0],'IP獲得量 ×'+BigNumber.fromLog10((Math.max(0,Math.floor(Number(state.ipMultLevel)||0))+1)*Math.log10(2)).toDisplayString(2));
    const small=ipMult.querySelector('small');
-   if(small)small.textContent='コスト：'+ipMultiplierCostBigNumber().toDisplayString(2)+' IP';
+   setInfinityLiveTextIfChanged(small,'コスト：'+ipMultiplierCostBigNumber().toDisplayString(2)+' IP');
   }
  }else if(infinitySubpage==='replicanti'){
   updateReplicantiLive();
@@ -7196,10 +7202,10 @@ function updateInfinityLive(){
    const bought=breakInfinityUpgradeBought(id);
    const cost=breakInfinityUpgradeData().find(item=>item[0]===id)?.[3]||0;
    const can=!!state.breakInfinityActive&&!bought&&hasIPAtLeast(cost);
-   button.classList.toggle('purchased',bought);
-   button.disabled=!can;
+   setInfinityLiveClassIfChanged(button,'purchased',bought);
+   if(button.disabled===can)button.disabled=!can;
    const current=button.querySelector('[data-bi-current-multiplier]');
-   if(current)current.textContent='現在の倍率：×'+fmtFixedBig(breakInfinityUpgradeEffectBigNumber(id),2);
+   if(current)setInfinityLiveTextIfChanged(current,'現在の倍率：×'+fmtFixedBig(breakInfinityUpgradeEffectBigNumber(id),2)+(bought?'':'（未購入）')); 
   });
   root.querySelectorAll('[data-bi-repeat]').forEach(button=>{
    const index=Number(button.dataset.biRepeat);
@@ -7208,7 +7214,8 @@ function updateInfinityLive(){
    const level=state.breakInfinityRepeatables[index]||0;
    const cost=data[3]*Math.pow(data[4],level);
    const max=index===2?10:index===0?8:7;
-   button.disabled=!state.breakInfinityActive||level>=max||!hasIPAtLeast(cost);
+   const disabled=!state.breakInfinityActive||level>=max||!hasIPAtLeast(cost);
+   if(button.disabled!==disabled)button.disabled=disabled;
   });
  }
 }
