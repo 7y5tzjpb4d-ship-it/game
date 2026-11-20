@@ -4338,7 +4338,7 @@ function updateReplicanti(dt){
  if(tsOwned(192)){setReplicantiLog10(nextLog);}else{setReplicantiLog10(Math.min(Math.log10(Number.MAX_VALUE),nextLog));if(nextLog>=Math.log10(Number.MAX_VALUE))state.replicantiTimer=0;}
  checkReplicantiAchievement();
 }
-function replicantiView(){const unlocked=state.replicantiUnlocked;const r=Math.max(1,state.replicanti||1);const repAtCap=replicantiLog10()>=Math.log10(Number.MAX_VALUE);const maxGal=Math.max(state.replicantiGalaxyUpgrades,hasAchievement(95)?1:0)+(tsOwned(225)?Math.floor(Math.max(0,replicantiLog10())/1000):0)+(tsOwned(226)?Math.floor(Math.max(0,Number(state.replicantiGalaxyUpgrades)||0)/15):0);if(!unlocked)return `<div class="replicanti-screen"><h2>Replicanti</h2><button type="button" class="replicanti-primary" data-rep-action="unlock" ${hasIPAtLeast('1e140')?'':'disabled'}>Replicantiを解放（1e140 IP）</button></div>`;return `<div class="replicanti-screen"><h2>Replicanti</h2><div class="replicanti-count"><small>所持Replicanti</small><strong>${repAtCap?fmtBig(replicantiBigNumber()):fmt(r)}</strong><span>Infinity Dimension倍率：×${fmtBig(replicantiInfinityDimensionMultiplier())}</span></div><div class="replicanti-time-estimate">${tsOwned(192)?'Replicanti増殖速度はInfinity以降、所持量に応じて低下します。':'1.8e308到達まで：'}<strong id="replicanti-time-remaining">${formatReplicantiTimeRemaining()}</strong></div><div class="replicanti-upgrades"><button type="button" class="${state.replicantiChanceUpgrades<99&&hasIPAtLeast(replicantiChanceCost())?'available':''}" data-rep-action="chance" ${state.replicantiChanceUpgrades>=99||!hasIPAtLeast(replicantiChanceCost())?'disabled':''}><strong>増殖確率</strong><span>現在：${state.replicantiChance}%</span><small>+1% · コスト：${fmtBig(replicantiChanceCost())} IP</small></button><button type="button" class="${state.replicantiInterval>50&&hasIPAtLeast(replicantiIntervalCost())?'available':''}" data-rep-action="interval" ${state.replicantiInterval<=(tsOwned(22)?1:50)||!hasIPAtLeast(replicantiIntervalCost())?'disabled':''}><strong>増殖間隔</strong><span>現在：${state.replicantiInterval.toFixed(1)} ms</span><small>×0.9 · コスト：${fmtBig(replicantiIntervalCost())} IP</small></button><button type="button" class="${hasIPAtLeast(replicantiGalaxyCost())?'available':''}" data-rep-action="galaxy" ${!hasIPAtLeast(replicantiGalaxyCost())?'disabled':''}><strong>最大Replicanti Galaxy</strong><span>現在：${state.replicantiGalaxies} / ${maxGal}</span><small>上限+1 · コスト：${fmtBig(replicantiGalaxyCost())} IP</small></button></div><div class="replicanti-galaxy"><strong>Replicanti Galaxy：${state.replicantiGalaxies}</strong><p>${repAtCap?'ReplicantiがInfinityに到達しました。Galaxyを購入できます。':'1.80e308に到達すると購入できます。'}</p><button type="button" class="replicanti-primary" data-rep-action="buyGalaxy" ${repAtCap&&state.replicantiGalaxies<maxGal?'':'disabled'}>Replicanti Galaxyを獲得</button></div></div>`;}
+function replicantiView(){const unlocked=state.replicantiUnlocked;const r=Math.max(1,state.replicanti||1);const repAtCap=replicantiLog10()>=Math.log10(Number.MAX_VALUE);const maxGal=Math.max(state.replicantiGalaxyUpgrades,hasAchievement(95)?1:0)+(tsOwned(225)?Math.floor(Math.max(0,replicantiLog10())/1000):0)+(tsOwned(226)?Math.floor(Math.max(0,Number(state.replicantiGalaxyUpgrades)||0)/15):0);if(!unlocked)return `<div class="replicanti-screen"><h2>Replicanti</h2><button type="button" class="replicanti-primary" data-rep-action="unlock" ${hasIPAtLeast('1e140')?'':'disabled'}>Unlock Replicanti<br>Cost: 1e140 IP</button></div>`;return `<div class="replicanti-screen"><h2>Replicanti</h2><div class="replicanti-count"><small>所持Replicanti</small><strong>${repAtCap?fmtBig(replicantiBigNumber()):fmt(r)}</strong><span>Infinity Dimension倍率：×${fmtBig(replicantiInfinityDimensionMultiplier())}</span></div><div class="replicanti-time-estimate">${tsOwned(192)?'Replicanti増殖速度はInfinity以降、所持量に応じて低下します。':'1.8e308到達まで：'}<strong id="replicanti-time-remaining">${formatReplicantiTimeRemaining()}</strong></div><div class="replicanti-upgrades"><button type="button" class="${state.replicantiChanceUpgrades<99&&hasIPAtLeast(replicantiChanceCost())?'available':''}" data-rep-action="chance" ${state.replicantiChanceUpgrades>=99||!hasIPAtLeast(replicantiChanceCost())?'disabled':''}><strong>増殖確率</strong><span>現在：${state.replicantiChance}%</span><small>+1% · コスト：${fmtBig(replicantiChanceCost())} IP</small></button><button type="button" class="${state.replicantiInterval>50&&hasIPAtLeast(replicantiIntervalCost())?'available':''}" data-rep-action="interval" ${state.replicantiInterval<=(tsOwned(22)?1:50)||!hasIPAtLeast(replicantiIntervalCost())?'disabled':''}><strong>増殖間隔</strong><span>現在：${state.replicantiInterval.toFixed(1)} ms</span><small>×0.9 · コスト：${fmtBig(replicantiIntervalCost())} IP</small></button><button type="button" class="${hasIPAtLeast(replicantiGalaxyCost())?'available':''}" data-rep-action="galaxy" ${!hasIPAtLeast(replicantiGalaxyCost())?'disabled':''}><strong>最大Replicanti Galaxy</strong><span>現在：${state.replicantiGalaxies} / ${maxGal}</span><small>上限+1 · コスト：${fmtBig(replicantiGalaxyCost())} IP</small></button></div><div class="replicanti-galaxy"><strong>Replicanti Galaxy：${state.replicantiGalaxies}</strong><p>${repAtCap?'ReplicantiがInfinityに到達しました。Galaxyを購入できます。':'1.80e308に到達すると購入できます。'}</p><button type="button" class="replicanti-primary" data-rep-action="buyGalaxy" ${repAtCap&&state.replicantiGalaxies<maxGal?'':'disabled'}>Replicanti Galaxyを獲得</button></div></div>`;}
 function updateInfinityDimensionProduction(dt){
  if(!(dt>0))return;
  // The save is normalized once when loading and once at the beginning of an
@@ -8007,6 +8007,83 @@ body[data-screen="infinity"] #tabContent .infinity-upgrade-btn[data-infinity-upg
  }
 }
 </style>
+
+<style id="replicanti-reference-layout">
+@media(max-width:700px){
+ body[data-screen="infinity"]{background:#1b1b1f!important;color:#bdbdc2!important}
+ body[data-screen="infinity"] main{
+  width:100%!important;max-width:none!important;margin:0!important;
+  padding:74px 8px 160px!important;box-sizing:border-box!important;
+  min-height:100vh!important;
+ }
+ body[data-screen="infinity"] #postInfinityScreenHeader{
+  display:block!important;width:100%!important;text-align:center!important;
+  margin:0 auto!important;padding:0!important;color:#858589!important;
+  font-size:clamp(15px,3.5vw,28px)!important;line-height:1.65!important;
+ }
+ body[data-screen="infinity"] #postInfinityScreenHeader #postInfinityScreenUniverse,
+ body[data-screen="infinity"] #postInfinityScreenHeader #postInfinityScreenIP,
+ body[data-screen="infinity"] #postInfinityScreenHeader #postInfinityScreenAM{
+  margin:0!important;white-space:normal!important;
+ }
+ body[data-screen="infinity"] #postInfinityScreenHeader #postInfinityScreenIP strong,
+ body[data-screen="infinity"] #postInfinityScreenHeader #postInfinityScreenAM strong{
+  font-size:1.45em!important;color:#c4c4c8!important;font-weight:700!important;
+ }
+ body[data-screen="infinity"] #tabContent{
+  width:100%!important;max-width:none!important;margin:0!important;
+  padding:0!important;background:transparent!important;border:0!important;
+  border-radius:0!important;box-shadow:none!important;text-align:center!important;
+ }
+ body[data-screen="infinity"] .replicanti-screen{padding:0!important;margin:0!important;color:#bdbdc2!important}
+ body[data-screen="infinity"] .replicanti-screen h2{display:none!important}
+ body[data-screen="infinity"] .replicanti-screen > .replicanti-primary[data-rep-action="unlock"]{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  flex-direction:column!important;width:min(49vw,405px)!important;max-width:calc(100vw - 32px)!important;
+  min-height:207px!important;height:207px!important;margin:17px auto 0!important;
+  padding:14px!important;box-sizing:border-box!important;text-align:center!important;
+  white-space:normal!important;background:#262626!important;color:#bdbdc2!important;
+  border:2px solid #b83e63!important;border-radius:7px!important;
+  font-size:clamp(16px,3.4vw,28px)!important;font-weight:400!important;line-height:1.25!important;
+  opacity:1!important;
+ }
+ body[data-screen="infinity"] .replicanti-screen > .replicanti-primary[data-rep-action="unlock"]:disabled{opacity:1!important}
+ body[data-screen="infinity"] .replicanti-count,
+ body[data-screen="infinity"] .replicanti-time-estimate,
+ body[data-screen="infinity"] .replicanti-upgrades,
+ body[data-screen="infinity"] .replicanti-galaxy{max-width:680px!important;margin-left:auto!important;margin-right:auto!important}
+ body[data-screen="infinity"] .mobile-bottom-actions{
+  display:flex!important;position:fixed!important;z-index:105!important;
+  left:auto!important;right:10px!important;bottom:calc(124px + env(safe-area-inset-bottom))!important;
+  width:auto!important;max-width:calc(100vw - 20px)!important;
+  justify-content:flex-end!important;align-items:center!important;gap:clamp(5px,1.2vw,12px)!important;
+  margin:0!important;padding:0!important;background:transparent!important;
+ }
+ body[data-screen="infinity"] .mobile-bottom-actions button{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  flex:0 1 clamp(64px,14vw,116px)!important;width:clamp(64px,14vw,116px)!important;
+  height:clamp(64px,14vw,116px)!important;min-width:0!important;min-height:0!important;
+  padding:4px!important;border:0!important;border-radius:50%!important;
+  background:#000!important;color:#fff!important;font-size:clamp(11px,2.4vw,21px)!important;
+  font-weight:700!important;white-space:nowrap!important;box-shadow:none!important;
+ }
+ body[data-screen="infinity"] .mobile-bottom-actions button[hidden]{display:none!important}
+ body[data-screen="infinity"] .mobile-bottom-actions #mobileTickspeedBtn,
+ body[data-screen="infinity"] .mobile-bottom-actions #mobileBuyModeBtn,
+ body[data-screen="infinity"] .mobile-bottom-actions #mobileSaveBtn{display:none!important}
+ body[data-screen="infinity"] .initial-main-footer{
+  position:fixed!important;z-index:110!important;left:0!important;right:0!important;bottom:0!important;
+  height:124px!important;min-height:124px!important;padding-bottom:env(safe-area-inset-bottom)!important;
+  box-sizing:content-box!important;background:#000!important;
+ }
+ body[data-screen="infinity"] .initial-footer-icons{height:62px!important;min-height:62px!important}
+ body[data-screen="infinity"] .initial-infinity-subnav{height:62px!important;min-height:62px!important}
+}
+@media(max-width:540px){
+ body[data-screen="infinity"] .replicanti-screen > .replicanti-primary[data-rep-action="unlock"]{width:min(49vw,405px)!important}
+}
+</style>
+
 </body>
 </html>
 
