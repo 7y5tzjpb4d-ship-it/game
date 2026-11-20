@@ -6158,12 +6158,12 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
       // position/order as the supplied drawer reference.
       {
         const group=document.createElement("section");
-        group.className="drawer-group drawer-challenges-group expanded"+(active==="challenges"?" active":"");
+        group.className="drawer-group drawer-challenges-group"+(active==="challenges"?" expanded active":"");
         const category=document.createElement("button");
         category.type="button";category.className="drawer-category"+(active==="challenges"?" active":"");
-        category.setAttribute("aria-expanded","true");
+        category.setAttribute("aria-expanded",String(active==="challenges"));
         const challengeIcon=bottomTabIcon("challenges");
-        category.innerHTML='<span class="drawer-item-icon">'+challengeIcon+'</span><span class="drawer-item-label">Challenges</span><span class="drawer-chevron">'+"⌄"+'</span>';
+        category.innerHTML='<span class="drawer-item-icon">'+challengeIcon+'</span><span class="drawer-item-label">Challenges</span><span class="drawer-chevron">'+(active==="challenges"?"⌄":"›")+'</span>';
         category.addEventListener("click",()=>{const expanded=group.classList.toggle("expanded");category.setAttribute("aria-expanded",String(expanded));category.querySelector(".drawer-chevron").textContent=expanded?"⌄":"›";});
         group.appendChild(category);
         const submenu=document.createElement("div");submenu.className="drawer-submenu drawer-challenges-submenu";
@@ -6176,11 +6176,11 @@ body[data-screen="autobuyers"] .ab-grid > .ab-card.ab-eternity-card {
       // Infinity group with the three pages shown in the reference image.
       if(Number(state.infinities)>0){
         const group=document.createElement("section");
-        group.className="drawer-group drawer-infinity-group expanded"+(active==="infinity"?" active":"");
+        group.className="drawer-group drawer-infinity-group"+(active==="infinity"?" expanded active":"");
         const category=document.createElement("button");category.type="button";
         category.className="drawer-category"+(active==="infinity"?" active":"");
-        category.setAttribute("aria-expanded","true");
-        category.innerHTML='<span class="drawer-item-icon">'+bottomTabIcon("infinity")+'</span><span class="drawer-item-label">Infinity</span><span class="drawer-chevron">'+"⌄"+'</span>';
+        category.setAttribute("aria-expanded",String(active==="infinity"));
+        category.innerHTML='<span class="drawer-item-icon">'+bottomTabIcon("infinity")+'</span><span class="drawer-item-label">Infinity</span><span class="drawer-chevron">'+(active==="infinity"?"⌄":"›")+'</span>';
         category.addEventListener("click",()=>{const expanded=group.classList.toggle("expanded");category.setAttribute("aria-expanded",String(expanded));category.querySelector(".drawer-chevron").textContent=expanded?"⌄":"›";});
         group.appendChild(category);
         const submenu=document.createElement("div");submenu.className="drawer-submenu drawer-infinity-submenu";
