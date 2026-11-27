@@ -3,7 +3,7 @@ import { OFFLINE_CAP_SEC } from './data.js';
 import { newGame, serialize, deserialize, tick, advance } from './logic.js';
 import { UI } from './ui.js';
 
-const SAVE_KEY = 'scale-save';
+const SAVE_KEY = 'kazu-save';
 const AUTOSAVE_MS = 10_000;
 const RENDER_MS = 100;
 
@@ -68,12 +68,15 @@ class Game {
   catchUp(seconds) {
     const sec = Math.min(seconds, OFFLINE_CAP_SEC);
     if (sec < 1) return;
-    const before = this.state.energy;
-    advance(this.state, sec);
+    const before = this.state.digitsTotal;
+    const beforeTotal = this.state.runTotal;
+    const carries = advance(this.state, sec);
     if (sec >= 10) {
-      const gained = this.state.energy.sub(before);
       const capped = seconds > OFFLINE_CAP_SEC ? '（上限 24 時間）' : '';
-      this.ui.toast(`離れていた ${fmtDuration(sec)}${capped}の間に\nエネルギー ${gained.sign() >= 0 ? '+' : ''}${format(gained)}`, 4000);
+      const result = carries > 0
+        ? `${carries} 回繰り上がり、桁 +${format(this.state.digitsTotal.sub(before))}`
+        : `数 +${format(this.state.runTotal.sub(beforeTotal))}`;
+      this.ui.toast(`離れていた ${fmtDuration(sec)}${capped}の間に\n${result}`, 4000);
     }
   }
 
@@ -97,10 +100,15 @@ class Game {
     const loop = (now) => {
       const dt = (now - this.lastFrame) / 1000;
       this.lastFrame = now;
+      let carries = 0;
       if (dt > 1) {
-        advance(this.state, dt);
+        carries = advance(this.state, dt);
       } else if (dt > 0) {
-        tick(this.state, dt);
+        carries = tick(this.state, dt);
+      }
+      if (carries > 0) {
+        this.save();
+        this.ui.toast(`自動繰り上がり！ 桁 +${format(this.state.lastGain)}`);
       }
       if (now - this.lastRender >= RENDER_MS) {
         this.lastRender = now;

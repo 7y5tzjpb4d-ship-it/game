@@ -3,53 +3,60 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0d1416">
+  <meta name="theme-color" content="#0f1220">
   <!-- ホーム画面に追加したとき全画面で起動する -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="スケール">
+  <meta name="apple-mobile-web-app-title" content="数の地平">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icons/icon-192.png">
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
-  <title>スケール</title>
+  <title>数の地平</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="top">
-    <div class="top-label">エネルギー</div>
-    <div class="top-energy" id="energy">10</div>
+    <div class="top-label">数</div>
+    <div class="top-energy" id="count">10</div>
     <div class="top-rate" id="rate">+0 /秒</div>
   </header>
 
   <main id="main">
-    <!-- 細胞（生産） -->
-    <section class="panel active" data-panel="cells">
+    <!-- 数える（生産） -->
+    <section class="panel active" data-panel="count">
       <div class="goal" id="goal">
         <div class="goal-text" id="goal-text"></div>
         <div class="bar"><div class="bar-fill" id="goal-bar"></div></div>
       </div>
-      <button class="evolve hidden" id="evolve" type="button">
-        <span class="evolve-title">進化する</span>
-        <span class="evolve-gain" id="evolve-gain"></span>
+      <button class="evolve hidden" id="carry" type="button">
+        <span class="evolve-title">繰り上がる</span>
+        <span class="evolve-gain" id="carry-gain"></span>
       </button>
       <div class="toolbar">
         <div class="seg" role="group" aria-label="購入数">
           <button type="button" data-buymode="one">1 個</button>
+          <button type="button" data-buymode="milestone">節目まで</button>
           <button type="button" data-buymode="max">最大</button>
         </div>
+      </div>
+      <div class="toolbar toggles">
         <button type="button" class="toggle hidden" id="auto-toggle">自動購入 ON</button>
+        <button type="button" class="toggle hidden" id="auto-carry-toggle">自動繰り上がり ON</button>
       </div>
       <ul class="tiers" id="tiers"></ul>
     </section>
 
-    <!-- 遺伝子（進化の強化） -->
-    <section class="panel" data-panel="genes">
+    <!-- 桁（繰り上がりの強化） -->
+    <section class="panel" data-panel="digits">
       <div class="genes-head">
-        <div class="genes-count"><span id="genes">0</span> 遺伝子</div>
-        <div class="genes-sub" id="genes-sub"></div>
+        <div class="genes-count"><span id="digits">0</span> 桁</div>
+        <div class="genes-sub" id="digits-sub"></div>
       </div>
+      <h2>強化</h2>
       <ul class="upgrades" id="upgrades"></ul>
+      <h2>繰り上がりの節目</h2>
+      <ul class="milestones" id="milestones"></ul>
     </section>
 
     <!-- 設定 -->
@@ -72,8 +79,8 @@
   </main>
 
   <nav class="tabs">
-    <button type="button" class="active" data-tab="cells"><span class="tab-icon">◉&#xFE0E;</span>細胞</button>
-    <button type="button" class="hidden" data-tab="genes"><span class="tab-icon">✲&#xFE0E;</span>遺伝子</button>
+    <button type="button" class="active" data-tab="count"><span class="tab-icon">Σ</span>数える</button>
+    <button type="button" class="hidden" data-tab="digits"><span class="tab-icon">0</span>桁</button>
     <button type="button" data-tab="settings"><span class="tab-icon">⚙&#xFE0E;</span>設定</button>
   </nav>
 
