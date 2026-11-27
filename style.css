@@ -1,25 +1,35 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
+  width: 100%;
   height: 100%;
   background: #111;
   overflow: hidden;
+  /* スクロール・引っ張って更新・ダブルタップズームを防ぐ */
+  overscroll-behavior: none;
   touch-action: none;
+  /* 長押しの選択・メニュー・タップ時のハイライトを消す */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-body {
+/* ノッチやホームバーを避けた表示領域。dvh はアドレスバーの伸縮に追従する */
+#stage {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* 表示サイズは src/screen.js が設定する */
 canvas {
   display: block;
-  /* 画面に収まるように縦横比を保って拡大縮小 */
-  max-width: 100vw;
-  max-height: 100vh;
-  aspect-ratio: 480 / 640;
-  height: 100vh;
   background: #222;
-  image-rendering: pixelated;
 }

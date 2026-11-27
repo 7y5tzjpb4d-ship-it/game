@@ -1,12 +1,17 @@
 // ゲーム本体：ループ・更新・描画
 export class Game {
-  constructor(canvas, input) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
+  constructor(screen, input) {
+    this.screen = screen;
     this.input = input;
-    this.width = canvas.width;
-    this.height = canvas.height;
+    this.width = screen.width;
+    this.height = screen.height;
     this.lastTime = 0;
+    this.paused = false;
+
+    // アプリ切り替えやロック中は止める
+    document.addEventListener('visibilitychange', () => {
+      this.paused = document.hidden;
+    });
 
     this.player = {
       x: this.width / 2,
@@ -28,8 +33,10 @@ export class Game {
     const dt = Math.min((time - this.lastTime) / 1000, 0.05);
     this.lastTime = time;
 
-    this.update(dt);
-    this.draw();
+    if (!this.paused) {
+      this.update(dt);
+      this.draw();
+    }
 
     requestAnimationFrame((t) => this.loop(t));
   }
@@ -38,7 +45,7 @@ export class Game {
     const p = this.player;
     let { x, y } = this.input.axis();
 
-    // タッチ／クリック中はその位置に向かって移動
+    // 指が触れている間はその位置に向かって移動
     const ptr = this.input.pointer;
     if (ptr) {
       const dx = ptr.x - p.x;
@@ -67,7 +74,7 @@ export class Game {
   }
 
   draw() {
-    const ctx = this.ctx;
+    const ctx = this.screen.ctx;
     ctx.fillStyle = '#222';
     ctx.fillRect(0, 0, this.width, this.height);
 
@@ -78,6 +85,6 @@ export class Game {
     ctx.fillStyle = '#aaa';
     ctx.font = '16px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('矢印キー / WASD / タッチで移動', this.width / 2, 32);
+    ctx.fillText('画面をタッチして移動', this.width / 2, 32);
   }
 }

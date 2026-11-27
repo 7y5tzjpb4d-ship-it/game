@@ -1,42 +1,56 @@
-// キーボードとタッチ／マウスの入力をまとめて扱う
+// タッチ（メイン）とキーボード（PC での確認用）の入力をまとめて扱う
 export class Input {
-  constructor(canvas) {
-    this.canvas = canvas;
+  constructor(screen) {
+    const canvas = screen.canvas;
     this.keys = new Set();
-    // タッチ・クリック中の位置（キャンバス座標）。押していなければ null
+    // 指が触れている位置（論理座標）。触れていなければ null
     this.pointer = null;
+    this.activePointerId = null;
 
+    // --- タッチ / マウス（Pointer Events で共通化）---
+    canvas.addEventListener('pointerdown', (e) => {
+      if (this.activePointerId !== null) return; // 最初の 1 本の指だけ追う
+      this.activePointerId = e.pointerId;
+      canvas.setPointerCapture(e.pointerId);
+      this.pointer = screen.toLogical(e.clientX, e.clientY);
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== this.activePointerId) return;
+      this.pointer = screen.toLogical(e.clientX, e.clientY);
+    });
+    const release = (e) => {
+      if (e.pointerId !== this.activePointerId) return;
+      this.activePointerId = null;
+      this.pointer = null;
+    };
+    canvas.addEventListener('pointerup', release);
+    canvas.addEventListener('pointercancel', release);
+
+    // --- スマホ特有の邪魔な挙動を止める ---
+    const prevent = (e) => e.preventDefault();
+    document.addEventListener('touchmove', prevent, { passive: false });
+    document.addEventListener('contextmenu', prevent);
+    // iOS Safari のピンチズーム
+    document.addEventListener('gesturestart', prevent);
+
+    // --- キーボード ---
     window.addEventListener('keydown', (e) => {
       this.keys.add(e.code);
       if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
-    window.addEventListener('blur', () => this.keys.clear());
-
-    const updatePointer = (e) => {
-      const rect = canvas.getBoundingClientRect();
-      this.pointer = {
-        x: ((e.clientX - rect.left) / rect.width) * canvas.width,
-        y: ((e.clientY - rect.top) / rect.height) * canvas.height,
-      };
-    };
-    canvas.addEventListener('pointerdown', (e) => {
-      canvas.setPointerCapture(e.pointerId);
-      updatePointer(e);
+    window.addEventListener('blur', () => {
+      this.keys.clear();
+      this.pointer = null;
+      this.activePointerId = null;
     });
-    canvas.addEventListener('pointermove', (e) => {
-      if (this.pointer) updatePointer(e);
-    });
-    const release = () => { this.pointer = null; };
-    canvas.addEventListener('pointerup', release);
-    canvas.addEventListener('pointercancel', release);
   }
 
   isDown(...codes) {
     return codes.some((c) => this.keys.has(c));
   }
 
-  // 移動方向（-1〜1）を返す
+  // キーボードの移動方向（-1〜1）
   axis() {
     let x = 0;
     let y = 0;
