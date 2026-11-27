@@ -1,16 +1,16 @@
 :root {
-  --bg: #0d1416;
-  --surface: #162125;
-  --surface-2: #1d2c31;
-  --border: #26393f;
-  --text: #e4f1ee;
-  --muted: #8aa39e;
-  --accent: #4fd1a5;
-  --accent-ink: #062018;
-  --gene: #c792ea;
-  --gene-ink: #1c0a26;
+  --bg: #0f1220;
+  --surface: #171b2e;
+  --surface-2: #1f2440;
+  --border: #2a3152;
+  --text: #e6e9f5;
+  --muted: #9097b8;
+  --accent: #7aa2ff;
+  --accent-ink: #0a1230;
+  --gene: #ffcb6b;
+  --gene-ink: #2a1c00;
   --warn: #ff8a80;
-  --disabled: #2a3a3f;
+  --disabled: #262c4a;
   --radius: 12px;
   --tabs-h: 60px;
   color-scheme: dark;
@@ -123,10 +123,12 @@ h2:first-child { margin-top: 4px; }
 .evolve-title { font-size: 18px; }
 .evolve-gain { font-size: 13px; font-weight: 600; }
 @keyframes pulse {
-  50% { box-shadow: 0 0 0 6px rgba(199, 146, 234, 0.25); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 203, 107, 0.25); }
 }
 
 /* ---------- ツールバー ---------- */
+.toggles { justify-content: flex-start; }
+.toggles:not(:has(.toggle:not(.hidden))) { display: none; }
 .toolbar {
   display: flex;
   align-items: center;
@@ -142,8 +144,8 @@ h2:first-child { margin-top: 4px; }
   padding: 3px;
 }
 .seg button {
-  min-width: 64px;
-  padding: 7px 12px;
+  min-width: 56px;
+  padding: 7px 10px;
   border-radius: 999px;
   font-size: 13px;
   color: var(--muted);
@@ -185,7 +187,8 @@ h2:first-child { margin-top: 4px; }
 .tier-name { font-weight: 700; }
 .tier-mult { font-size: 12px; color: var(--accent); font-variant-numeric: tabular-nums; }
 .tier-count { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.3; }
-.tier-bought { margin-left: 8px; font-size: 11px; font-weight: 400; color: var(--muted); }
+.tier-bought { margin-left: 8px; font-size: 11px; font-weight: 400; color: var(--muted); white-space: nowrap; }
+.tier-count { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tier-prod, .tier-adapt-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 .tier-prod, .tier-adapt { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .tier-adapt .bar { height: 3px; margin-top: 3px; }
@@ -241,6 +244,23 @@ h2:first-child { margin-top: 4px; }
 .upgrade.owned { border-color: var(--gene); }
 .upgrade.owned .buy { background: transparent; color: var(--gene); border: 1px solid var(--gene); }
 .upgrade.locked { opacity: 0.45; }
+
+/* ---------- 繰り上がりの節目 ---------- */
+.milestones { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.milestone {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  color: var(--muted);
+}
+.milestone-at { flex: none; width: 44px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.milestone-name { font-weight: 700; }
+.milestone-desc { font-size: 12px; margin-top: 2px; }
+.milestone.reached { border-style: solid; border-color: var(--gene); color: var(--text); }
+.milestone.reached .milestone-at { color: var(--gene); }
 
 /* ---------- 設定 ---------- */
 .stats { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 14px; }

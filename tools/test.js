@@ -1,7 +1,10 @@
 // 数値処理とゲームロジックの簡単なテスト。使い方: node tools/test.js
 import assert from 'node:assert/strict';
 import { Big, format } from '../src/big.js';
-import { newGame, serialize, deserialize, tierCost, maxAffordable, buyTier, tick, canEvolve, evolve, genesOnEvolve, buyUpgrade } from '../src/logic.js';
+import {
+  newGame, serialize, deserialize, tierCost, bulkCost, maxAffordable, buyTier, buyToMilestone, tick,
+  canCarry, carry, digitsOnCarry, buyUpgrade, divisorCount, isPrime, milestonesPassed, nextMilestone,
+} from '../src/logic.js';
 
 let passed = 0;
 const test = (name, fn) => { fn(); passed++; console.log(`ok  ${name}`); };
@@ -33,18 +36,29 @@ test('format', () => {
   assert.equal(format(Big.from('5e1234567')), '5.00e1.23e6');
 });
 
+test('約数の個数と素数', () => {
+  assert.deepEqual([1, 2, 6, 12, 13, 60, 360, 720720].map(divisorCount), [1, 2, 4, 6, 2, 12, 24, 240]);
+  assert.deepEqual([1, 2, 3, 4, 97, 91].map(isPrime), [false, true, true, false, true, false]);
+});
+
+test('節目（高度合成数）', () => {
+  assert.equal(milestonesPassed(11), 0);
+  assert.equal(milestonesPassed(12), 1);
+  assert.equal(milestonesPassed(60), 5);
+  assert.equal(nextMilestone(60), 120);
+});
+
 test('maxAffordable は買える最大数で、1 個多いと買えない', () => {
   for (const e of [10, 55, 1e4, 1e9, 1e30, 1e300]) {
     const s = newGame();
-    s.energy = Big.from(e);
+    s.count = Big.from(e);
     const { n, cost } = maxAffordable(s, 0);
-    assert.ok(cost.lte(s.energy), `e=${e}`);
-    // 1 個ずつ買って合計を比べる
+    assert.ok(cost.lte(s.count), `e=${e}`);
     if (n < 200) {
       let sum = new Big(0);
       for (let k = 0; k < n; k++) sum = sum.add(tierCost(0, k));
       close(sum.log10(), cost.log10(), 1e-6);
-      assert.ok(sum.add(tierCost(0, n)).gt(s.energy));
+      assert.ok(sum.add(tierCost(0, n)).gt(s.count));
     }
   }
 });
@@ -52,36 +66,51 @@ test('maxAffordable は買える最大数で、1 個多いと買えない', () =
 test('購入と生産', () => {
   const s = newGame();
   assert.equal(buyTier(s, 0, 'one'), 1);
-  assert.ok(s.energy.isZero());
+  assert.ok(s.count.isZero());
   tick(s, 1);
-  close(s.energy.toNumber(), 1);
-  assert.equal(buyTier(s, 1, 'one'), 0, '細胞はまだ買えない');
+  close(s.count.toNumber(), 1);
+  assert.equal(buyTier(s, 1, 'one'), 0, '刻み目はまだ買えない');
 });
 
-test('進化と強化', () => {
+test('節目までまとめ買い', () => {
   const s = newGame();
-  s.energy = Big.from('1e18');
-  assert.ok(canEvolve(s));
-  assert.equal(genesOnEvolve(s).toNumber(), 10);
-  evolve(s);
-  assert.equal(s.genes.toNumber(), 10);
-  assert.equal(s.evolutions, 1);
+  s.count = Big.from(1e6);
+  assert.equal(buyToMilestone(s, 0), 12);
+  assert.equal(s.tiers[0].bought, 12);
+  close(s.count.toNumber(), 1e6 - bulkCost(0, 0, 12).toNumber(), 1e-9);
+});
+
+test('繰り上がりと強化', () => {
+  const s = newGame();
+  s.runTotal = Big.from('1e21');
+  assert.ok(canCarry(s));
+  assert.equal(digitsOnCarry(s).toNumber(), 5);
+  carry(s);
+  assert.equal(s.digits.toNumber(), 5);
+  assert.equal(s.carries, 1);
   assert.equal(s.tiers[0].bought, 0);
   assert.ok(buyUpgrade(s, 'memory'));
   assert.ok(!buyUpgrade(s, 'memory'), '二重購入できない');
-  assert.ok(!buyUpgrade(s, 'instinct'), '前提が足りない');
-  assert.equal(s.genes.toNumber(), 9);
+  assert.ok(!buyUpgrade(s, 'autoCount2'), '前提が足りない');
+  assert.equal(s.digits.toNumber(), 2);
+});
+
+test('繰り上がり 2 回目からは指 10 本で始まる', () => {
+  const s = newGame();
+  s.runTotal = Big.from('1e15'); carry(s);
+  s.runTotal = Big.from('1e15'); carry(s);
+  assert.equal(s.tiers[0].bought, 10);
 });
 
 test('セーブの往復', () => {
   const s = newGame();
-  s.energy = Big.from('1.5e123');
+  s.count = Big.from('1.5e123');
   s.tiers[2].bought = 7;
-  s.upgrades.mitosis = true;
+  s.upgrades.divisor = true;
   const t = deserialize(serialize(s));
-  assert.equal(t.energy.cmp(s.energy), 0);
+  assert.equal(t.count.cmp(s.count), 0);
   assert.equal(t.tiers[2].bought, 7);
-  assert.ok(t.upgrades.mitosis);
+  assert.ok(t.upgrades.divisor);
 });
 
 console.log(`\n${passed} 件成功`);

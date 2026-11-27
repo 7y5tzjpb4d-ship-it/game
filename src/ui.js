@@ -1,10 +1,11 @@
 // 画面の組み立てと更新
 import { format } from './big.js';
-import { TIERS, UPGRADES, EVOLVE_LOG10, nextAdaptAt } from './data.js';
+import { TIERS, UPGRADES, CARRY_LOG10, CARRY_MILESTONES, HCN } from './data.js';
 import {
-  tierCost, tierMult, tierProduction, energyPerSec, isTierUnlocked, maxAffordable,
-  buyTier, canEvolve, genesOnEvolve, nextGeneAt, evolve, geneBonus,
-  upgradeState, buyUpgrade, hasAnyAuto, adaptFactor,
+  tierCost, bulkCost, tierMult, tierProduction, countPerSec, isTierUnlocked, maxAffordable,
+  buyTier, buyToMilestone, canCarry, digitsOnCarry, nextDigitAt, carry, digitBonus,
+  upgradeState, buyUpgrade, hasAnyAuto, milestoneFactor, nextMilestone, milestonesPassed,
+  divisorCount, isPrime, isPerfect, has, autoCarryAvailable, milestoneReached, countDigits,
 } from './logic.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -27,6 +28,7 @@ export class UI {
     this.toastTimer = null;
     this.buildTiers();
     this.buildUpgrades();
+    this.buildMilestones();
     this.bindEvents();
   }
 
@@ -94,6 +96,23 @@ export class UI {
     });
   }
 
+  buildMilestones() {
+    const list = $('#milestones');
+    list.innerHTML = '';
+    this.milestoneEls = CARRY_MILESTONES.map((m) => {
+      const li = document.createElement('li');
+      li.className = 'milestone';
+      li.innerHTML = `
+        <div class="milestone-at">${m.at} 回</div>
+        <div class="milestone-body">
+          <div class="milestone-name">${m.name}</div>
+          <div class="milestone-desc">${m.desc}</div>
+        </div>`;
+      list.appendChild(li);
+      return { li, m };
+    });
+  }
+
   bindEvents() {
     // 購入ボタン：タップで 1 回、長押しで連続購入
     const tiers = $('#tiers');
@@ -110,17 +129,17 @@ export class UI {
       stopRepeat();
       repeatTimer = setTimeout(() => {
         repeatTimer = setInterval(() => {
-          buyTier(this.state, i);
+          this.buy(i);
           this.render();
         }, 70);
       }, 350);
     });
     ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) => tiers.addEventListener(ev, stopRepeat));
-    document.querySelector('main').addEventListener('scroll', stopRepeat, { passive: true });
+    $('#main').addEventListener('scroll', stopRepeat, { passive: true });
     tiers.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-tier]');
       if (!btn) return;
-      buyTier(this.state, Number(btn.dataset.tier));
+      this.buy(Number(btn.dataset.tier));
       this.render();
     });
 
@@ -135,19 +154,26 @@ export class UI {
       this.state.auto = !this.state.auto;
       this.render();
     });
+    $('#auto-carry-toggle').addEventListener('click', () => {
+      this.state.autoCarry = !this.state.autoCarry;
+      this.render();
+    });
 
-    $('#evolve').addEventListener('click', () => {
-      const gain = genesOnEvolve(this.state);
+    $('#carry').addEventListener('click', () => {
+      const gain = digitsOnCarry(this.state);
       if (gain.isZero()) return;
-      if (this.state.evolutions === 0) {
+      const first = this.state.carries === 0;
+      if (first) {
         const ok = window.confirm(
-          `進化すると、エネルギーとすべての段がリセットされます。\n代わりに遺伝子 ${format(gain)} 個を手に入れ、永続的な強化に使えます。\n進化しますか？`,
+          `繰り上がると、数とすべての道具がリセットされます。\n代わりに「桁」を ${format(gain)} 個手に入れ、永続的な強化に使えます。\n繰り上がりますか？`,
         );
         if (!ok) return;
       }
-      evolve(this.state);
+      carry(this.state);
       this.game.save();
-      this.toast(`進化しました！ 遺伝子 +${format(gain)}`);
+      this.toast(first
+        ? `零の発見！\nまとまった数を「位」で表せるようになった。桁 +${format(gain)}`
+        : `繰り上がり！ 桁 +${format(gain)}`, first ? 4000 : 2500);
       this.render();
     });
 
@@ -195,7 +221,7 @@ export class UI {
         area.value = '';
         area.classList.add('hidden');
         this.toast('読み込みました');
-        this.showTab('cells');
+        this.showTab('count');
       } else {
         this.toast('読み込めませんでした。文字列を確認してください');
       }
@@ -205,8 +231,13 @@ export class UI {
       if (!window.confirm('本当に消しますか？元に戻せません。')) return;
       this.game.hardReset();
       this.toast('最初からやり直します');
-      this.showTab('cells');
+      this.showTab('count');
     });
+  }
+
+  buy(i) {
+    if (this.state.buyMode === 'milestone') return buyToMilestone(this.state, i);
+    return buyTier(this.state, i);
   }
 
   showTab(name) {
@@ -228,8 +259,8 @@ export class UI {
 
   render() {
     const s = this.state;
-    $('#energy').textContent = format(s.energy.floor());
-    $('#rate').textContent = `+${format(energyPerSec(s), 1)} /秒`;
+    $('#count').textContent = format(s.count.floor());
+    $('#rate').textContent = `+${format(countPerSec(s), 1)} /秒`;
 
     this.renderGoal();
     this.renderTiers();
@@ -239,34 +270,48 @@ export class UI {
     autoBtn.classList.toggle('hidden', !hasAnyAuto(s));
     autoBtn.classList.toggle('on', s.auto);
     autoBtn.textContent = `自動購入 ${s.auto ? 'ON' : 'OFF'}`;
+    const autoCarryBtn = $('#auto-carry-toggle');
+    autoCarryBtn.classList.toggle('hidden', !autoCarryAvailable(s));
+    autoCarryBtn.classList.toggle('on', s.autoCarry);
+    autoCarryBtn.textContent = `自動繰り上がり ${s.autoCarry ? 'ON' : 'OFF'}`;
 
-    // 遺伝子タブは一度でも進化できるようになったら出す
-    const genesTab = document.querySelector('[data-tab="genes"]');
-    const genesVisible = s.evolutions > 0 || canEvolve(s);
-    genesTab.classList.toggle('hidden', !genesVisible);
-    genesTab.classList.toggle('badge', UPGRADES.some((u) => upgradeState(s, u) === 'affordable'));
+    // 桁タブは一度でも繰り上がれるようになったら出す
+    const digitsTab = document.querySelector('[data-tab="digits"]');
+    digitsTab.classList.toggle('hidden', !(s.carries > 0 || canCarry(s)));
+    digitsTab.classList.toggle('badge', s.carries > 0 && UPGRADES.some((u) => upgradeState(s, u) === 'affordable'));
 
-    if (document.querySelector('[data-panel="genes"]').classList.contains('active')) this.renderGenes();
+    if (document.querySelector('[data-panel="digits"]').classList.contains('active')) this.renderDigits();
     if (document.querySelector('[data-panel="settings"]').classList.contains('active')) this.renderStats();
   }
 
   renderGoal() {
     const s = this.state;
-    const evolveBtn = $('#evolve');
-    const can = canEvolve(s);
-    evolveBtn.classList.toggle('hidden', !can);
+    const btn = $('#carry');
+    const can = canCarry(s);
+    btn.classList.toggle('hidden', !can);
     if (can) {
-      $('#evolve-gain').textContent = `遺伝子 +${format(genesOnEvolve(s))}（次の +1 まで ${format(nextGeneAt(s))}）`;
+      $('#carry-gain').textContent = `桁 +${format(digitsOnCarry(s))}（次の +1 まで 合計 ${format(nextDigitAt(s))}）`;
       $('#goal').classList.add('hidden');
       return;
     }
     $('#goal').classList.remove('hidden');
-    const l = Math.max(0, s.energy.log10());
-    const pct = Math.min(100, (l / EVOLVE_LOG10) * 100);
-    $('#goal-text').textContent = s.evolutions === 0
-      ? `何かが起こりそうだ…（エネルギー 1e${EVOLVE_LOG10}）`
-      : `進化まで：エネルギー 1e${EVOLVE_LOG10}`;
+    const l = Math.max(0, s.runTotal.log10());
+    const pct = Math.min(100, (l / CARRY_LOG10) * 100);
+    $('#goal-text').textContent = s.carries === 0
+      ? `数えきれなくなりそうだ…（この周で数えた合計 ${format(s.runTotal.floor())} / 1e${CARRY_LOG10}）`
+      : `繰り上がりまで：この周で数えた合計 ${format(s.runTotal.floor())} / 1e${CARRY_LOG10}`;
     $('#goal-bar').style.width = `${pct}%`;
+  }
+
+  // 購入数の整数論的な性質を短く表す
+  numberNote(bought) {
+    const s = this.state;
+    if (bought <= 0) return '';
+    const notes = [];
+    if (has(s, 'perfect') && isPerfect(bought)) notes.push('完全数');
+    if (has(s, 'prime') && isPrime(bought)) notes.push('素数');
+    if (has(s, 'divisor')) notes.push(`約数${divisorCount(bought)}個`);
+    return notes.length ? ` · ${notes.join(' · ')}` : '';
   }
 
   renderTiers() {
@@ -303,14 +348,21 @@ export class UI {
       const tier = s.tiers[i];
       el.mult.textContent = `×${format(tierMult(s, i), 1)}`;
       el.count.textContent = format(tier.count.floor());
-      el.bought.textContent = `購入 ${tier.bought}`;
-      const target = i === 0 ? 'エネルギー' : TIERS[i - 1].name;
+      el.bought.textContent = `購入 ${tier.bought}${this.numberNote(tier.bought)}`;
+      const target = i === 0 ? '数' : TIERS[i - 1].name;
       el.prod.textContent = `毎秒 +${format(tierProduction(s, i), 1)} ${target}`;
 
-      const next = nextAdaptAt(tier.bought);
-      const prev = next === 25 ? 0 : next === 50 ? 25 : next - 100 < 50 ? 50 : next - 100;
-      el.adaptText.textContent = `適応まで あと ${next - tier.bought} 個 → ×${adaptFactor(s)}`;
-      el.adaptBar.style.width = `${((tier.bought - prev) / (next - prev)) * 100}%`;
+      // 次の節目（高度合成数）
+      const next = nextMilestone(tier.bought);
+      const k = milestonesPassed(tier.bought);
+      const prev = k === 0 ? 0 : HCN[k - 1];
+      if (next === null) {
+        el.adaptText.textContent = '節目をすべて通過';
+        el.adaptBar.style.width = '100%';
+      } else {
+        el.adaptText.textContent = `節目 ${next} まで あと ${next - tier.bought}（×${milestoneFactor(s)}）`;
+        el.adaptBar.style.width = `${((tier.bought - prev) / (next - prev)) * 100}%`;
+      }
 
       let n;
       let cost;
@@ -320,27 +372,33 @@ export class UI {
           n = 1;
           cost = tierCost(i, tier.bought);
         }
+      } else if (s.buyMode === 'milestone' && next !== null) {
+        n = next - tier.bought;
+        cost = bulkCost(i, tier.bought, n);
       } else {
         n = 1;
         cost = tierCost(i, tier.bought);
       }
-      const can = s.energy.gte(cost);
+      const can = s.count.gte(cost);
       el.buy.classList.toggle('cant', !can);
       el.buyLabel.textContent = n > 1 ? `+${format(n)} 個` : '購入';
       el.buyCost.textContent = format(cost);
     });
   }
 
-  renderGenes() {
+  renderDigits() {
     const s = this.state;
-    $('#genes').textContent = format(s.genes);
-    $('#genes-sub').innerHTML = `累計 ${format(s.genesTotal)} 遺伝子 → 全生産 ×${format(geneBonus(s), 2)}<br>進化 ${s.evolutions} 回`;
+    $('#digits').textContent = format(s.digits);
+    $('#digits-sub').innerHTML = `累計 ${format(s.digitsTotal)} 桁 → 数の生産 ×${format(digitBonus(s), 2)}<br>繰り上がり ${s.carries} 回`;
     this.upgradeEls.forEach(({ li, buy, u }) => {
       const st = upgradeState(s, u);
       li.classList.toggle('owned', st === 'owned');
       li.classList.toggle('locked', st === 'locked');
       buy.classList.toggle('cant', st === 'expensive' || st === 'locked');
-      buy.textContent = st === 'owned' ? '取得済み' : `${u.cost} 遺伝子`;
+      buy.textContent = st === 'owned' ? '取得済み' : `${u.cost} 桁`;
+    });
+    this.milestoneEls.forEach(({ li, m }) => {
+      li.classList.toggle('reached', milestoneReached(s, m.id));
     });
   }
 
@@ -348,8 +406,10 @@ export class UI {
     const s = this.state;
     $('#stats').innerHTML = `
       <dt>プレイ時間</dt><dd>${fmtTime(s.playTime)}</dd>
-      <dt>今回の進化からの時間</dt><dd>${fmtTime(s.runTime)}</dd>
-      <dt>進化した回数</dt><dd>${s.evolutions} 回</dd>
-      <dt>累計遺伝子</dt><dd>${format(s.genesTotal)}</dd>`;
+      <dt>今回の周の時間</dt><dd>${fmtTime(s.runTime)}</dd>
+      <dt>数の桁数</dt><dd>${countDigits(s)} 桁</dd>
+      <dt>繰り上がった回数</dt><dd>${s.carries} 回</dd>
+      <dt>累計の桁</dt><dd>${format(s.digitsTotal)}</dd>`;
   }
 }
+
