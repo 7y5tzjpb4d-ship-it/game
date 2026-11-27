@@ -1,35 +1,319 @@
+:root {
+  --bg: #0d1416;
+  --surface: #162125;
+  --surface-2: #1d2c31;
+  --border: #26393f;
+  --text: #e4f1ee;
+  --muted: #8aa39e;
+  --accent: #4fd1a5;
+  --accent-ink: #062018;
+  --gene: #c792ea;
+  --gene-ink: #1c0a26;
+  --warn: #ff8a80;
+  --disabled: #2a3a3f;
+  --radius: 12px;
+  --tabs-h: 60px;
+  color-scheme: dark;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
-  width: 100%;
   height: 100%;
-  background: #111;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  font-size: 15px;
   overflow: hidden;
-  /* スクロール・引っ張って更新・ダブルタップズームを防ぐ */
   overscroll-behavior: none;
-  touch-action: none;
-  /* 長押しの選択・メニュー・タップ時のハイライトを消す */
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
 }
 
-/* ノッチやホームバーを避けた表示領域。dvh はアドレスバーの伸縮に追従する */
-#stage {
-  position: fixed;
-  inset: 0;
+body {
+  display: flex;
+  flex-direction: column;
   height: 100vh;
   height: 100dvh;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right)
-           env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+  /* 連打してもダブルタップズームにならない */
+  touch-action: manipulation;
+}
+
+.hidden { display: none !important; }
+
+/* ---------- 上部：エネルギー ---------- */
+.top {
+  flex: none;
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+.top-label { font-size: 12px; color: var(--muted); letter-spacing: 0.1em; }
+.top-energy {
+  font-size: 32px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  line-height: 1.2;
+}
+.top-rate { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* ---------- 中央：スクロール領域 ---------- */
+main {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding: 12px max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left));
+}
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+h2 {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 20px 0 8px;
+}
+h2:first-child { margin-top: 4px; }
+
+/* ---------- 目標バー ---------- */
+.goal { margin-bottom: 12px; }
+.goal-text { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.bar {
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.2s linear;
+}
+
+/* ---------- 進化ボタン ---------- */
+.evolve {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 12px;
+  border-radius: var(--radius);
+  background: var(--gene);
+  color: var(--gene-ink);
+  font-weight: 700;
+  animation: pulse 2s ease-in-out infinite;
+}
+.evolve-title { font-size: 18px; }
+.evolve-gain { font-size: 13px; font-weight: 600; }
+@keyframes pulse {
+  50% { box-shadow: 0 0 0 6px rgba(199, 146, 234, 0.25); }
+}
+
+/* ---------- ツールバー ---------- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.seg {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px;
+}
+.seg button {
+  min-width: 64px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.seg button.active { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.toggle {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--muted);
+}
+.toggle.on { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- 段のカード ---------- */
+.tiers, .upgrades { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+.tier {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px 8px 8px 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.tier-icon {
+  flex: none;
+  width: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 24px;
+  color: var(--accent);
+}
+.tier-body { flex: 1; min-width: 0; }
+.tier-head { display: flex; align-items: baseline; gap: 6px; }
+.tier-name { font-weight: 700; }
+.tier-mult { font-size: 12px; color: var(--accent); font-variant-numeric: tabular-nums; }
+.tier-count { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.tier-bought { margin-left: 8px; font-size: 11px; font-weight: 400; color: var(--muted); }
+.tier-prod, .tier-adapt-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.tier-prod, .tier-adapt { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tier-adapt .bar { height: 3px; margin-top: 3px; }
+
+.buy {
+  flex: none;
+  width: 100px;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.buy small { font-size: 11px; font-weight: 600; opacity: 0.75; }
+.buy:disabled, .buy.cant { background: var(--disabled); color: var(--muted); }
+.buy:active:not(.cant) { transform: scale(0.97); }
+
+.tier.locked { opacity: 0.5; }
+.tier.locked .tier-icon { color: var(--muted); }
+
+/* ---------- 遺伝子 ---------- */
+.genes-head {
+  text-align: center;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.genes-count { font-size: 22px; font-weight: 700; color: var(--gene); font-variant-numeric: tabular-nums; }
+.genes-sub { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.6; }
+
+.upgrade {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.upgrade-body { flex: 1; min-width: 0; }
+.upgrade-name { font-weight: 700; }
+.upgrade-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.upgrade-req { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.upgrade .buy { width: 84px; min-height: 48px; background: var(--gene); color: var(--gene-ink); }
+.upgrade.owned { border-color: var(--gene); }
+.upgrade.owned .buy { background: transparent; color: var(--gene); border: 1px solid var(--gene); }
+.upgrade.locked { opacity: 0.45; }
+
+/* ---------- 設定 ---------- */
+.stats { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 14px; }
+.stats dt { color: var(--muted); }
+.stats dd { text-align: right; font-variant-numeric: tabular-nums; }
+.note { font-size: 12px; color: var(--muted); margin-bottom: 10px; line-height: 1.6; }
+.buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.buttons button {
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.buttons .danger { color: var(--warn); border-color: var(--warn); background: transparent; }
+textarea {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: 12px/1.4 ui-monospace, monospace;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
-/* 表示サイズは src/screen.js が設定する */
-canvas {
-  display: block;
-  background: #222;
+/* ---------- 下部タブ ---------- */
+.tabs {
+  flex: none;
+  display: flex;
+  height: calc(var(--tabs-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.tabs button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.tab-icon { font-size: 20px; line-height: 1; }
+.tabs button.active { color: var(--accent); }
+.tabs button.badge { position: relative; }
+.tabs button.badge::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  right: calc(50% - 18px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gene);
+}
+
+/* ---------- トースト ---------- */
+.toast {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(var(--tabs-h) + env(safe-area-inset-bottom) + 12px);
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  white-space: pre-line;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
