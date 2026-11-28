@@ -90,6 +90,43 @@ export const UPGRADES = [
     id: 'sexagesimal', name: '六十進法', cost: 80, requires: ['hcn', 'autoCount2'],
     desc: '繰り上がりで得られる桁 ×2',
   },
+  // ここから「記数法の進化」：桁の式そのものを強くしていく
+  {
+    id: 'exponent', name: '指数表記', cost: 1e3, requires: ['sexagesimal'],
+    desc: '得られる桁 ×10^((L − 15) / 12)。L はこの周で数えた合計の log10。数えるほど桁が指数的に増える',
+  },
+  {
+    id: 'weight', name: '桁の重み', cost: 1e6, requires: ['exponent'],
+    desc: '累計の桁による数の生産ボーナスが ^0.5 から ^1 になる',
+  },
+  {
+    id: 'scientific', name: '科学的記数法', cost: 1e15, requires: ['weight'],
+    desc: '指数表記の式の「÷12」が「÷9」になる',
+  },
+  {
+    id: 'power', name: '累乗', cost: 1e25, requires: ['scientific'],
+    desc: '累計の桁による数の生産ボーナスが ^2 になる',
+  },
+  {
+    id: 'logarithm', name: '対数', cost: 1e40, requires: ['power'],
+    desc: '累計の桁による数の生産ボーナスが ^3 になる',
+  },
+  {
+    id: 'arrow', name: '矢印表記', cost: 1e200, requires: ['logarithm'],
+    desc: '得られる桁の指数部分 ×1.1（10^x 桁なら 10^(1.1x) 桁に）',
+  },
+];
+
+// 何度でも買える強化。値段は baseCost × growth^(レベル)
+export const REPEATABLES = [
+  {
+    id: 'countTriple', name: '三倍の数', requires: ['divisor'], baseCost: 10, growth: 3,
+    desc: '数の生産 ×3',
+  },
+  {
+    id: 'digitDouble', name: '倍の桁', requires: ['placeValue'], baseCost: 20, growth: 4,
+    desc: '繰り上がりで得られる桁 ×2',
+  },
 ];
 
 export const MEMORY_START_COUNT = 1e3;
@@ -102,9 +139,17 @@ export const PRIME_MULT = 2;
 export const PERFECT_NUMBERS = [6, 28, 496, 8128, 33550336];
 export const PERFECT_MULT = 6;
 export const SEXAGESIMAL_MULT = 2;
+export const EXPONENT_DIVISOR = 12;
+export const SCIENTIFIC_DIVISOR = 9;
+export const BONUS_EXPONENT_WEIGHT = 1;
+export const BONUS_EXPONENT_POWER = 2;
+export const BONUS_EXPONENT_LOG = 3;
+export const ARROW_POWER = 1.1;
+export const COUNT_TRIPLE_MULT = 3;
+export const DIGIT_DOUBLE_MULT = 2;
 
-// 第 2 層「整数」への拡張に必要な累計の桁
-export const EXPAND_DIGITS = 1000;
+// 第 2 層「整数」への拡張に必要な所持桁（強化に使うと減る）
+export const EXPAND_DIGITS = '1.8e308';
 
 // オフライン進行の上限（秒）
 export const OFFLINE_CAP_SEC = 24 * 60 * 60;

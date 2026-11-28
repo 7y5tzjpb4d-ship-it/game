@@ -1,11 +1,12 @@
 // 画面の組み立てと更新
-import { format } from './big.js';
-import { TIERS, UPGRADES, CARRY_LOG10, HCN, EXPAND_DIGITS } from './data.js';
+import { Big, format } from './big.js';
+import { TIERS, UPGRADES, REPEATABLES, CARRY_LOG10, HCN, EXPAND_DIGITS } from './data.js';
 import {
   tierCost, bulkCost, tierMult, tierProduction, countPerSec, isTierUnlocked, maxAffordable,
   buyByMode, canCarry, canExpand, nextPrime, digitsOnCarry, nextDigitAt, carry, digitBonus,
   upgradeState, buyUpgrade, hasAnyAuto, milestoneFactor, nextMilestone, milestonesPassed,
   divisorCount, isPrime, perfectPassed, has, autoCarryAvailable, countDigits,
+  repeatableCost, repeatableState, buyRepeatable, level,
 } from './logic.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -28,6 +29,7 @@ export class UI {
     this.toastTimer = null;
     this.buildTiers();
     this.buildUpgrades();
+    this.buildRepeatables();
     this.bindEvents();
   }
 
@@ -92,6 +94,23 @@ export class UI {
         <button type="button" class="buy" data-upgrade="${u.id}"></button>`;
       list.appendChild(li);
       return { li, buy: li.querySelector('.buy'), u };
+    });
+  }
+
+  buildRepeatables() {
+    const list = $('#repeatables');
+    list.innerHTML = '';
+    this.repeatableEls = REPEATABLES.map((r) => {
+      const li = document.createElement('li');
+      li.className = 'upgrade';
+      li.innerHTML = `
+        <div class="upgrade-body">
+          <div class="upgrade-name">${r.name} <span class="upgrade-level"></span></div>
+          <div class="upgrade-desc">${r.desc}（買うたびに重なる）</div>
+        </div>
+        <button type="button" class="buy" data-repeatable="${r.id}"></button>`;
+      list.appendChild(li);
+      return { li, buy: li.querySelector('.buy'), level: li.querySelector('.upgrade-level'), r };
     });
   }
 
@@ -161,6 +180,15 @@ export class UI {
         ? `零の発見！\nまとまった数を「位」で表せるようになった。桁 +${format(gain)}`
         : `繰り上がり！ 桁 +${format(gain)}`, first ? 4000 : 2500);
       this.render();
+    });
+
+    $('#repeatables').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-repeatable]');
+      if (!btn) return;
+      if (buyRepeatable(this.state, btn.dataset.repeatable)) {
+        this.game.save();
+        this.render();
+      }
     });
 
     $('#upgrades').addEventListener('click', (e) => {
@@ -280,7 +308,10 @@ export class UI {
     const can = canCarry(s);
     btn.classList.toggle('hidden', !can);
     if (can) {
-      $('#carry-gain').textContent = `桁 +${format(digitsOnCarry(s))}（次の +1 まで 合計 ${format(nextDigitAt(s))}）`;
+      const next = nextDigitAt(s);
+      $('#carry-gain').textContent = next
+        ? `桁 +${format(digitsOnCarry(s))}（次の +1 まで 合計 ${format(next)}）`
+        : `桁 +${format(digitsOnCarry(s))}`;
       $('#goal').classList.add('hidden');
       return;
     }
@@ -388,10 +419,22 @@ export class UI {
       li.classList.toggle('owned', st === 'owned');
       li.classList.toggle('locked', st === 'locked');
       buy.classList.toggle('cant', st === 'expensive' || st === 'locked');
-      buy.textContent = st === 'owned' ? '取得済み' : `${u.cost} 桁`;
+      buy.textContent = st === 'owned' ? '取得済み' : `${format(u.cost)} 桁`;
     });
-    const pct = Math.min(100, (s.digitsTotal.toNumber() / EXPAND_DIGITS) * 100);
-    $('#expand-text').textContent = `累計の桁 ${format(s.digitsTotal)} / ${format(EXPAND_DIGITS)}`;
+    let anyRepeatable = false;
+    this.repeatableEls.forEach(({ li, buy, level: lvEl, r }) => {
+      const st = repeatableState(s, r);
+      li.classList.toggle('hidden', st === 'locked');
+      if (st !== 'locked') anyRepeatable = true;
+      lvEl.textContent = `Lv ${level(s, r.id)}`;
+      buy.classList.toggle('cant', st !== 'affordable');
+      buy.textContent = `${format(repeatableCost(r, level(s, r.id)))} 桁`;
+    });
+    $('#repeatables-title').classList.toggle('hidden', !anyRepeatable);
+    // 進み具合は桁数（log10）で表す
+    const goal = Big.from(EXPAND_DIGITS);
+    const pct = Math.min(100, Math.max(0, s.digits.log10() / goal.log10()) * 100);
+    $('#expand-text').textContent = `所持している桁 ${format(s.digits)} / ${format(goal)}`;
     $('#expand-bar').style.width = `${pct}%`;
     $('#expand').classList.toggle('ready', canExpand(s));
   }
