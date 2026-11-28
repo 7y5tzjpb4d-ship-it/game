@@ -242,6 +242,7 @@ h2:first-child { margin-top: 4px; }
 .upgrade-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .upgrade-req { font-size: 11px; color: var(--muted); margin-top: 4px; }
 .upgrade .buy { width: 84px; min-height: 48px; background: var(--gene); color: var(--gene-ink); }
+.upgrade .buy.cant { background: var(--disabled); color: var(--muted); }
 .upgrade.owned { border-color: var(--gene); }
 .upgrade.owned .buy { background: transparent; color: var(--gene); border: 1px solid var(--gene); }
 .upgrade.locked { opacity: 0.45; }
@@ -330,6 +331,10 @@ h2:first-child { margin-top: 4px; }
   font-weight: 700;
 }
 .expand.ready { border-style: solid; border-color: var(--gene); }
+.expand.ready .expand-btn:not(:disabled) { background: var(--gene); color: var(--gene-ink); }
+#factory .tier-icon { font-size: 16px; font-weight: 700; color: var(--gene); }
+#factory .buy { background: var(--gene); color: var(--gene-ink); }
+#factory .buy.cant { background: var(--disabled); color: var(--muted); }
 
 /* ---------- 設定 ---------- */
 .stats { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 14px; }

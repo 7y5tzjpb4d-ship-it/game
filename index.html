@@ -95,7 +95,32 @@
         <div class="expand-desc">桁を 1.8e308 個手元に貯めると、数の世界を「整数」へ広げられる。強化に使うと減るので注意。</div>
         <div class="goal-text" id="expand-text"></div>
         <div class="bar"><div class="bar-fill" id="expand-bar"></div></div>
-        <button type="button" class="expand-btn" id="expand-btn" disabled>第 2 層は準備中</button>
+        <button type="button" class="expand-btn" id="expand-btn" disabled>拡張する</button>
+      </div>
+    </section>
+
+    <!-- 整数（第 2 層） -->
+    <section class="panel" data-panel="integers">
+      <div class="genes-head">
+        <div class="genes-count"><span id="integers">0</span> 整数</div>
+        <div class="genes-sub" id="integers-sub"></div>
+      </div>
+      <h2>負の数の工場</h2>
+      <p class="note">整数で買う生産ライン。−1 が負のエネルギーを生み、上の段は 1 つ下の段を増やす。拡張してもリセットされない。</p>
+      <ul class="tiers" id="factory"></ul>
+      <h2>整数の強化</h2>
+      <div class="toolbar toggles">
+        <button type="button" class="toggle hidden" id="auto-digit-up-toggle">自動の公理 ON</button>
+        <button type="button" class="toggle hidden" id="auto-expand-toggle">自動拡張 ON</button>
+      </div>
+      <ul class="upgrades" id="integer-upgrades"></ul>
+      <h2>次の層へ</h2>
+      <div class="expand" id="layer3">
+        <div class="expand-title">拡張：有理数</div>
+        <div class="expand-desc">整数を貯めると、数の世界を「有理数」へ広げられる。</div>
+        <div class="goal-text" id="layer3-text"></div>
+        <div class="bar"><div class="bar-fill" id="layer3-bar"></div></div>
+        <button type="button" class="expand-btn" disabled>第 3 層は準備中</button>
       </div>
     </section>
 
@@ -127,6 +152,7 @@
   <nav class="tabs">
     <button type="button" class="active" data-tab="count"><span class="tab-icon">Σ</span>数える</button>
     <button type="button" class="hidden" data-tab="digits"><span class="tab-icon">0</span>桁</button>
+    <button type="button" class="hidden" data-tab="integers"><span class="tab-icon">−</span>整数</button>
     <button type="button" class="hidden" data-tab="proofs"><span class="tab-icon">∴</span>証明</button>
     <button type="button" data-tab="settings"><span class="tab-icon">⚙&#xFE0E;</span>設定</button>
   </nav>

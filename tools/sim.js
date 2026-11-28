@@ -3,6 +3,7 @@
 // 同じ判定で繰り上がり、桁は安い強化から使う」プレイヤーを想定する。
 // 対数を取ったあとは、次の証明に挑戦する（10 分で届かなければあきらめ、
 // 通常の周を 2 回はさんで再挑戦）。
+// 拡張したあとは、整数を安い順に（整数の強化・工場）使い、SIM_EXPANSIONS 回（初期値 1）拡張するまで続ける。
 // 使い方: node tools/sim.js [最大繰り上がり回数] [-v]
 // 環境変数 SIM_MODE=max|milestone|prime で自動購入の買い止め方を固定できる
 // 環境変数 SIM_PROBE=1 で、対数を取った時点から各証明を 15 分ずつ試し、届いた合計の桁数を表示する
@@ -10,8 +11,10 @@ import {
   newGame, tick, buyBest, has, canCarry, carry, digitsLog, digitsOnCarry, buyUpgrade, upgradeState,
   buyRepeatable, repeatableState, repeatableCost, level, canExpand, startProof, abandonProof,
   completeProof, proofGoalReached, proven, proofsAvailable, inProof, serialize, deserialize,
+  expand, expandGain, buyFactory, factoryCost, factoryUnlocked, buyIntegerUpgrade, integerUpgradeState,
+  canReachLayer3, negCountLog,
 } from '../src/logic.js';
-import { TIERS, UPGRADES, REPEATABLES, PROOFS, EXPAND_DIGITS } from '../src/data.js';
+import { TIERS, UPGRADES, REPEATABLES, PROOFS, EXPAND_DIGITS, FACTORY, INTEGER_UPGRADES } from '../src/data.js';
 import { Big, format } from '../src/big.js';
 
 const maxRuns = Number(process.argv[2] || 3000);
@@ -103,6 +106,34 @@ if (process.env.SIM_PROBE) {
 }
 
 const state = newGame();
+const targetExpansions = Number(process.env.SIM_EXPANSIONS || 1);
+let expansionsSeen = 0;
+let lastExpandAt = 0;
+// 整数を安い順に使う（整数の強化と工場）
+function spendIntegers() {
+  const bought = [];
+  for (;;) {
+    let best = null;
+    for (const u of INTEGER_UPGRADES) {
+      if (integerUpgradeState(state, u) === 'affordable' && (!best || Big.from(u.cost).lt(best.cost))) best = { cost: Big.from(u.cost), buy: () => buyIntegerUpgrade(state, u.id), name: u.name };
+    }
+    FACTORY.forEach((f, i) => {
+      if (!factoryUnlocked(state, i)) return;
+      const c = factoryCost(i, state.factory[i].bought);
+      if (state.integers.gte(c) && (!best || c.lt(best.cost))) best = { cost: c, buy: () => buyFactory(state, i), name: null };
+    });
+    if (!best) break;
+    best.buy();
+    if (best.name) bought.push(best.name);
+  }
+  return bought;
+}
+function reportExpansion(r, gain) {
+  const bought = spendIntegers();
+  const fac = state.factory.map((f) => f.bought).join('/');
+  console.log(`拡張 ${String(state.expansions).padStart(3)} 回目：${fmtT(total).padStart(9)}（前回から ${fmtT(total - lastExpandAt)}）整数 +${format(gain)}  所持 ${format(state.integers)}  工場 ${fac}  数の生産 ×1e${negCountLog(state).toFixed(1)}${bought.length ? `  強化: ${bought.join('、')}` : ''}${canReachLayer3(state) ? '  ★第 3 層' : ''}`);
+  lastExpandAt = total;
+}
 let total = 0;
 let lastPrint = -1;
 let retryAfter = 0;
@@ -135,11 +166,22 @@ for (let r = 0; r < maxRuns; r++) {
     gain = digitsOnCarry(state);
     carry(state);
   }
+  if (state.expansions > expansionsSeen) {
+    // ゲームの自動拡張が起きた
+    expansionsSeen = state.expansions;
+    reportExpansion(r, state.lastExpandGain);
+    if (state.expansions >= targetExpansions) process.exit(0);
+  }
   if (canExpand(state)) {
-    console.log(note);
-    console.log(`\n拡張に到達：${r + 1} 周、${fmtT(total)}（所持桁 ${format(state.digits)}）`);
-    console.log(`証明にかかった時間：${JSON.stringify(Object.fromEntries(Object.entries(proofTimes).map(([k, v]) => [k, fmtT(v)])))}`);
-    process.exit(0);
+    if (state.expansions === 0) {
+      console.log(note);
+      console.log(`証明にかかった時間：${JSON.stringify(Object.fromEntries(Object.entries(proofTimes).map(([k, v]) => [k, fmtT(v)])))}`);
+    }
+    const g = expand(state);
+    expansionsSeen = state.expansions;
+    reportExpansion(r, g);
+    if (state.expansions >= targetExpansions) process.exit(0);
+    continue;
   }
   const bought = [];
   let name;

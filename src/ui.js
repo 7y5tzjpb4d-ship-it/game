@@ -1,6 +1,9 @@
 // 画面の組み立てと更新
 import { Big, format } from './big.js';
-import { TIERS, UPGRADES, REPEATABLES, PROOFS, CARRY_LOG10, HCN, EXPAND_DIGITS, FEW_TOOLS_LIMIT } from './data.js';
+import {
+  TIERS, UPGRADES, REPEATABLES, PROOFS, CARRY_LOG10, HCN, EXPAND_DIGITS, FEW_TOOLS_LIMIT,
+  FACTORY, INTEGER_UPGRADES, LAYER3_INTEGERS,
+} from './data.js';
 import {
   tierCost, bulkCost, tierMult, tierProduction, countPerSec, isTierUnlocked, maxAffordable,
   buyByMode, canCarry, canExpand, nextPrime, digitsOnCarry, nextDigitAt, carry, digitBonus,
@@ -9,6 +12,8 @@ import {
   repeatableCost, repeatableState, buyRepeatable, level, autoCarryGuardTime,
   proofsAvailable, proofUnlocked, proven, provenCount, activeProof, inProof, proofGoalReached,
   startProof, abandonProof, completeProof,
+  expand, expandGain, layer2Visible, hasInt, factoryCost, factoryUnlocked, buyFactory, factoryProduction,
+  negCountLog, negDigitLog, integerUpgradeState, buyIntegerUpgrade,
 } from './logic.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -33,6 +38,8 @@ export class UI {
     this.buildUpgrades();
     this.buildRepeatables();
     this.buildProofs();
+    this.buildFactory();
+    this.buildIntegerUpgrades();
     this.bindEvents();
   }
 
@@ -134,6 +141,48 @@ export class UI {
         <button type="button" class="proof-start" data-proof="${p.id}">挑戦する</button>`;
       list.appendChild(li);
       return { li, status: li.querySelector('.proof-status'), btn: li.querySelector('.proof-start'), p };
+    });
+  }
+
+  buildFactory() {
+    const list = $('#factory');
+    list.innerHTML = '';
+    this.factoryEls = FACTORY.map((f, i) => {
+      const li = document.createElement('li');
+      li.className = 'tier';
+      li.innerHTML = `
+        <div class="tier-icon">${f.name}</div>
+        <div class="tier-body">
+          <div class="tier-count"><span class="tier-count-num"></span><span class="tier-bought"></span></div>
+          <div class="tier-prod"></div>
+        </div>
+        <button type="button" class="buy" data-factory="${i}"><span>購入</span><small class="buy-cost"></small></button>`;
+      list.appendChild(li);
+      return {
+        li,
+        count: li.querySelector('.tier-count-num'),
+        bought: li.querySelector('.tier-bought'),
+        prod: li.querySelector('.tier-prod'),
+        buy: li.querySelector('.buy'),
+        cost: li.querySelector('.buy-cost'),
+      };
+    });
+  }
+
+  buildIntegerUpgrades() {
+    const list = $('#integer-upgrades');
+    list.innerHTML = '';
+    this.integerUpgradeEls = INTEGER_UPGRADES.map((u) => {
+      const li = document.createElement('li');
+      li.className = 'upgrade';
+      li.innerHTML = `
+        <div class="upgrade-body">
+          <div class="upgrade-name">${u.name}</div>
+          <div class="upgrade-desc">${u.desc}</div>
+        </div>
+        <button type="button" class="buy" data-int-upgrade="${u.id}"></button>`;
+      list.appendChild(li);
+      return { li, buy: li.querySelector('.buy'), u };
     });
   }
 
@@ -263,6 +312,41 @@ export class UI {
       this.render();
     });
 
+    $('#expand-btn').addEventListener('click', () => {
+      const gain = expandGain(this.state);
+      if (gain.isZero() || this.state.proof) return;
+      const ok = window.confirm(this.state.expansions === 0
+        ? `拡張すると、数・道具・桁・桁の強化・繰り返し強化がすべてリセットされます（証明は残ります）。\n代わりに「整数」を ${format(gain)} 個手に入れ、負の数の工場などに使えます。\n拡張しますか？`
+        : `拡張しますか？（整数 +${format(gain)}）`);
+      if (!ok) return;
+      const first = this.state.expansions === 0;
+      expand(this.state);
+      this.game.save();
+      this.toast(first ? `負の数の発見！\n数の世界が「整数」へ広がった。整数 +${format(gain)}` : `拡張！ 整数 +${format(gain)}`, first ? 4000 : 2500);
+      this.showTab(first ? 'integers' : 'count');
+    });
+    $('#factory').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-factory]');
+      if (!btn) return;
+      if (buyFactory(this.state, Number(btn.dataset.factory))) this.render();
+    });
+    $('#integer-upgrades').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-int-upgrade]');
+      if (!btn) return;
+      if (buyIntegerUpgrade(this.state, btn.dataset.intUpgrade)) {
+        this.game.save();
+        this.render();
+      }
+    });
+    $('#auto-digit-up-toggle').addEventListener('click', () => {
+      this.state.autoDigitUpgrades = !this.state.autoDigitUpgrades;
+      this.render();
+    });
+    $('#auto-expand-toggle').addEventListener('click', () => {
+      this.state.autoExpand = !this.state.autoExpand;
+      this.render();
+    });
+
     $('#upgrades').addEventListener('click', (e) => {
       const btn = e.target.closest('[data-upgrade]');
       if (!btn) return;
@@ -371,6 +455,11 @@ export class UI {
     const digitsTab = document.querySelector('[data-tab="digits"]');
     digitsTab.classList.toggle('hidden', !(s.carries > 0 || canCarry(s)));
     digitsTab.classList.toggle('badge', s.carries > 0 && UPGRADES.some((u) => upgradeState(s, u) === 'affordable'));
+
+    const intTab = document.querySelector('[data-tab="integers"]');
+    intTab.classList.toggle('hidden', !layer2Visible(s));
+    intTab.classList.toggle('badge', s.expansions > 0 && INTEGER_UPGRADES.some((u) => integerUpgradeState(s, u) === 'affordable'));
+    if (document.querySelector('[data-panel="integers"]').classList.contains('active')) this.renderIntegers();
 
     const proofsTab = document.querySelector('[data-tab="proofs"]');
     proofsTab.classList.toggle('hidden', !proofsAvailable(s));
@@ -594,7 +683,62 @@ export class UI {
     const pct = Math.min(100, Math.max(0, s.digits.log10() / goal.log10()) * 100);
     $('#expand-text').textContent = `所持している桁 ${format(s.digits)} / ${format(goal)}`;
     $('#expand-bar').style.width = `${pct}%`;
-    $('#expand').classList.toggle('ready', canExpand(s));
+    const ready = canExpand(s);
+    $('#expand').classList.toggle('ready', ready);
+    const expandBtn = $('#expand-btn');
+    expandBtn.disabled = !ready || !!s.proof;
+    expandBtn.textContent = !ready ? '拡張する' : s.proof ? '証明中は拡張できない' : `拡張する（整数 +${format(expandGain(s))}）`;
+  }
+
+  renderIntegers() {
+    const s = this.state;
+    $('#integers').textContent = format(s.integers);
+    $('#integers-sub').innerHTML = `負のエネルギー ${format(s.negEnergy, 1)}<br>`
+      + `→ 数の生産 ×${format(Big.fromLog10(negCountLog(s)), 1)}、得られる桁 ×${format(Big.fromLog10(negDigitLog(s)), 1)}<br>`
+      + `拡張 ${s.expansions} 回`;
+    let shownLocked = false;
+    this.factoryEls.forEach((el, i) => {
+      const unlocked = factoryUnlocked(s, i);
+      if (!unlocked && shownLocked) {
+        el.li.classList.add('hidden');
+        return;
+      }
+      el.li.classList.remove('hidden');
+      el.li.classList.toggle('locked', !unlocked);
+      if (!unlocked) {
+        shownLocked = true;
+        el.count.textContent = '';
+        el.bought.textContent = '';
+        el.prod.textContent = `${FACTORY[i - 1].name} を手に入れると使える`;
+        el.buy.classList.add('hidden');
+        return;
+      }
+      const f = s.factory[i];
+      el.count.textContent = format(f.count.floor());
+      el.bought.textContent = `購入 ${f.bought}`;
+      el.prod.textContent = `毎秒 +${format(factoryProduction(s, i), 1)} ${i === 0 ? '負のエネルギー' : FACTORY[i - 1].name}`;
+      const cost = factoryCost(i, f.bought);
+      el.buy.classList.remove('hidden');
+      el.buy.classList.toggle('cant', s.integers.lt(cost));
+      el.cost.textContent = `${format(cost)} 整数`;
+    });
+    this.integerUpgradeEls.forEach(({ li, buy, u }) => {
+      const st = integerUpgradeState(s, u);
+      li.classList.toggle('owned', st === 'owned');
+      buy.classList.toggle('cant', st === 'expensive');
+      buy.textContent = st === 'owned' ? '取得済み' : `${format(u.cost)} 整数`;
+    });
+    const t1 = $('#auto-digit-up-toggle');
+    t1.classList.toggle('hidden', !hasInt(s, 'autoDigitUpgrades'));
+    t1.classList.toggle('on', s.autoDigitUpgrades);
+    t1.textContent = `自動の公理 ${s.autoDigitUpgrades ? 'ON' : 'OFF'}`;
+    const t2 = $('#auto-expand-toggle');
+    t2.classList.toggle('hidden', !hasInt(s, 'autoExpand'));
+    t2.classList.toggle('on', s.autoExpand);
+    t2.textContent = `自動拡張 ${s.autoExpand ? 'ON' : 'OFF'}`;
+    const goal = Big.from(LAYER3_INTEGERS);
+    $('#layer3-text').textContent = `所持している整数 ${format(s.integers)} / ${format(goal)}`;
+    $('#layer3-bar').style.width = `${Math.min(100, Math.max(0, s.integers.add(1).log10() / goal.log10()) * 100)}%`;
   }
 
   renderStats() {

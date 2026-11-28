@@ -106,7 +106,11 @@ class Game {
       } else if (dt > 0) {
         carries = tick(this.state, dt);
       }
-      if (carries > 0) {
+      if (this.state.lastExpandGain) {
+        this.save();
+        this.ui.toast(`自動拡張！ 整数 +${format(this.state.lastExpandGain)}`);
+        this.state.lastExpandGain = null;
+      } else if (carries > 0) {
         this.save();
         this.ui.toast(`自動繰り上がり！ 桁 +${format(this.state.lastGain)}`);
       }

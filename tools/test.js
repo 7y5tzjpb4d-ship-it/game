@@ -8,6 +8,7 @@ import {
   buyRepeatable, level, repeatableCost, canExpand, digitsLog, nextDigitAt,
   startProof, abandonProof, completeProof, proofGoalReached, proven, proofUnlocked, tierProduction,
   isTierUnlocked, upgradeState, provenCount,
+  expand, expandGain, buyFactory, factoryCost, buyIntegerUpgrade, negCountLog, countPerSec,
 } from '../src/logic.js';
 import { REPEATABLES, PROOFS, UPGRADES } from '../src/data.js';
 
@@ -280,6 +281,79 @@ test('証明の数で開く強化', () => {
   assert.equal(upgradeState(s, rec), 'locked');
   for (const p of PROOFS.slice(0, rec.proofs)) s.proofs[p.id] = true;
   assert.equal(upgradeState(s, rec), 'affordable');
+});
+
+test('拡張：第 1 層がリセットされ、整数がもらえる（証明は残る）', () => {
+  const s = newGame();
+  s.digits = Big.from('1e300');
+  assert.ok(expandGain(s).isZero(), '1.8e308 未満では拡張できない');
+  s.digits = Big.from('2e308');
+  s.digitsTotal = Big.from('1e400');
+  s.upgrades.logarithm = true;
+  s.levels.countTriple = 50;
+  s.proofs.primeTheorem = true;
+  const g = expand(s);
+  assert.equal(g.toNumber(), 1);
+  assert.equal(s.integers.toNumber(), 1);
+  assert.equal(s.expansions, 1);
+  assert.ok(s.digits.isZero() && s.digitsTotal.isZero());
+  assert.deepEqual(s.upgrades, {});
+  assert.equal(level(s, 'countTriple'), 0);
+  assert.ok(proven(s, 'primeTheorem'), '証明は残る');
+});
+
+test('拡張中の証明は先に終える必要がある', () => {
+  const s = newGame();
+  s.digits = Big.from('2e308');
+  s.proof = 'primeTheorem';
+  assert.ok(expand(s).isZero());
+});
+
+test('基礎の継承：拡張後に基本の強化を持って始まる', () => {
+  const s = newGame();
+  s.integers = Big.from(5);
+  assert.ok(buyIntegerUpgrade(s, 'startBasics'));
+  s.digits = Big.from('2e308');
+  expand(s);
+  assert.ok(s.upgrades.tenFingers && s.upgrades.sexagesimal);
+  assert.ok(!s.upgrades.exponent, '記数法の進化は含まない');
+});
+
+test('負の数の工場：エネルギーが貯まり、数の生産が上がる', () => {
+  const s = newGame();
+  s.integers = Big.from(100);
+  assert.ok(buyFactory(s, 0));
+  assert.ok(!buyFactory(s, 2), '前の段がないと買えない');
+  assert.ok(factoryCost(0, 1).gt(factoryCost(0, 0)));
+  s.tiers[0] = { count: Big.from(1), bought: 1 };
+  const before = countPerSec(s).toNumber();
+  for (let k = 0; k < 100; k++) tick(s, 0.1);
+  assert.ok(s.negEnergy.gt(9));
+  assert.ok(negCountLog(s) > 0);
+  assert.ok(countPerSec(s).toNumber() > before * 10);
+});
+
+test('自動拡張', () => {
+  const s = newGame();
+  s.integerUpgrades.autoExpand = true;
+  s.digits = Big.from('2e308');
+  for (let k = 0; k < 5; k++) tick(s, 0.1);
+  assert.equal(s.expansions, 1);
+});
+
+test('セーブの往復（第 2 層）', () => {
+  const s = newGame();
+  s.integers = Big.from('1.5e12');
+  s.expansions = 4;
+  s.factory[1] = { count: Big.from(30), bought: 7 };
+  s.negEnergy = Big.from('3e40');
+  s.integerUpgrades.factoryBoost = true;
+  const t = deserialize(serialize(s));
+  assert.equal(t.integers.cmp(s.integers), 0);
+  assert.equal(t.expansions, 4);
+  assert.equal(t.factory[1].bought, 7);
+  assert.equal(t.negEnergy.cmp(s.negEnergy), 0);
+  assert.ok(t.integerUpgrades.factoryBoost);
 });
 
 console.log(`\n${passed} 件成功`);

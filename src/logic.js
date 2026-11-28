@@ -12,6 +12,9 @@ import {
   PROOFS, PRIME_MULT_PROVEN, DIVISOR_EXPONENT_PROVEN, FEW_TOOLS_REWARD_MULT, NAIVE_GROWTH,
   PERFECT_MULT_PROVEN, PERFECT_QUEST_POWER, FORGET_DIGITS_BONUS, RECURRENCE_MULT,
   GOOGOL_LOG_PER_PROOF, FEW_TOOLS_LIMIT, REPEATABLE_SOFTCAP_LEVEL, REPEATABLE_SOFTCAP_LEVEL_GOOGOL, REPEATABLE_SOFTCAP_STEEPNESS,
+  EXPAND_LOG10, EXPAND_GAIN_DIVISOR, EXPAND_NEG_EXPONENT, BASIC_UPGRADES, FACTORY, FACTORY_ENERGY_RATE, FACTORY_CHAIN_RATE,
+  NEG_COUNT_EXPONENT, NEG_DIGIT_EXPONENT, INTEGER_UPGRADES, FACTORY_BOOST_MULT, EXPAND_BOOST_MULT,
+  SOFTCAP_SHIFT, LAYER3_INTEGERS,
 } from './data.js';
 
 export const SAVE_VERSION = 1;
@@ -93,6 +96,16 @@ export function newRun(state) {
 export function newGame() {
   const state = {
     version: SAVE_VERSION,
+    // 第 2 層（拡張してもリセットされない）
+    integers: ZERO,
+    integersTotal: ZERO,
+    expansions: 0,
+    integerUpgrades: {},
+    factory: FACTORY.map(() => ({ count: ZERO, bought: 0 })),
+    negEnergy: ZERO,
+    autoExpand: true,
+    autoDigitUpgrades: true,
+    // 第 1 層
     digits: ZERO,
     digitsTotal: ZERO,
     carries: 0,
@@ -149,6 +162,18 @@ export function deserialize(text) {
   state.bestRate = Number.isFinite(raw.bestRate) ? raw.bestRate : -Infinity;
   state.readyTime = Number.isFinite(raw.readyTime) ? raw.readyTime : null;
   state.lastSaved = Number(raw.lastSaved) || Date.now();
+  state.integers = Big.from(raw.integers);
+  state.integersTotal = Big.from(raw.integersTotal);
+  state.expansions = Number(raw.expansions) || 0;
+  state.integerUpgrades = {};
+  for (const u of INTEGER_UPGRADES) if (raw.integerUpgrades?.[u.id]) state.integerUpgrades[u.id] = true;
+  state.factory = FACTORY.map((_, i) => ({
+    count: Big.from(raw.factory?.[i]?.count),
+    bought: Number(raw.factory?.[i]?.bought) || 0,
+  }));
+  state.negEnergy = Big.from(raw.negEnergy);
+  state.autoExpand = raw.autoExpand !== false;
+  state.autoDigitUpgrades = raw.autoDigitUpgrades !== false;
   state.tiers = TIERS.map((_, i) => ({
     count: Big.from(raw.tiers?.[i]?.count),
     bought: Number(raw.tiers?.[i]?.bought) || 0,
@@ -253,6 +278,7 @@ export function decimalMult(state) {
 export function globalMult(state) {
   let mult = digitBonus(state).mul(decimalMult(state));
   if (has(state, 'placeValue')) mult = mult.mul(PLACE_VALUE_MULT);
+  mult = mult.mul(Big.fromLog10(negCountLog(state)));
   const triple = inProof(state, 'naive') ? 0 : level(state, 'countTriple');
   if (triple > 0) mult = mult.mul(Big.fromLog10(triple * Math.log10(COUNT_TRIPLE_MULT)));
   return mult;
@@ -457,6 +483,7 @@ export function digitsLog(state, l = state.runTotal.log10()) {
   if (!inProof(state, 'naive')) lg += level(state, 'digitDouble') * Math.log10(has(state, 'recurrence') ? RECURRENCE_MULT : DIGIT_DOUBLE_MULT);
   if (has(state, 'exponent')) lg += over / (has(state, 'scientific') ? SCIENTIFIC_DIVISOR : EXPONENT_DIVISOR);
   if (has(state, 'googol')) lg += provenCount(state) * GOOGOL_LOG_PER_PROOF;
+  lg += negDigitLog(state);
   if (has(state, 'arrow') && lg > 0) lg *= ARROW_POWER;
   return lg;
 }
@@ -549,6 +576,7 @@ export function tick(state, dt) {
     if (prods[i].isZero()) continue;
     state.tiers[i - 1].count = state.tiers[i - 1].count.add(prods[i].mul(dt));
   }
+  tickFactory(state, dt);
   state.playTime += dt;
   state.runTime += dt;
   // 自動購入は 0.2 秒ごと（素数探しなどの計算を毎フレームしないため）
@@ -556,6 +584,11 @@ export function tick(state, dt) {
   if (state.autoBuyTimer >= AUTO_BUY_INTERVAL) {
     state.autoBuyTimer = 0;
     autoBuy(state);
+    autoBuyDigitUpgrades(state);
+    if (hasInt(state, 'autoExpand') && state.autoExpand && canExpand(state) && !state.proof) {
+      state.lastExpandGain = expand(state);
+      return 0;
+    }
   }
   if (shouldAutoCarry(state)) {
     carry(state);
@@ -606,7 +639,8 @@ export function repeatableGrowth(state, r) {
 
 export function repeatableCost(r, lv, state = null) {
   const growth = state ? repeatableGrowth(state, r) : r.growth;
-  const cap = state && has(state, 'googol') ? REPEATABLE_SOFTCAP_LEVEL_GOOGOL : REPEATABLE_SOFTCAP_LEVEL;
+  let cap = state && has(state, 'googol') ? REPEATABLE_SOFTCAP_LEVEL_GOOGOL : REPEATABLE_SOFTCAP_LEVEL;
+  if (state && hasInt(state, 'softcapShift')) cap += SOFTCAP_SHIFT;
   const over = Math.max(0, lv - cap);
   return Big.fromLog10(Math.log10(r.baseCost) + lv * Math.log10(growth) + over * over * REPEATABLE_SOFTCAP_STEEPNESS);
 }
@@ -622,4 +656,138 @@ export function buyRepeatable(state, id) {
   state.digits = state.digits.sub(repeatableCost(r, level(state, id), state)).max(ZERO);
   state.levels[id] = level(state, id) + 1;
   return true;
+}
+
+// ================= 第 2 層：整数 =================
+
+export function hasInt(state, id) {
+  return !!state.integerUpgrades?.[id];
+}
+
+// 第 1 層の進行をリセットする（拡張時）。証明の完成状態は残る
+export function resetLayer1(state) {
+  state.digits = ZERO;
+  state.digitsTotal = ZERO;
+  state.lastGain = ZERO;
+  state.upgrades = {};
+  if (hasInt(state, 'startBasics')) for (const id of BASIC_UPGRADES) state.upgrades[id] = true;
+  state.levels = {};
+  state.proof = null;
+  newRun(state);
+}
+
+export function expandGain(state) {
+  if (!canExpand(state)) return ZERO;
+  const lg = Math.max(0, (state.digits.log10() - EXPAND_LOG10) / EXPAND_GAIN_DIVISOR)
+    + EXPAND_NEG_EXPONENT * state.negEnergy.add(1).log10();
+  let g = Big.fromLog10(lg).floor().max(1);
+  if (hasInt(state, 'expandBoost')) g = g.mul(EXPAND_BOOST_MULT);
+  return g;
+}
+
+export function expand(state) {
+  if (state.proof) return ZERO;
+  const gain = expandGain(state);
+  if (gain.isZero()) return ZERO;
+  state.integers = state.integers.add(gain);
+  state.integersTotal = state.integersTotal.add(gain);
+  state.expansions += 1;
+  resetLayer1(state);
+  return gain;
+}
+
+export function layer2Visible(state) {
+  return state.expansions > 0 || canExpand(state);
+}
+
+export function canReachLayer3(state) {
+  return state.integers.gte(LAYER3_INTEGERS);
+}
+
+// ---------- 負の数の工場 ----------
+
+export function factoryCost(i, bought) {
+  const f = FACTORY[i];
+  return Big.fromLog10(Math.log10(f.baseCost) + bought * Math.log10(f.growth));
+}
+
+export function factoryUnlocked(state, i) {
+  return i === 0 || state.factory[i - 1].bought > 0 || state.factory[i].bought > 0;
+}
+
+export function buyFactory(state, i) {
+  if (!factoryUnlocked(state, i)) return false;
+  const f = state.factory[i];
+  const cost = factoryCost(i, f.bought);
+  if (state.integers.lt(cost)) return false;
+  state.integers = state.integers.sub(cost).max(ZERO);
+  f.count = f.count.add(1);
+  f.bought += 1;
+  return true;
+}
+
+export function factoryMult(state) {
+  return hasInt(state, 'factoryBoost') ? FACTORY_BOOST_MULT : 1;
+}
+
+// 工場の段 i が毎秒生み出す量（段 0 は負のエネルギー、それ以外は段 i-1）
+export function factoryProduction(state, i) {
+  const rate = i === 0 ? FACTORY_ENERGY_RATE : FACTORY_CHAIN_RATE;
+  return state.factory[i].count.mul(rate * factoryMult(state));
+}
+
+function tickFactory(state, dt) {
+  const prods = FACTORY.map((_, i) => factoryProduction(state, i));
+  if (!prods[0].isZero()) state.negEnergy = state.negEnergy.add(prods[0].mul(dt));
+  for (let i = 1; i < FACTORY.length; i++) {
+    if (prods[i].isZero()) continue;
+    state.factory[i - 1].count = state.factory[i - 1].count.add(prods[i].mul(dt));
+  }
+}
+
+// 負のエネルギーによる倍率（log10）
+export function negCountLog(state) {
+  return NEG_COUNT_EXPONENT * state.negEnergy.add(1).log10();
+}
+
+export function negDigitLog(state) {
+  return NEG_DIGIT_EXPONENT * state.negEnergy.add(1).log10();
+}
+
+// ---------- 整数の強化 ----------
+
+export function integerUpgradeState(state, u) {
+  if (hasInt(state, u.id)) return 'owned';
+  return state.integers.gte(u.cost) ? 'affordable' : 'expensive';
+}
+
+export function buyIntegerUpgrade(state, id) {
+  const u = INTEGER_UPGRADES.find((x) => x.id === id);
+  if (!u || integerUpgradeState(state, u) !== 'affordable') return false;
+  state.integers = state.integers.sub(u.cost).max(ZERO);
+  state.integerUpgrades[id] = true;
+  return true;
+}
+
+// 自動の公理：桁の強化と繰り返し強化を安い順に買う
+export function autoBuyDigitUpgrades(state, maxBuys = 50) {
+  if (!hasInt(state, 'autoDigitUpgrades') || !state.autoDigitUpgrades) return 0;
+  let n = 0;
+  while (n < maxBuys) {
+    let best = null;
+    for (const u of UPGRADES) {
+      if (upgradeState(state, u) !== 'affordable') continue;
+      const c = Big.from(u.cost);
+      if (!best || c.lt(best.cost)) best = { cost: c, buy: () => buyUpgrade(state, u.id) };
+    }
+    for (const r of REPEATABLES) {
+      if (repeatableState(state, r) !== 'affordable') continue;
+      const c = repeatableCost(r, level(state, r.id), state);
+      if (!best || c.lt(best.cost)) best = { cost: c, buy: () => buyRepeatable(state, r.id) };
+    }
+    if (!best) break;
+    best.buy();
+    n++;
+  }
+  return n;
 }

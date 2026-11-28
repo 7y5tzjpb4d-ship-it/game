@@ -212,5 +212,50 @@ export const DIGIT_DOUBLE_MULT = 2;
 // 第 2 層「整数」への拡張に必要な所持桁（強化に使うと減る）
 export const EXPAND_DIGITS = '1.8e308';
 
+// ================= 第 2 層：整数 =================
+
+// 拡張：所持している桁が EXPAND_DIGITS に届くと実行でき、第 1 層の進行をリセットして「整数」を得る。
+// 証明の完成状態は拡張しても残る。
+// 得られる整数 = max(1, 10^((log10(所持桁) − EXPAND_LOG10) / EXPAND_GAIN_DIVISOR)) × (1 + 負のエネルギー)^EXPAND_NEG_EXPONENT（切り捨て）
+export const EXPAND_LOG10 = Math.log10(1.8e308);
+export const EXPAND_GAIN_DIVISOR = 40;
+export const EXPAND_NEG_EXPONENT = 0.45;
+
+// 基礎の継承で、拡張後に最初から持っている強化（記数法の進化より前の 13 種）
+export const BASIC_UPGRADES = [
+  'tenFingers', 'memory', 'divisor', 'openHands', 'autoCount', 'placeValue', 'decimal',
+  'prime', 'autoCount2', 'hcn', 'perfect', 'autoCarry', 'sexagesimal',
+];
+
+// 負の数の工場：整数で買う生産ライン。上の段が 1 つ下の段を、−1 は「負のエネルギー」を生む。
+// 拡張してもリセットされない
+export const FACTORY = [
+  { id: 'neg1', name: '−1', baseCost: 1, growth: 1.5 },
+  { id: 'neg10', name: '−10', baseCost: 5, growth: 1.8 },
+  { id: 'neg100', name: '−100', baseCost: 50, growth: 2.2 },
+  { id: 'neg1000', name: '−1000', baseCost: 1000, growth: 2.6 },
+];
+export const FACTORY_ENERGY_RATE = 1;
+export const FACTORY_CHAIN_RATE = 0.05;
+// 負のエネルギー E の効果：数の生産 ×(1 + E)^NEG_COUNT_EXPONENT、得られる桁 ×(1 + E)^NEG_DIGIT_EXPONENT
+export const NEG_COUNT_EXPONENT = 2;
+export const NEG_DIGIT_EXPONENT = 4;
+
+// 整数で買う強化（1 回ずつ）
+export const INTEGER_UPGRADES = [
+  { id: 'startBasics', name: '基礎の継承', cost: 1, desc: '拡張後、記数法の進化より前の強化 13 種を持って始まる' },
+  { id: 'autoDigitUpgrades', name: '自動の公理', cost: 2, desc: '桁の強化と繰り返し強化を、自動で安い順に買う（ON/OFF 可）' },
+  { id: 'factoryBoost', name: '負の増幅', cost: 10, desc: '負の数の工場の生産 ×3' },
+  { id: 'autoExpand', name: '自動拡張', cost: 25, desc: '拡張できるようになったら自動で拡張する（ON/OFF 可）' },
+  { id: 'expandBoost', name: '拡張の効率', cost: 1000, desc: '拡張で得られる整数 ×2' },
+  { id: 'softcapShift', name: '限界の突破', cost: 1e4, desc: '繰り返し強化の値段が急に上がり始めるレベル +40' },
+];
+export const FACTORY_BOOST_MULT = 3;
+export const EXPAND_BOOST_MULT = 2;
+export const SOFTCAP_SHIFT = 40;
+
+// 第 3 層「有理数」への入口（未実装）：所持している整数がこの値に届く
+export const LAYER3_INTEGERS = 1e6;
+
 // オフライン進行の上限（秒）
 export const OFFLINE_CAP_SEC = 24 * 60 * 60;
