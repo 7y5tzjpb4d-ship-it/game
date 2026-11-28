@@ -12,9 +12,9 @@ import {
   buyRepeatable, repeatableState, repeatableCost, level, canExpand, startProof, abandonProof,
   completeProof, proofGoalReached, proven, proofsAvailable, inProof, serialize, deserialize,
   expand, expandGain, buyFactory, factoryCost, factoryUnlocked, buyIntegerUpgrade, integerUpgradeState,
-  canReachLayer3, negCountLog,
+  canReachLayer3, negCountLog, buyIntegerRepeatable, integerRepeatableCost, intLevel, expandNegExponent,
 } from '../src/logic.js';
-import { TIERS, UPGRADES, REPEATABLES, PROOFS, EXPAND_DIGITS, FACTORY, INTEGER_UPGRADES } from '../src/data.js';
+import { TIERS, UPGRADES, REPEATABLES, PROOFS, EXPAND_DIGITS, FACTORY, INTEGER_UPGRADES, INTEGER_REPEATABLES } from '../src/data.js';
 import { Big, format } from '../src/big.js';
 
 const maxRuns = Number(process.argv[2] || 3000);
@@ -117,6 +117,10 @@ function spendIntegers() {
     for (const u of INTEGER_UPGRADES) {
       if (integerUpgradeState(state, u) === 'affordable' && (!best || Big.from(u.cost).lt(best.cost))) best = { cost: Big.from(u.cost), buy: () => buyIntegerUpgrade(state, u.id), name: u.name };
     }
+    for (const r of INTEGER_REPEATABLES) {
+      const c = integerRepeatableCost(r, intLevel(state, r.id));
+      if (state.integers.gte(c) && (!best || c.lt(best.cost))) best = { cost: c, buy: () => buyIntegerRepeatable(state, r.id), name: null };
+    }
     FACTORY.forEach((f, i) => {
       if (!factoryUnlocked(state, i)) return;
       const c = factoryCost(i, state.factory[i].bought);
@@ -131,7 +135,7 @@ function spendIntegers() {
 function reportExpansion(r, gain) {
   const bought = spendIntegers();
   const fac = state.factory.map((f) => f.bought).join('/');
-  console.log(`拡張 ${String(state.expansions).padStart(3)} 回目：${fmtT(total).padStart(9)}（前回から ${fmtT(total - lastExpandAt)}）整数 +${format(gain)}  所持 ${format(state.integers)}  工場 ${fac}  数の生産 ×1e${negCountLog(state).toFixed(1)}${bought.length ? `  強化: ${bought.join('、')}` : ''}${canReachLayer3(state) ? '  ★第 3 層' : ''}`);
+  console.log(`拡張 ${String(state.expansions).padStart(3)} 回目：${fmtT(total).padStart(9)}（前回から ${fmtT(total - lastExpandAt)}）整数 +${format(gain)}  所持 ${format(state.integers)}  工場 ${fac} 倍化${intLevel(state, 'factoryDouble')}  指数${expandNegExponent(state)}${bought.length ? `  強化: ${bought.join('、')}` : ''}${canReachLayer3(state) ? '  ★第 3 層' : ''}`);
   lastExpandAt = total;
 }
 let total = 0;

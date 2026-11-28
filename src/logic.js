@@ -14,7 +14,7 @@ import {
   GOOGOL_LOG_PER_PROOF, FEW_TOOLS_LIMIT, REPEATABLE_SOFTCAP_LEVEL, REPEATABLE_SOFTCAP_LEVEL_GOOGOL, REPEATABLE_SOFTCAP_STEEPNESS,
   EXPAND_LOG10, EXPAND_GAIN_DIVISOR, EXPAND_NEG_EXPONENT, EXPAND_MIN_GAIN, BASIC_UPGRADES, FACTORY, FACTORY_ENERGY_RATE, FACTORY_CHAIN_RATE,
   NEG_COUNT_EXPONENT, NEG_DIGIT_EXPONENT, INTEGER_UPGRADES, FACTORY_BOOST_MULT, EXPAND_BOOST_MULT,
-  SOFTCAP_SHIFT, LAYER3_INTEGERS,
+  SOFTCAP_SHIFT, LAYER3_INTEGERS, INTEGER_REPEATABLES, FACTORY_DOUBLE_MULT,
 } from './data.js';
 
 export const SAVE_VERSION = 1;
@@ -101,6 +101,7 @@ export function newGame() {
     integersTotal: ZERO,
     expansions: 0,
     integerUpgrades: {},
+    integerLevels: {},
     factory: FACTORY.map(() => ({ count: ZERO, bought: 0 })),
     negEnergy: ZERO,
     autoExpand: true,
@@ -167,6 +168,8 @@ export function deserialize(text) {
   state.expansions = Number(raw.expansions) || 0;
   state.integerUpgrades = {};
   for (const u of INTEGER_UPGRADES) if (raw.integerUpgrades?.[u.id]) state.integerUpgrades[u.id] = true;
+  state.integerLevels = {};
+  for (const r of INTEGER_REPEATABLES) state.integerLevels[r.id] = Math.max(0, Math.floor(Number(raw.integerLevels?.[r.id]) || 0));
   state.factory = FACTORY.map((_, i) => ({
     count: Big.from(raw.factory?.[i]?.count),
     bought: Number(raw.factory?.[i]?.bought) || 0,
@@ -680,10 +683,17 @@ export function resetLayer1(state) {
 export function expandGain(state) {
   if (!canExpand(state)) return ZERO;
   const lg = Math.max(0, (state.digits.log10() - EXPAND_LOG10) / EXPAND_GAIN_DIVISOR)
-    + EXPAND_NEG_EXPONENT * state.negEnergy.add(1).log10();
+    + expandNegExponent(state) * state.negEnergy.add(1).log10();
   let g = Big.fromLog10(lg).floor().max(EXPAND_MIN_GAIN);
   if (hasInt(state, 'expandBoost')) g = g.mul(EXPAND_BOOST_MULT);
   return g;
+}
+
+// 拡張で得られる整数に掛かる、負のエネルギーの指数（強化で上がる）
+export function expandNegExponent(state) {
+  let e = EXPAND_NEG_EXPONENT;
+  for (const u of INTEGER_UPGRADES) if (u.negExponent && hasInt(state, u.id)) e = Math.max(e, u.negExponent);
+  return e;
 }
 
 export function expand(state) {
@@ -728,13 +738,35 @@ export function buyFactory(state, i) {
 }
 
 export function factoryMult(state) {
-  return hasInt(state, 'factoryBoost') ? FACTORY_BOOST_MULT : 1;
+  let m = Big.fromLog10(intLevel(state, 'factoryDouble') * Math.log10(FACTORY_DOUBLE_MULT));
+  if (hasInt(state, 'factoryBoost')) m = m.mul(FACTORY_BOOST_MULT);
+  return m;
 }
 
 // 工場の段 i が毎秒生み出す量（段 0 は負のエネルギー、それ以外は段 i-1）
 export function factoryProduction(state, i) {
   const rate = i === 0 ? FACTORY_ENERGY_RATE : FACTORY_CHAIN_RATE;
-  return state.factory[i].count.mul(rate * factoryMult(state));
+  return state.factory[i].count.mul(rate).mul(factoryMult(state));
+}
+
+// ---------- 整数の繰り返し強化 ----------
+
+export function intLevel(state, id) {
+  return state.integerLevels?.[id] || 0;
+}
+
+export function integerRepeatableCost(r, lv) {
+  return Big.fromLog10(Math.log10(r.baseCost) + lv * Math.log10(r.growth));
+}
+
+export function buyIntegerRepeatable(state, id) {
+  const r = INTEGER_REPEATABLES.find((x) => x.id === id);
+  if (!r) return false;
+  const cost = integerRepeatableCost(r, intLevel(state, id));
+  if (state.integers.lt(cost)) return false;
+  state.integers = state.integers.sub(cost).max(ZERO);
+  state.integerLevels[id] = intLevel(state, id) + 1;
+  return true;
 }
 
 function tickFactory(state, dt) {
