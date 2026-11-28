@@ -283,7 +283,7 @@ test('証明の数で開く強化', () => {
   assert.equal(upgradeState(s, rec), 'affordable');
 });
 
-test('拡張：第 1 層がリセットされ、整数がもらえる（証明は残る）', () => {
+test('拡張：第 1 層がリセットされ、整数がもらえる', () => {
   const s = newGame();
   s.digits = Big.from('1e300');
   assert.ok(expandGain(s).isZero(), '1.8e308 未満では拡張できない');
@@ -293,13 +293,23 @@ test('拡張：第 1 層がリセットされ、整数がもらえる（証明�
   s.levels.countTriple = 50;
   s.proofs.primeTheorem = true;
   const g = expand(s);
-  assert.equal(g.toNumber(), 1);
-  assert.equal(s.integers.toNumber(), 1);
+  assert.equal(g.toNumber(), 3, '最低 3 もらえる');
+  assert.equal(s.integers.toNumber(), 3);
   assert.equal(s.expansions, 1);
   assert.ok(s.digits.isZero() && s.digitsTotal.isZero());
   assert.deepEqual(s.upgrades, {});
   assert.equal(level(s, 'countTriple'), 0);
-  assert.ok(proven(s, 'primeTheorem'), '証明は残る');
+  assert.ok(!proven(s, 'primeTheorem'), '証明もリセットされる');
+});
+
+test('定理の記憶：拡張しても証明が残る', () => {
+  const s = newGame();
+  s.integers = Big.from(100);
+  assert.ok(buyIntegerUpgrade(s, 'keepProofs'));
+  s.proofs.primeTheorem = true;
+  s.digits = Big.from('2e308');
+  expand(s);
+  assert.ok(proven(s, 'primeTheorem'));
 });
 
 test('拡張中の証明は先に終える必要がある', () => {

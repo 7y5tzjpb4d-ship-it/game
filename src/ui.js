@@ -316,7 +316,7 @@ export class UI {
       const gain = expandGain(this.state);
       if (gain.isZero() || this.state.proof) return;
       const ok = window.confirm(this.state.expansions === 0
-        ? `拡張すると、数・道具・桁・桁の強化・繰り返し強化がすべてリセットされます（証明は残ります）。\n代わりに「整数」を ${format(gain)} 個手に入れ、負の数の工場などに使えます。\n拡張しますか？`
+        ? `拡張すると、数・道具・桁・桁の強化・繰り返し強化・証明がすべてリセットされます。\n代わりに「整数」を ${format(gain)} 個手に入れ、負の数の工場などに使えます。\n拡張しますか？`
         : `拡張しますか？（整数 +${format(gain)}）`);
       if (!ok) return;
       const first = this.state.expansions === 0;

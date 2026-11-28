@@ -12,7 +12,7 @@ import {
   PROOFS, PRIME_MULT_PROVEN, DIVISOR_EXPONENT_PROVEN, FEW_TOOLS_REWARD_MULT, NAIVE_GROWTH,
   PERFECT_MULT_PROVEN, PERFECT_QUEST_POWER, FORGET_DIGITS_BONUS, RECURRENCE_MULT,
   GOOGOL_LOG_PER_PROOF, FEW_TOOLS_LIMIT, REPEATABLE_SOFTCAP_LEVEL, REPEATABLE_SOFTCAP_LEVEL_GOOGOL, REPEATABLE_SOFTCAP_STEEPNESS,
-  EXPAND_LOG10, EXPAND_GAIN_DIVISOR, EXPAND_NEG_EXPONENT, BASIC_UPGRADES, FACTORY, FACTORY_ENERGY_RATE, FACTORY_CHAIN_RATE,
+  EXPAND_LOG10, EXPAND_GAIN_DIVISOR, EXPAND_NEG_EXPONENT, EXPAND_MIN_GAIN, BASIC_UPGRADES, FACTORY, FACTORY_ENERGY_RATE, FACTORY_CHAIN_RATE,
   NEG_COUNT_EXPONENT, NEG_DIGIT_EXPONENT, INTEGER_UPGRADES, FACTORY_BOOST_MULT, EXPAND_BOOST_MULT,
   SOFTCAP_SHIFT, LAYER3_INTEGERS,
 } from './data.js';
@@ -664,7 +664,7 @@ export function hasInt(state, id) {
   return !!state.integerUpgrades?.[id];
 }
 
-// 第 1 層の進行をリセットする（拡張時）。証明の完成状態は残る
+// 第 1 層の進行をリセットする（拡張時）。証明は「定理の記憶」があれば残る
 export function resetLayer1(state) {
   state.digits = ZERO;
   state.digitsTotal = ZERO;
@@ -672,6 +672,7 @@ export function resetLayer1(state) {
   state.upgrades = {};
   if (hasInt(state, 'startBasics')) for (const id of BASIC_UPGRADES) state.upgrades[id] = true;
   state.levels = {};
+  if (!hasInt(state, 'keepProofs')) state.proofs = {};
   state.proof = null;
   newRun(state);
 }
@@ -680,7 +681,7 @@ export function expandGain(state) {
   if (!canExpand(state)) return ZERO;
   const lg = Math.max(0, (state.digits.log10() - EXPAND_LOG10) / EXPAND_GAIN_DIVISOR)
     + EXPAND_NEG_EXPONENT * state.negEnergy.add(1).log10();
-  let g = Big.fromLog10(lg).floor().max(1);
+  let g = Big.fromLog10(lg).floor().max(EXPAND_MIN_GAIN);
   if (hasInt(state, 'expandBoost')) g = g.mul(EXPAND_BOOST_MULT);
   return g;
 }
