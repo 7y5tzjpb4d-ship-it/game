@@ -2,7 +2,7 @@
 import { Big, format } from './big.js';
 import {
   TIERS, UPGRADES, REPEATABLES, PROOFS, CARRY_LOG10, HCN, EXPAND_DIGITS, FEW_TOOLS_LIMIT,
-  FACTORY, INTEGER_UPGRADES, LAYER3_INTEGERS,
+  FACTORY, INTEGER_UPGRADES, LAYER3_INTEGERS, INTEGER_REPEATABLES,
 } from './data.js';
 import {
   tierCost, bulkCost, tierMult, tierProduction, countPerSec, isTierUnlocked, maxAffordable,
@@ -14,6 +14,7 @@ import {
   startProof, abandonProof, completeProof,
   expand, expandGain, layer2Visible, hasInt, factoryCost, factoryUnlocked, buyFactory, factoryProduction,
   negCountLog, negDigitLog, integerUpgradeState, buyIntegerUpgrade,
+  intLevel, integerRepeatableCost, buyIntegerRepeatable, expandNegExponent,
 } from './logic.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -40,6 +41,7 @@ export class UI {
     this.buildProofs();
     this.buildFactory();
     this.buildIntegerUpgrades();
+    this.buildIntegerRepeatables();
     this.bindEvents();
   }
 
@@ -183,6 +185,23 @@ export class UI {
         <button type="button" class="buy" data-int-upgrade="${u.id}"></button>`;
       list.appendChild(li);
       return { li, buy: li.querySelector('.buy'), u };
+    });
+  }
+
+  buildIntegerRepeatables() {
+    const list = $('#integer-repeatables');
+    list.innerHTML = '';
+    this.integerRepeatableEls = INTEGER_REPEATABLES.map((r) => {
+      const li = document.createElement('li');
+      li.className = 'upgrade';
+      li.innerHTML = `
+        <div class="upgrade-body">
+          <div class="upgrade-name">${r.name} <span class="upgrade-level"></span></div>
+          <div class="upgrade-desc">${r.desc}（買うたびに重なる）</div>
+        </div>
+        <button type="button" class="buy" data-int-repeatable="${r.id}"></button>`;
+      list.appendChild(li);
+      return { li, buy: li.querySelector('.buy'), level: li.querySelector('.upgrade-level'), r };
     });
   }
 
@@ -334,6 +353,14 @@ export class UI {
       const btn = e.target.closest('[data-int-upgrade]');
       if (!btn) return;
       if (buyIntegerUpgrade(this.state, btn.dataset.intUpgrade)) {
+        this.game.save();
+        this.render();
+      }
+    });
+    $('#integer-repeatables').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-int-repeatable]');
+      if (!btn) return;
+      if (buyIntegerRepeatable(this.state, btn.dataset.intRepeatable)) {
         this.game.save();
         this.render();
       }
@@ -695,6 +722,7 @@ export class UI {
     $('#integers').textContent = format(s.integers);
     $('#integers-sub').innerHTML = `負のエネルギー ${format(s.negEnergy, 1)}<br>`
       + `→ 数の生産 ×${format(Big.fromLog10(negCountLog(s)), 1)}、得られる桁 ×${format(Big.fromLog10(negDigitLog(s)), 1)}<br>`
+      + `→ 拡張で得られる整数 ×${format(Big.fromLog10(expandNegExponent(s) * s.negEnergy.add(1).log10()), 1)}（^${expandNegExponent(s)}）<br>`
       + `拡張 ${s.expansions} 回`;
     let shownLocked = false;
     this.factoryEls.forEach((el, i) => {
@@ -727,6 +755,12 @@ export class UI {
       li.classList.toggle('owned', st === 'owned');
       buy.classList.toggle('cant', st === 'expensive');
       buy.textContent = st === 'owned' ? '取得済み' : `${format(u.cost)} 整数`;
+    });
+    this.integerRepeatableEls.forEach(({ buy, level: lvEl, r }) => {
+      const cost = integerRepeatableCost(r, intLevel(s, r.id));
+      lvEl.textContent = `Lv ${intLevel(s, r.id)}`;
+      buy.classList.toggle('cant', s.integers.lt(cost));
+      buy.textContent = `${format(cost)} 整数`;
     });
     const t1 = $('#auto-digit-up-toggle');
     t1.classList.toggle('hidden', !hasInt(s, 'autoDigitUpgrades'));
