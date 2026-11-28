@@ -2,6 +2,7 @@
 // 「上の段から買えるだけ買い（約数の力を取ったら節目で買い止め）、桁の獲得効率が落ち始めたら
 // 繰り上がり、桁は安い強化から順に使う」プレイヤーを想定する。
 // 使い方: node tools/sim.js [最大繰り上がり回数] [-v]
+// 環境変数 SIM_MODE=max|milestone|prime で自動購入の買い止め方を固定できる
 import {
   newGame, tick, buyBest, has, canCarry, carry, digitsLog, digitsOnCarry, buyUpgrade, upgradeState,
   buyRepeatable, repeatableState, repeatableCost, level, canExpand,
@@ -37,8 +38,9 @@ for (let r = 0; r < maxRuns && total < maxTotal; r++) {
   const carriesBefore = state.carries;
   let t = 0;
   let bestRate = -Infinity;
+  let readyAt = null;
   while (t < 6 * 3600 && state.carries === carriesBefore) {
-    const mode = has(state, 'divisor') ? 'milestone' : 'max';
+    const mode = process.env.SIM_MODE || (has(state, 'divisor') ? 'milestone' : 'max');
     state.autoMode = mode;
     for (let i = TIERS.length - 1; i >= 0; i--) buyBest(state, i, mode);
     tick(state, DT);
@@ -48,6 +50,9 @@ for (let r = 0; r < maxRuns && total < maxTotal; r++) {
       const rate = digitsLog(state) - Math.log10(t);
       bestRate = Math.max(bestRate, rate);
       if (rate < bestRate + Math.log10(0.9)) break;
+      // ゲームの自動繰り上がりと同じ安全装置：効率が上がり続けても一定時間で繰り上がる
+      if (readyAt === null) readyAt = t;
+      if (t >= readyAt + Math.max(readyAt * 2, 60)) break;
     }
   }
   total += t;
