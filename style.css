@@ -249,6 +249,21 @@ h2:first-child { margin-top: 4px; }
 /* ---------- 自動購入 ---------- */
 .auto-row { justify-content: flex-start; gap: 10px; }
 .auto-label { font-size: 12px; color: var(--muted); }
+.auto-row { flex-wrap: wrap; }
+.carry-input { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.carry-input input {
+  width: 72px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.carry-note { margin: -4px 0 10px; }
 
 /* ---------- 次の層へ ---------- */
 .expand {

@@ -53,6 +53,19 @@
       <div class="toolbar toggles">
         <button type="button" class="toggle hidden" id="auto-carry-toggle">自動繰り上がり ON</button>
       </div>
+      <div class="toolbar auto-row hidden" id="auto-carry-row">
+        <span class="auto-label">条件</span>
+        <div class="seg" role="group" aria-label="自動繰り上がりの条件">
+          <button type="button" data-carrymode="rate">効率</button>
+          <button type="button" data-carrymode="amount">倍率</button>
+          <button type="button" data-carrymode="time">時間</button>
+        </div>
+        <label class="carry-input hidden" id="carry-amount-wrap">所持の
+          <input type="number" id="carry-amount" min="0.01" step="any" inputmode="decimal"> 倍</label>
+        <label class="carry-input hidden" id="carry-time-wrap">
+          <input type="number" id="carry-time" min="1" step="1" inputmode="numeric"> 秒</label>
+      </div>
+      <p class="note carry-note hidden" id="carry-note"></p>
       <ul class="tiers" id="tiers"></ul>
     </section>
 

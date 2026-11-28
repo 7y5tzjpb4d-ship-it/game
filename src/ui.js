@@ -6,7 +6,7 @@ import {
   buyByMode, canCarry, canExpand, nextPrime, digitsOnCarry, nextDigitAt, carry, digitBonus,
   upgradeState, buyUpgrade, hasAnyAuto, milestoneFactor, nextMilestone, milestonesPassed,
   divisorCount, isPrime, perfectPassed, has, autoCarryAvailable, countDigits,
-  repeatableCost, repeatableState, buyRepeatable, level,
+  repeatableCost, repeatableState, buyRepeatable, level, autoCarryGuardTime,
 } from './logic.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -159,6 +159,25 @@ export class UI {
         this.render();
       });
     });
+    document.querySelectorAll('[data-carrymode]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.state.autoCarryMode = btn.dataset.carrymode;
+        this.render();
+      });
+    });
+    const amount = $('#carry-amount');
+    const time = $('#carry-time');
+    amount.addEventListener('change', () => {
+      const v = Number(amount.value);
+      if (v > 0) this.state.autoCarryAmount = v;
+      this.render();
+    });
+    time.addEventListener('change', () => {
+      const v = Math.floor(Number(time.value));
+      if (v >= 1) this.state.autoCarryTime = v;
+      this.render();
+    });
+
     $('#auto-carry-toggle').addEventListener('click', () => {
       this.state.autoCarry = !this.state.autoCarry;
       this.render();
@@ -288,6 +307,7 @@ export class UI {
     $('#auto-row').classList.toggle('hidden', !hasAnyAuto(s));
     const autoActive = s.auto ? s.autoMode : 'off';
     document.querySelectorAll('[data-automode]').forEach((b) => b.classList.toggle('active', b.dataset.automode === autoActive));
+    this.renderAutoCarry();
     const autoCarryBtn = $('#auto-carry-toggle');
     autoCarryBtn.classList.toggle('hidden', !autoCarryAvailable(s));
     autoCarryBtn.classList.toggle('on', s.autoCarry);
@@ -300,6 +320,31 @@ export class UI {
 
     if (document.querySelector('[data-panel="digits"]').classList.contains('active')) this.renderDigits();
     if (document.querySelector('[data-panel="settings"]').classList.contains('active')) this.renderStats();
+  }
+
+  renderAutoCarry() {
+    const s = this.state;
+    const show = autoCarryAvailable(s) && s.autoCarry;
+    $('#auto-carry-row').classList.toggle('hidden', !show);
+    $('#carry-note').classList.toggle('hidden', !show);
+    if (!show) return;
+    document.querySelectorAll('[data-carrymode]').forEach((b) => b.classList.toggle('active', b.dataset.carrymode === s.autoCarryMode));
+    $('#carry-amount-wrap').classList.toggle('hidden', s.autoCarryMode !== 'amount');
+    $('#carry-time-wrap').classList.toggle('hidden', s.autoCarryMode !== 'time');
+    // 入力中は上書きしない
+    const amount = $('#carry-amount');
+    const time = $('#carry-time');
+    if (document.activeElement !== amount) amount.value = String(s.autoCarryAmount);
+    if (document.activeElement !== time) time.value = String(s.autoCarryTime);
+    let note;
+    if (s.autoCarryMode === 'amount') note = `得られる桁が所持している桁の ${s.autoCarryAmount} 倍以上になったら繰り上がる`;
+    else if (s.autoCarryMode === 'time') note = `1 周が ${s.autoCarryTime} 秒になったら繰り上がる`;
+    else {
+      const guard = autoCarryGuardTime(s);
+      note = '桁の獲得効率が下がり始めたら繰り上がる。'
+        + (guard === null ? '上がり続ける場合も、一定時間で繰り上がる' : `上がり続けても、この周の ${fmtTime(guard)} で繰り上がる`);
+    }
+    $('#carry-note').textContent = note;
   }
 
   renderGoal() {

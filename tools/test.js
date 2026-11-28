@@ -191,4 +191,39 @@ test('セーブの往復（繰り返し強化）', () => {
   assert.equal(t.bestRate, -Infinity);
 });
 
+test('自動繰り上がり：時間・倍率・効率（安全装置つき）', () => {
+  const make = (mode) => {
+    const s = newGame();
+    s.upgrades.autoCarry = true;
+    s.autoCarryMode = mode;
+    s.runTotal = Big.from('1e20');
+    return s;
+  };
+  // 時間：60 秒たつまでは繰り上がらない
+  const a = make('time');
+  a.runTime = 30;
+  assert.equal(tick(a, 0.01), 0);
+  a.runTime = 61;
+  assert.equal(tick(a, 0.01), 1);
+  // 倍率：得られる桁（1e20 で約 3）≥ 所持 × 10 なら繰り上がる
+  const b = make('amount');
+  b.digits = Big.from(1);
+  assert.equal(tick(b, 0.01), 0);
+  b.autoCarryAmount = 2;
+  assert.equal(tick(b, 0.01), 1);
+  // 効率：効率が上がり続けていても、安全装置の時間で繰り上がる
+  const c = make('rate');
+  c.runTime = 10;
+  assert.equal(tick(c, 0.01), 0, '最初の判定では繰り上がらない');
+  c.bestRate = -Infinity;
+  c.runTime = 10 + 60;
+  assert.equal(tick(c, 0.01), 1);
+});
+
+test('素数モードの自動購入は 0 個からでも始められる', () => {
+  const s = newGame();
+  s.count = Big.from(10);
+  assert.equal(buyBest(s, 0, 'prime'), 1);
+});
+
 console.log(`\n${passed} 件成功`);

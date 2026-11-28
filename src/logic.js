@@ -14,6 +14,7 @@ import {
 export const SAVE_VERSION = 1;
 export const BUY_MODES = ['one', 'milestone', 'prime', 'max'];
 export const AUTO_MODES = ['max', 'milestone', 'prime'];
+export const AUTO_CARRY_MODES = ['rate', 'amount', 'time'];
 const AUTO_BUY_INTERVAL = 0.2;
 const SMALL_HCN = [1, 2, 4, 6];
 
@@ -82,6 +83,7 @@ export function newRun(state) {
   state.runTotal = state.count;
   state.runTime = 0;
   state.bestRate = -Infinity; // 桁の獲得効率の最高値（log10）
+  state.readyTime = null; // この周で繰り上がれるようになった時刻
   return state;
 }
 
@@ -97,6 +99,9 @@ export function newGame() {
     auto: true,
     autoMode: 'max',
     autoCarry: true,
+    autoCarryMode: 'rate',
+    autoCarryAmount: 10,
+    autoCarryTime: 60,
     buyMode: 'one',
     playTime: 0,
     lastSaved: Date.now(),
@@ -127,10 +132,14 @@ export function deserialize(text) {
   state.auto = raw.auto !== false;
   state.autoMode = AUTO_MODES.includes(raw.autoMode) ? raw.autoMode : 'max';
   state.autoCarry = raw.autoCarry !== false;
+  state.autoCarryMode = AUTO_CARRY_MODES.includes(raw.autoCarryMode) ? raw.autoCarryMode : 'rate';
+  state.autoCarryAmount = Number(raw.autoCarryAmount) > 0 ? Number(raw.autoCarryAmount) : 10;
+  state.autoCarryTime = Number(raw.autoCarryTime) > 0 ? Number(raw.autoCarryTime) : 60;
   state.buyMode = BUY_MODES.includes(raw.buyMode) ? raw.buyMode : 'one';
   state.playTime = Number(raw.playTime) || 0;
   state.runTime = Number(raw.runTime) || 0;
   state.bestRate = Number.isFinite(raw.bestRate) ? raw.bestRate : -Infinity;
+  state.readyTime = Number.isFinite(raw.readyTime) ? raw.readyTime : null;
   state.lastSaved = Number(raw.lastSaved) || Date.now();
   state.tiers = TIERS.map((_, i) => ({
     count: Big.from(raw.tiers?.[i]?.count),
@@ -333,7 +342,8 @@ export function buyBest(state, i, mode) {
     // 買い止め先には 12 未満の高度合成数（1, 2, 4, 6）も含める
     target = limit > HCN[HCN.length - 1] ? limit : [...SMALL_HCN, ...HCN].reverse().find((h) => h <= limit) ?? 0;
   } else {
-    target = primeAtMost(limit);
+    // 素数（2 以上）に届かないうちは 1 個だけ買って始める
+    target = limit >= 2 ? primeAtMost(limit) : limit;
   }
   return target > bought ? buyUpTo(state, i, target) : 0;
 }
@@ -424,12 +434,29 @@ export function carryRateLog(state) {
 
 // 効率が今回の最高値の 90% を下回ったら自動で繰り上がる
 const AUTO_CARRY_RATE_DROP = 0.9;
+// 効率モードの安全装置：効率が上がり続けても、繰り上がれるようになってから
+// その時間の 2 倍（最低 60 秒）たったら繰り上がる
+const AUTO_CARRY_RATE_GUARD_FACTOR = 2;
+const AUTO_CARRY_RATE_GUARD_MIN = 60;
+
+export function autoCarryGuardTime(state) {
+  if (state.readyTime === null) return null;
+  return state.readyTime + Math.max(state.readyTime * AUTO_CARRY_RATE_GUARD_FACTOR, AUTO_CARRY_RATE_GUARD_MIN);
+}
 
 function shouldAutoCarry(state) {
-  if (!autoCarryAvailable(state) || !state.autoCarry || !canCarry(state)) return false;
+  if (!canCarry(state)) return false;
+  if (state.readyTime === null) state.readyTime = state.runTime;
+  if (!autoCarryAvailable(state) || !state.autoCarry) return false;
+  if (state.autoCarryMode === 'time') return state.runTime >= state.autoCarryTime;
+  if (state.autoCarryMode === 'amount') {
+    // 得られる桁 ≥ 所持している桁 × 指定の倍率（所持が 1 未満なら 1 として扱う）
+    return digitsLog(state) >= Math.max(0, state.digits.log10()) + Math.log10(state.autoCarryAmount);
+  }
   const rate = carryRateLog(state);
   if (rate > state.bestRate) state.bestRate = rate;
-  return rate < state.bestRate + Math.log10(AUTO_CARRY_RATE_DROP);
+  if (rate < state.bestRate + Math.log10(AUTO_CARRY_RATE_DROP)) return true;
+  return state.runTime >= autoCarryGuardTime(state);
 }
 
 // ---------- 時間経過 ----------
