@@ -6,10 +6,16 @@ import {
   START_COUNT, CARRY_LOG10, DIGIT_STEP, DIGIT_POWER, DIGIT_BONUS_EXPONENT,
   UPGRADES, MEMORY_START_COUNT, TEN_FINGERS_MULT, DECIMAL_MULT_PER_DIGIT,
   PRIME_MULT, DIVISOR_EXPONENT, PERFECT_NUMBERS, PERFECT_MULT, SEXAGESIMAL_MULT,
-  CARRY_MILESTONES, START_FINGERS, PLACE_VALUE_MULT,
+  START_FINGERS, PLACE_VALUE_MULT, EXPAND_DIGITS,
+  REPEATABLES, EXPONENT_DIVISOR, SCIENTIFIC_DIVISOR, BONUS_EXPONENT_WEIGHT, BONUS_EXPONENT_POWER, BONUS_EXPONENT_LOG,
+  ARROW_POWER, COUNT_TRIPLE_MULT, DIGIT_DOUBLE_MULT,
 } from './data.js';
 
 export const SAVE_VERSION = 1;
+export const BUY_MODES = ['one', 'milestone', 'prime', 'max'];
+export const AUTO_MODES = ['max', 'milestone', 'prime'];
+const AUTO_BUY_INTERVAL = 0.2;
+const SMALL_HCN = [1, 2, 4, 6];
 
 // ---------- 整数論の小道具 ----------
 
@@ -36,30 +42,46 @@ export function divisorCount(n) {
 }
 
 export function isPrime(n) {
-  return n >= 2 && divisorCount(n) === 2;
+  if (n < 2) return false;
+  if (n % 2 === 0) return n === 2;
+  for (let p = 3; p * p <= n; p += 2) if (n % p === 0) return false;
+  return true;
 }
 
 export function isPerfect(n) {
   return PERFECT_NUMBERS.includes(n);
 }
 
-// ---------- 状態 ----------
-
-export function milestoneReached(state, id) {
-  const m = CARRY_MILESTONES.find((x) => x.id === id);
-  return !!m && state.carries >= m.at;
+// 購入数 n までに通過した完全数の数
+export function perfectPassed(n) {
+  return PERFECT_NUMBERS.filter((p) => p <= n).length;
 }
+
+// n 以下で最大の素数（なければ 0）
+export function primeAtMost(n) {
+  for (let k = Math.floor(n); k >= 2; k--) if (isPrime(k)) return k;
+  return 0;
+}
+
+// n より大きい最小の素数
+export function nextPrime(n) {
+  let k = Math.floor(n) + 1;
+  while (!isPrime(k)) k++;
+  return k;
+}
+
+// ---------- 状態 ----------
 
 export function newRun(state) {
   state.count = new Big(state.upgrades?.memory ? MEMORY_START_COUNT : START_COUNT, 0);
   state.tiers = TIERS.map(() => ({ count: ZERO, bought: 0 }));
-  if (milestoneReached(state, 'startFingers')) {
+  if (state.upgrades?.openHands) {
     state.tiers[0] = { count: new Big(START_FINGERS, 0), bought: START_FINGERS };
   }
   // この周で数えた合計（買い物では減らない）。繰り上がりの基準になる
   state.runTotal = state.count;
   state.runTime = 0;
-  state.bestRate = 0;
+  state.bestRate = -Infinity; // 桁の獲得効率の最高値（log10）
   return state;
 }
 
@@ -71,7 +93,9 @@ export function newGame() {
     carries: 0,
     lastGain: ZERO,
     upgrades: {},
+    levels: {},
     auto: true,
+    autoMode: 'max',
     autoCarry: true,
     buyMode: 'one',
     playTime: 0,
@@ -98,12 +122,15 @@ export function deserialize(text) {
   state.lastGain = Big.from(raw.lastGain);
   state.upgrades = {};
   for (const u of UPGRADES) if (raw.upgrades?.[u.id]) state.upgrades[u.id] = true;
+  state.levels = {};
+  for (const r of REPEATABLES) state.levels[r.id] = Math.max(0, Math.floor(Number(raw.levels?.[r.id]) || 0));
   state.auto = raw.auto !== false;
+  state.autoMode = AUTO_MODES.includes(raw.autoMode) ? raw.autoMode : 'max';
   state.autoCarry = raw.autoCarry !== false;
-  state.buyMode = ['one', 'milestone', 'max'].includes(raw.buyMode) ? raw.buyMode : 'one';
+  state.buyMode = BUY_MODES.includes(raw.buyMode) ? raw.buyMode : 'one';
   state.playTime = Number(raw.playTime) || 0;
   state.runTime = Number(raw.runTime) || 0;
-  state.bestRate = Number(raw.bestRate) || 0;
+  state.bestRate = Number.isFinite(raw.bestRate) ? raw.bestRate : -Infinity;
   state.lastSaved = Number(raw.lastSaved) || Date.now();
   state.tiers = TIERS.map((_, i) => ({
     count: Big.from(raw.tiers?.[i]?.count),
@@ -118,9 +145,20 @@ export function has(state, id) {
   return !!state.upgrades[id];
 }
 
+export function level(state, id) {
+  return state.levels?.[id] || 0;
+}
+
+export function digitBonusExponent(state) {
+  if (has(state, 'logarithm')) return BONUS_EXPONENT_LOG;
+  if (has(state, 'power')) return BONUS_EXPONENT_POWER;
+  if (has(state, 'weight')) return BONUS_EXPONENT_WEIGHT;
+  return DIGIT_BONUS_EXPONENT;
+}
+
 // 累計の桁による「数」の生産ボーナス：(1 + 累計)^指数
 export function digitBonus(state) {
-  return state.digitsTotal.add(1).pow(DIGIT_BONUS_EXPONENT);
+  return state.digitsTotal.add(1).pow(digitBonusExponent(state));
 }
 
 // 「数」の桁数（10 進）
@@ -136,7 +174,9 @@ export function decimalMult(state) {
 
 export function globalMult(state) {
   let mult = digitBonus(state).mul(decimalMult(state));
-  if (milestoneReached(state, 'boost')) mult = mult.mul(PLACE_VALUE_MULT);
+  if (has(state, 'placeValue')) mult = mult.mul(PLACE_VALUE_MULT);
+  const triple = level(state, 'countTriple');
+  if (triple > 0) mult = mult.mul(Big.fromLog10(triple * Math.log10(COUNT_TRIPLE_MULT)));
   return mult;
 }
 
@@ -166,7 +206,7 @@ export function numberTheoryMult(state, i) {
   if (b <= 0) return m;
   if (has(state, 'divisor')) m *= divisorCount(b) ** DIVISOR_EXPONENT;
   if (has(state, 'prime') && isPrime(b)) m *= PRIME_MULT;
-  if (has(state, 'perfect') && isPerfect(b)) m *= PERFECT_MULT;
+  if (has(state, 'perfect')) m *= PERFECT_MULT ** perfectPassed(b);
   return m;
 }
 
@@ -250,15 +290,52 @@ export function buyTier(state, i, mode = state.buyMode) {
   return state.count.gte(cost) ? addBought(state, i, 1, cost) : 0;
 }
 
-// 次の節目（高度合成数）までまとめて買う。買えなければ何もしない
-export function buyToMilestone(state, i) {
-  if (!isTierUnlocked(state, i)) return 0;
+// 購入数をちょうど target にする。買えなければ何もしない
+function buyUpTo(state, i, target) {
   const bought = state.tiers[i].bought;
-  const target = nextMilestone(bought);
-  if (target === null) return 0;
   const k = target - bought;
+  if (k <= 0) return 0;
   const cost = bulkCost(i, bought, k);
   return state.count.gte(cost) ? addBought(state, i, k, cost) : 0;
+}
+
+// 次の節目（高度合成数）までまとめて買う
+export function buyToMilestone(state, i) {
+  if (!isTierUnlocked(state, i)) return 0;
+  const target = nextMilestone(state.tiers[i].bought);
+  return target === null ? 0 : buyUpTo(state, i, target);
+}
+
+// 次の素数までまとめて買う
+export function buyToPrime(state, i) {
+  if (!isTierUnlocked(state, i)) return 0;
+  return buyUpTo(state, i, nextPrime(state.tiers[i].bought));
+}
+
+// 手動購入（購入モードに従う）
+export function buyByMode(state, i, mode = state.buyMode) {
+  if (mode === 'milestone') return buyToMilestone(state, i);
+  if (mode === 'prime') return buyToPrime(state, i);
+  return buyTier(state, i, mode);
+}
+
+// 買える範囲で、買い止め方に合ういちばん大きい購入数まで買う（自動購入用）
+export function buyBest(state, i, mode) {
+  if (mode === 'max') return buyTier(state, i, 'max');
+  if (!isTierUnlocked(state, i)) return 0;
+  const bought = state.tiers[i].bought;
+  const { n } = maxAffordable(state, i);
+  if (n <= 0) return 0;
+  const limit = bought + n;
+  let target;
+  if (mode === 'milestone') {
+    // 用意した高度合成数を超えたら最大まで買う
+    // 買い止め先には 12 未満の高度合成数（1, 2, 4, 6）も含める
+    target = limit > HCN[HCN.length - 1] ? limit : [...SMALL_HCN, ...HCN].reverse().find((h) => h <= limit) ?? 0;
+  } else {
+    target = primeAtMost(limit);
+  }
+  return target > bought ? buyUpTo(state, i, target) : 0;
 }
 
 export function autoBuyAllowed(state, i) {
@@ -274,7 +351,7 @@ export function hasAnyAuto(state) {
 function autoBuy(state) {
   // 上の段から順に買えるだけ買う
   for (let i = TIERS.length - 1; i >= 0; i--) {
-    if (autoBuyAllowed(state, i)) buyTier(state, i, 'max');
+    if (autoBuyAllowed(state, i)) buyBest(state, i, state.autoMode);
   }
 }
 
@@ -284,28 +361,44 @@ export function canCarry(state) {
   return state.runTotal.log10() >= CARRY_LOG10;
 }
 
-function rawDigits(state) {
-  const l = state.runTotal.log10();
-  if (l < CARRY_LOG10) return 0;
-  let g = (1 + (l - CARRY_LOG10) / DIGIT_STEP) ** DIGIT_POWER;
-  if (has(state, 'sexagesimal')) g *= SEXAGESIMAL_MULT;
-  return g;
+// 繰り上がりで得られる桁の log10（切り捨て前）。届いていなければ -Infinity
+// 大きな値を扱うので、すべて log10 で計算する
+export function digitsLog(state, l = state.runTotal.log10()) {
+  if (l < CARRY_LOG10) return -Infinity;
+  const over = l - CARRY_LOG10;
+  let lg = DIGIT_POWER * Math.log10(1 + over / DIGIT_STEP);
+  if (has(state, 'sexagesimal')) lg += Math.log10(SEXAGESIMAL_MULT);
+  lg += level(state, 'digitDouble') * Math.log10(DIGIT_DOUBLE_MULT);
+  if (has(state, 'exponent')) lg += over / (has(state, 'scientific') ? SCIENTIFIC_DIVISOR : EXPONENT_DIVISOR);
+  if (has(state, 'arrow') && lg > 0) lg *= ARROW_POWER;
+  return lg;
 }
 
 // 切り捨て前の獲得量（効率の判定用）
 export function digitsContinuous(state) {
-  return Big.from(rawDigits(state));
+  return Big.fromLog10(digitsLog(state));
 }
 
 export function digitsOnCarry(state) {
-  return Big.from(Math.floor(rawDigits(state)));
+  return Big.fromLog10(digitsLog(state)).floor();
 }
 
-// 次の +1 桁に必要な「この周で数えた合計」
+// 次の +1 桁に必要な「この周で数えた合計」。獲得量が大きくて意味がなければ null
 export function nextDigitAt(state) {
-  const mult = has(state, 'sexagesimal') ? SEXAGESIMAL_MULT : 1;
-  const target = (Math.floor(rawDigits(state)) + 1) / mult;
-  return Big.fromLog10(CARRY_LOG10 + (target ** (1 / DIGIT_POWER) - 1) * DIGIT_STEP);
+  const l = state.runTotal.log10();
+  const lg = digitsLog(state, l);
+  if (lg > 9) return null;
+  const target = Math.log10(Math.floor(10 ** lg) + 1);
+  // digitsLog は L について単調増加なので二分探索
+  let lo = Math.max(l, CARRY_LOG10);
+  let hi = lo + 1;
+  while (digitsLog(state, hi) < target) hi += hi - CARRY_LOG10 + 1;
+  for (let k = 0; k < 60; k++) {
+    const mid = (lo + hi) / 2;
+    if (digitsLog(state, mid) >= target) hi = mid;
+    else lo = mid;
+  }
+  return Big.fromLog10(hi);
 }
 
 export function carry(state) {
@@ -320,13 +413,13 @@ export function carry(state) {
 }
 
 export function autoCarryAvailable(state) {
-  return milestoneReached(state, 'autoCarry');
+  return has(state, 'autoCarry');
 }
 
-// 1 秒あたりの桁の獲得効率（今繰り上がった場合）。切り捨て前の値で比べる
-export function carryRate(state) {
-  if (state.runTime <= 0) return 0;
-  return digitsContinuous(state).toNumber() / state.runTime;
+// 1 秒あたりの桁の獲得効率の log10（今繰り上がった場合）。切り捨て前の値で比べる
+export function carryRateLog(state) {
+  if (state.runTime <= 0) return -Infinity;
+  return digitsLog(state) - Math.log10(state.runTime);
 }
 
 // 効率が今回の最高値の 90% を下回ったら自動で繰り上がる
@@ -334,9 +427,9 @@ const AUTO_CARRY_RATE_DROP = 0.9;
 
 function shouldAutoCarry(state) {
   if (!autoCarryAvailable(state) || !state.autoCarry || !canCarry(state)) return false;
-  const rate = carryRate(state);
+  const rate = carryRateLog(state);
   if (rate > state.bestRate) state.bestRate = rate;
-  return rate < state.bestRate * AUTO_CARRY_RATE_DROP;
+  return rate < state.bestRate + Math.log10(AUTO_CARRY_RATE_DROP);
 }
 
 // ---------- 時間経過 ----------
@@ -353,7 +446,12 @@ export function tick(state, dt) {
   }
   state.playTime += dt;
   state.runTime += dt;
-  autoBuy(state);
+  // 自動購入は 0.2 秒ごと（素数探しなどの計算を毎フレームしないため）
+  state.autoBuyTimer = (state.autoBuyTimer || 0) + dt;
+  if (state.autoBuyTimer >= AUTO_BUY_INTERVAL) {
+    state.autoBuyTimer = 0;
+    autoBuy(state);
+  }
   if (shouldAutoCarry(state)) {
     carry(state);
     return 1;
@@ -371,6 +469,12 @@ export function advance(state, seconds, maxSteps = 2000) {
   return carries;
 }
 
+// ---------- 第 2 層への拡張 ----------
+
+export function canExpand(state) {
+  return state.digits.gte(EXPAND_DIGITS);
+}
+
 // ---------- 桁の強化 ----------
 
 export function upgradeState(state, u) {
@@ -385,5 +489,24 @@ export function buyUpgrade(state, id) {
   if (!u || upgradeState(state, u) !== 'affordable') return false;
   state.digits = state.digits.sub(u.cost).max(ZERO);
   state.upgrades[id] = true;
+  return true;
+}
+
+// ---------- 繰り返し買える強化 ----------
+
+export function repeatableCost(r, lv) {
+  return Big.fromLog10(Math.log10(r.baseCost) + lv * Math.log10(r.growth));
+}
+
+export function repeatableState(state, r) {
+  if (!r.requires.every((id) => has(state, id))) return 'locked';
+  return state.digits.gte(repeatableCost(r, level(state, r.id))) ? 'affordable' : 'expensive';
+}
+
+export function buyRepeatable(state, id) {
+  const r = REPEATABLES.find((x) => x.id === id);
+  if (!r || repeatableState(state, r) !== 'affordable') return false;
+  state.digits = state.digits.sub(repeatableCost(r, level(state, id))).max(ZERO);
+  state.levels[id] = level(state, id) + 1;
   return true;
 }

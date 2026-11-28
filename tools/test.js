@@ -4,7 +4,10 @@ import { Big, format } from '../src/big.js';
 import {
   newGame, serialize, deserialize, tierCost, bulkCost, maxAffordable, buyTier, buyToMilestone, tick,
   canCarry, carry, digitsOnCarry, buyUpgrade, divisorCount, isPrime, milestonesPassed, nextMilestone,
+  buyBest, buyToPrime, primeAtMost, perfectPassed, tierMult,
+  buyRepeatable, level, repeatableCost, canExpand, digitsLog, nextDigitAt,
 } from '../src/logic.js';
+import { REPEATABLES } from '../src/data.js';
 
 let passed = 0;
 const test = (name, fn) => { fn(); passed++; console.log(`ok  ${name}`); };
@@ -95,11 +98,42 @@ test('繰り上がりと強化', () => {
   assert.equal(s.digits.toNumber(), 2);
 });
 
-test('繰り上がり 2 回目からは指 10 本で始まる', () => {
+test('手を開いて：繰り上がり後に指 10 本で始まる', () => {
   const s = newGame();
-  s.runTotal = Big.from('1e15'); carry(s);
+  s.upgrades.openHands = true;
   s.runTotal = Big.from('1e15'); carry(s);
   assert.equal(s.tiers[0].bought, 10);
+});
+
+test('素数の小道具', () => {
+  assert.equal(primeAtMost(100), 97);
+  assert.equal(primeAtMost(1), 0);
+  assert.deepEqual([0, 6, 27, 28, 500].map(perfectPassed), [0, 1, 1, 2, 3]);
+});
+
+test('自動購入の買い止め方', () => {
+  const s = newGame();
+  s.count = Big.from(1e6);
+  const maxN = maxAffordable(s, 0).n;
+  // 買える範囲でいちばん大きい高度合成数・素数で止まる
+  assert.equal(buyBest(s, 0, 'milestone'), [60, 48, 36, 24, 12].find((h) => h <= maxN));
+  const t = newGame();
+  t.count = Big.from(1e6);
+  assert.equal(buyBest(t, 0, 'prime'), primeAtMost(maxN));
+  assert.ok(isPrime(t.tiers[0].bought));
+  const u = newGame();
+  u.count = Big.from(1e6);
+  assert.equal(buyToPrime(u, 0), 2);
+});
+
+test('完全数は通過するたびに倍率', () => {
+  const s = newGame();
+  s.upgrades.perfect = true;
+  s.tiers[2].bought = 30;
+  s.tiers[2].count = Big.from(1);
+  const withPerfect = tierMult(s, 2).toNumber();
+  s.upgrades.perfect = false;
+  close(withPerfect / tierMult(s, 2).toNumber(), 36);
 });
 
 test('セーブの往復', () => {
@@ -111,6 +145,50 @@ test('セーブの往復', () => {
   assert.equal(t.count.cmp(s.count), 0);
   assert.equal(t.tiers[2].bought, 7);
   assert.ok(t.upgrades.divisor);
+});
+
+test('繰り返し強化：買うたびに値段が上がり、効果が重なる', () => {
+  const s = newGame();
+  s.upgrades.placeValue = true;
+  s.digits = Big.from(1000);
+  const r = REPEATABLES.find((x) => x.id === 'digitDouble');
+  assert.ok(buyRepeatable(s, 'digitDouble'));
+  assert.ok(buyRepeatable(s, 'digitDouble'));
+  assert.equal(level(s, 'digitDouble'), 2);
+  close(s.digits.toNumber(), 1000 - r.baseCost - r.baseCost * r.growth);
+  assert.ok(repeatableCost(r, 2).gt(repeatableCost(r, 1)));
+  s.runTotal = Big.from('1e15');
+  close(10 ** digitsLog(s), 4); // 1 × 2 × 2
+  assert.ok(!buyRepeatable(s, 'countTriple'), '前提（約数の力）がない');
+});
+
+test('拡張は所持している桁で判定する', () => {
+  const s = newGame();
+  s.digitsTotal = Big.from('1e400');
+  s.digits = Big.from('1e300');
+  assert.ok(!canExpand(s));
+  s.digits = Big.from('1.8e308');
+  assert.ok(canExpand(s));
+});
+
+test('記数法の強化で桁が巨大になっても計算できる', () => {
+  const s = newGame();
+  Object.assign(s.upgrades, { sexagesimal: true, exponent: true, scientific: true, arrow: true });
+  s.runTotal = Big.from('1e3000');
+  const g = digitsOnCarry(s);
+  assert.ok(g.log10() > 300 && Number.isFinite(g.log10()));
+  assert.equal(nextDigitAt(s), null, '獲得量が大きいときは「次の +1」を出さない');
+  const t = newGame();
+  t.runTotal = Big.from('1e15');
+  assert.ok(nextDigitAt(t).gt('1e15'));
+});
+
+test('セーブの往復（繰り返し強化）', () => {
+  const s = newGame();
+  s.levels.countTriple = 7;
+  const t = deserialize(serialize(s));
+  assert.equal(level(t, 'countTriple'), 7);
+  assert.equal(t.bestRate, -Infinity);
 });
 
 console.log(`\n${passed} 件成功`);

@@ -1,11 +1,12 @@
 // 画面の組み立てと更新
-import { format } from './big.js';
-import { TIERS, UPGRADES, CARRY_LOG10, CARRY_MILESTONES, HCN } from './data.js';
+import { Big, format } from './big.js';
+import { TIERS, UPGRADES, REPEATABLES, CARRY_LOG10, HCN, EXPAND_DIGITS } from './data.js';
 import {
   tierCost, bulkCost, tierMult, tierProduction, countPerSec, isTierUnlocked, maxAffordable,
-  buyTier, buyToMilestone, canCarry, digitsOnCarry, nextDigitAt, carry, digitBonus,
+  buyByMode, canCarry, canExpand, nextPrime, digitsOnCarry, nextDigitAt, carry, digitBonus,
   upgradeState, buyUpgrade, hasAnyAuto, milestoneFactor, nextMilestone, milestonesPassed,
-  divisorCount, isPrime, isPerfect, has, autoCarryAvailable, milestoneReached, countDigits,
+  divisorCount, isPrime, perfectPassed, has, autoCarryAvailable, countDigits,
+  repeatableCost, repeatableState, buyRepeatable, level,
 } from './logic.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -28,7 +29,7 @@ export class UI {
     this.toastTimer = null;
     this.buildTiers();
     this.buildUpgrades();
-    this.buildMilestones();
+    this.buildRepeatables();
     this.bindEvents();
   }
 
@@ -96,20 +97,20 @@ export class UI {
     });
   }
 
-  buildMilestones() {
-    const list = $('#milestones');
+  buildRepeatables() {
+    const list = $('#repeatables');
     list.innerHTML = '';
-    this.milestoneEls = CARRY_MILESTONES.map((m) => {
+    this.repeatableEls = REPEATABLES.map((r) => {
       const li = document.createElement('li');
-      li.className = 'milestone';
+      li.className = 'upgrade';
       li.innerHTML = `
-        <div class="milestone-at">${m.at} 回</div>
-        <div class="milestone-body">
-          <div class="milestone-name">${m.name}</div>
-          <div class="milestone-desc">${m.desc}</div>
-        </div>`;
+        <div class="upgrade-body">
+          <div class="upgrade-name">${r.name} <span class="upgrade-level"></span></div>
+          <div class="upgrade-desc">${r.desc}（買うたびに重なる）</div>
+        </div>
+        <button type="button" class="buy" data-repeatable="${r.id}"></button>`;
       list.appendChild(li);
-      return { li, m };
+      return { li, buy: li.querySelector('.buy'), level: li.querySelector('.upgrade-level'), r };
     });
   }
 
@@ -150,9 +151,13 @@ export class UI {
       });
     });
 
-    $('#auto-toggle').addEventListener('click', () => {
-      this.state.auto = !this.state.auto;
-      this.render();
+    document.querySelectorAll('[data-automode]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.automode;
+        this.state.auto = mode !== 'off';
+        if (mode !== 'off') this.state.autoMode = mode;
+        this.render();
+      });
     });
     $('#auto-carry-toggle').addEventListener('click', () => {
       this.state.autoCarry = !this.state.autoCarry;
@@ -175,6 +180,15 @@ export class UI {
         ? `零の発見！\nまとまった数を「位」で表せるようになった。桁 +${format(gain)}`
         : `繰り上がり！ 桁 +${format(gain)}`, first ? 4000 : 2500);
       this.render();
+    });
+
+    $('#repeatables').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-repeatable]');
+      if (!btn) return;
+      if (buyRepeatable(this.state, btn.dataset.repeatable)) {
+        this.game.save();
+        this.render();
+      }
     });
 
     $('#upgrades').addEventListener('click', (e) => {
@@ -236,8 +250,7 @@ export class UI {
   }
 
   buy(i) {
-    if (this.state.buyMode === 'milestone') return buyToMilestone(this.state, i);
-    return buyTier(this.state, i);
+    return buyByMode(this.state, i);
   }
 
   showTab(name) {
@@ -265,11 +278,16 @@ export class UI {
     this.renderGoal();
     this.renderTiers();
 
+    // 素数を使うモードは「素数の輝き」を取ってから出す
+    const primeOn = has(s, 'prime');
+    if (!primeOn && s.buyMode === 'prime') s.buyMode = 'one';
+    if (!primeOn && s.autoMode === 'prime') s.autoMode = 'max';
+    document.querySelector('[data-buymode="prime"]').classList.toggle('hidden', !primeOn);
+    document.querySelector('[data-automode="prime"]').classList.toggle('hidden', !primeOn);
     document.querySelectorAll('[data-buymode]').forEach((b) => b.classList.toggle('active', b.dataset.buymode === s.buyMode));
-    const autoBtn = $('#auto-toggle');
-    autoBtn.classList.toggle('hidden', !hasAnyAuto(s));
-    autoBtn.classList.toggle('on', s.auto);
-    autoBtn.textContent = `自動購入 ${s.auto ? 'ON' : 'OFF'}`;
+    $('#auto-row').classList.toggle('hidden', !hasAnyAuto(s));
+    const autoActive = s.auto ? s.autoMode : 'off';
+    document.querySelectorAll('[data-automode]').forEach((b) => b.classList.toggle('active', b.dataset.automode === autoActive));
     const autoCarryBtn = $('#auto-carry-toggle');
     autoCarryBtn.classList.toggle('hidden', !autoCarryAvailable(s));
     autoCarryBtn.classList.toggle('on', s.autoCarry);
@@ -290,7 +308,10 @@ export class UI {
     const can = canCarry(s);
     btn.classList.toggle('hidden', !can);
     if (can) {
-      $('#carry-gain').textContent = `桁 +${format(digitsOnCarry(s))}（次の +1 まで 合計 ${format(nextDigitAt(s))}）`;
+      const next = nextDigitAt(s);
+      $('#carry-gain').textContent = next
+        ? `桁 +${format(digitsOnCarry(s))}（次の +1 まで 合計 ${format(next)}）`
+        : `桁 +${format(digitsOnCarry(s))}`;
       $('#goal').classList.add('hidden');
       return;
     }
@@ -308,9 +329,9 @@ export class UI {
     const s = this.state;
     if (bought <= 0) return '';
     const notes = [];
-    if (has(s, 'perfect') && isPerfect(bought)) notes.push('完全数');
     if (has(s, 'prime') && isPrime(bought)) notes.push('素数');
     if (has(s, 'divisor')) notes.push(`約数${divisorCount(bought)}個`);
+    if (has(s, 'perfect') && perfectPassed(bought) > 0) notes.push(`完全数${perfectPassed(bought)}`);
     return notes.length ? ` · ${notes.join(' · ')}` : '';
   }
 
@@ -375,6 +396,9 @@ export class UI {
       } else if (s.buyMode === 'milestone' && next !== null) {
         n = next - tier.bought;
         cost = bulkCost(i, tier.bought, n);
+      } else if (s.buyMode === 'prime') {
+        n = nextPrime(tier.bought) - tier.bought;
+        cost = bulkCost(i, tier.bought, n);
       } else {
         n = 1;
         cost = tierCost(i, tier.bought);
@@ -395,11 +419,24 @@ export class UI {
       li.classList.toggle('owned', st === 'owned');
       li.classList.toggle('locked', st === 'locked');
       buy.classList.toggle('cant', st === 'expensive' || st === 'locked');
-      buy.textContent = st === 'owned' ? '取得済み' : `${u.cost} 桁`;
+      buy.textContent = st === 'owned' ? '取得済み' : `${format(u.cost)} 桁`;
     });
-    this.milestoneEls.forEach(({ li, m }) => {
-      li.classList.toggle('reached', milestoneReached(s, m.id));
+    let anyRepeatable = false;
+    this.repeatableEls.forEach(({ li, buy, level: lvEl, r }) => {
+      const st = repeatableState(s, r);
+      li.classList.toggle('hidden', st === 'locked');
+      if (st !== 'locked') anyRepeatable = true;
+      lvEl.textContent = `Lv ${level(s, r.id)}`;
+      buy.classList.toggle('cant', st !== 'affordable');
+      buy.textContent = `${format(repeatableCost(r, level(s, r.id)))} 桁`;
     });
+    $('#repeatables-title').classList.toggle('hidden', !anyRepeatable);
+    // 進み具合は桁数（log10）で表す
+    const goal = Big.from(EXPAND_DIGITS);
+    const pct = Math.min(100, Math.max(0, s.digits.log10() / goal.log10()) * 100);
+    $('#expand-text').textContent = `所持している桁 ${format(s.digits)} / ${format(goal)}`;
+    $('#expand-bar').style.width = `${pct}%`;
+    $('#expand').classList.toggle('ready', canExpand(s));
   }
 
   renderStats() {

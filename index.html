@@ -37,11 +37,20 @@
         <div class="seg" role="group" aria-label="購入数">
           <button type="button" data-buymode="one">1 個</button>
           <button type="button" data-buymode="milestone">節目まで</button>
+          <button type="button" class="hidden" data-buymode="prime">素数まで</button>
           <button type="button" data-buymode="max">最大</button>
         </div>
       </div>
+      <div class="toolbar auto-row hidden" id="auto-row">
+        <span class="auto-label">自動購入</span>
+        <div class="seg" role="group" aria-label="自動購入">
+          <button type="button" data-automode="off">停止</button>
+          <button type="button" data-automode="max">最大</button>
+          <button type="button" data-automode="milestone">節目</button>
+          <button type="button" class="hidden" data-automode="prime">素数</button>
+        </div>
+      </div>
       <div class="toolbar toggles">
-        <button type="button" class="toggle hidden" id="auto-toggle">自動購入 ON</button>
         <button type="button" class="toggle hidden" id="auto-carry-toggle">自動繰り上がり ON</button>
       </div>
       <ul class="tiers" id="tiers"></ul>
@@ -55,8 +64,16 @@
       </div>
       <h2>強化</h2>
       <ul class="upgrades" id="upgrades"></ul>
-      <h2>繰り上がりの節目</h2>
-      <ul class="milestones" id="milestones"></ul>
+      <h2 id="repeatables-title" class="hidden">繰り返し強化</h2>
+      <ul class="upgrades" id="repeatables"></ul>
+      <h2>次の層へ</h2>
+      <div class="expand" id="expand">
+        <div class="expand-title">拡張：負の数</div>
+        <div class="expand-desc">桁を 1.8e308 個手元に貯めると、数の世界を「整数」へ広げられる。強化に使うと減るので注意。</div>
+        <div class="goal-text" id="expand-text"></div>
+        <div class="bar"><div class="bar-fill" id="expand-bar"></div></div>
+        <button type="button" class="expand-btn" id="expand-btn" disabled>第 2 層は準備中</button>
+      </div>
     </section>
 
     <!-- 設定 -->
