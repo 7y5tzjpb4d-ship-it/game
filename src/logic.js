@@ -9,6 +9,9 @@ import {
   START_FINGERS, PLACE_VALUE_MULT, EXPAND_DIGITS,
   REPEATABLES, EXPONENT_DIVISOR, SCIENTIFIC_DIVISOR, BONUS_EXPONENT_WEIGHT, BONUS_EXPONENT_POWER, BONUS_EXPONENT_LOG,
   ARROW_POWER, COUNT_TRIPLE_MULT, DIGIT_DOUBLE_MULT,
+  PROOFS, PRIME_MULT_PROVEN, DIVISOR_EXPONENT_PROVEN, FEW_TOOLS_REWARD_MULT, NAIVE_GROWTH,
+  PERFECT_MULT_PROVEN, PERFECT_QUEST_POWER, FORGET_DIGITS_BONUS, RECURRENCE_MULT,
+  GOOGOL_LOG_PER_PROOF, FEW_TOOLS_LIMIT, REPEATABLE_SOFTCAP_LEVEL, REPEATABLE_SOFTCAP_LEVEL_GOOGOL, REPEATABLE_SOFTCAP_STEEPNESS,
 } from './data.js';
 
 export const SAVE_VERSION = 1;
@@ -96,6 +99,8 @@ export function newGame() {
     lastGain: ZERO,
     upgrades: {},
     levels: {},
+    proof: null,
+    proofs: {},
     auto: true,
     autoMode: 'max',
     autoCarry: true,
@@ -127,6 +132,9 @@ export function deserialize(text) {
   state.lastGain = Big.from(raw.lastGain);
   state.upgrades = {};
   for (const u of UPGRADES) if (raw.upgrades?.[u.id]) state.upgrades[u.id] = true;
+  state.proof = PROOFS.some((p) => p.id === raw.proof) ? raw.proof : null;
+  state.proofs = {};
+  for (const p of PROOFS) if (raw.proofs?.[p.id]) state.proofs[p.id] = true;
   state.levels = {};
   for (const r of REPEATABLES) state.levels[r.id] = Math.max(0, Math.floor(Number(raw.levels?.[r.id]) || 0));
   state.auto = raw.auto !== false;
@@ -154,19 +162,80 @@ export function has(state, id) {
   return !!state.upgrades[id];
 }
 
+// ---------- 証明 ----------
+
+export function proven(state, id) {
+  return !!state.proofs?.[id];
+}
+
+export function provenCount(state) {
+  return PROOFS.filter((p) => proven(state, p.id)).length;
+}
+
+export function inProof(state, id) {
+  return state.proof === id;
+}
+
+export function proofsAvailable(state) {
+  return has(state, 'logarithm');
+}
+
+export function activeProof(state) {
+  return PROOFS.find((p) => p.id === state.proof) ?? null;
+}
+
+export function proofGoalReached(state) {
+  const p = activeProof(state);
+  return !!p && state.runTotal.log10() >= p.goal;
+}
+
+// 証明は並び順に 1 つずつ開く（前の証明を完成させると次が挑戦できる）
+export function proofUnlocked(state, id) {
+  const i = PROOFS.findIndex((p) => p.id === id);
+  return proofsAvailable(state) && i >= 0 && PROOFS.slice(0, i).every((p) => proven(state, p.id));
+}
+
+// 証明を始める：今の周をリセットして制約付きの周にする（桁はもらえない）
+export function startProof(state, id) {
+  if (state.proof || proven(state, id) || !proofUnlocked(state, id)) return false;
+  state.proof = id;
+  newRun(state);
+  return true;
+}
+
+// 証明をやめる：今の周をリセットして通常に戻る（桁はもらえない）
+export function abandonProof(state) {
+  if (!state.proof) return false;
+  state.proof = null;
+  newRun(state);
+  return true;
+}
+
+// 証明を完成させる：定理を得て、通常の繰り上がりと同じだけ桁ももらう
+export function completeProof(state) {
+  if (!proofGoalReached(state)) return false;
+  state.proofs[state.proof] = true;
+  state.proof = null;
+  carry(state);
+  return true;
+}
+
 export function level(state, id) {
   return state.levels?.[id] || 0;
 }
 
 export function digitBonusExponent(state) {
-  if (has(state, 'logarithm')) return BONUS_EXPONENT_LOG;
-  if (has(state, 'power')) return BONUS_EXPONENT_POWER;
-  if (has(state, 'weight')) return BONUS_EXPONENT_WEIGHT;
-  return DIGIT_BONUS_EXPONENT;
+  let e = DIGIT_BONUS_EXPONENT;
+  if (has(state, 'logarithm')) e = BONUS_EXPONENT_LOG;
+  else if (has(state, 'power')) e = BONUS_EXPONENT_POWER;
+  else if (has(state, 'weight')) e = BONUS_EXPONENT_WEIGHT;
+  if (proven(state, 'forgetDigits')) e += FORGET_DIGITS_BONUS;
+  return e;
 }
 
 // 累計の桁による「数」の生産ボーナス：(1 + 累計)^指数
 export function digitBonus(state) {
+  if (inProof(state, 'forgetDigits')) return new Big(1, 0);
   return state.digitsTotal.add(1).pow(digitBonusExponent(state));
 }
 
@@ -184,7 +253,7 @@ export function decimalMult(state) {
 export function globalMult(state) {
   let mult = digitBonus(state).mul(decimalMult(state));
   if (has(state, 'placeValue')) mult = mult.mul(PLACE_VALUE_MULT);
-  const triple = level(state, 'countTriple');
+  const triple = inProof(state, 'naive') ? 0 : level(state, 'countTriple');
   if (triple > 0) mult = mult.mul(Big.fromLog10(triple * Math.log10(COUNT_TRIPLE_MULT)));
   return mult;
 }
@@ -205,6 +274,7 @@ export function nextMilestone(bought) {
 }
 
 export function milestoneMult(state, i) {
+  if (inProof(state, 'divisorStudy')) return new Big(1, 0);
   return Big.fromLog10(milestonesPassed(state.tiers[i].bought) * Math.log10(milestoneFactor(state)));
 }
 
@@ -213,9 +283,9 @@ export function numberTheoryMult(state, i) {
   const b = state.tiers[i].bought;
   let m = 1;
   if (b <= 0) return m;
-  if (has(state, 'divisor')) m *= divisorCount(b) ** DIVISOR_EXPONENT;
-  if (has(state, 'prime') && isPrime(b)) m *= PRIME_MULT;
-  if (has(state, 'perfect')) m *= PERFECT_MULT ** perfectPassed(b);
+  if (has(state, 'divisor')) m *= divisorCount(b) ** (proven(state, 'divisorStudy') ? DIVISOR_EXPONENT_PROVEN : DIVISOR_EXPONENT);
+  if (has(state, 'prime') && isPrime(b)) m *= proven(state, 'primeTheorem') ? PRIME_MULT_PROVEN : PRIME_MULT;
+  if (has(state, 'perfect')) m *= (proven(state, 'perfectQuest') ? PERFECT_MULT_PROVEN : PERFECT_MULT) ** perfectPassed(b);
   return m;
 }
 
@@ -227,12 +297,17 @@ export function tierMult(state, i) {
     mult = mult.mul(globalMult(state));
     if (has(state, 'tenFingers')) mult = mult.mul(TEN_FINGERS_MULT);
   }
+  if (i >= FEW_TOOLS_LIMIT && proven(state, 'fewTools')) mult = mult.mul(FEW_TOOLS_REWARD_MULT);
   return mult;
 }
 
 // 段 i が毎秒生み出す量（段 0 なら「数」、それ以外は段 i-1）
 export function tierProduction(state, i) {
-  return state.tiers[i].count.mul(tierMult(state, i)).mul(i === 0 ? COUNT_RATE : CHAIN_RATE);
+  if (inProof(state, 'primeTheorem') && !isPrime(state.tiers[i].bought)) return ZERO;
+  if (inProof(state, 'fewTools') && i >= FEW_TOOLS_LIMIT) return ZERO;
+  const p = state.tiers[i].count.mul(tierMult(state, i)).mul(i === 0 ? COUNT_RATE : CHAIN_RATE);
+  if (i === 0 && inProof(state, 'perfectQuest')) return p.pow(PERFECT_QUEST_POWER);
+  return p;
 }
 
 export function countPerSec(state) {
@@ -247,6 +322,7 @@ export function tierCost(i, bought) {
 }
 
 export function isTierUnlocked(state, i) {
+  if (inProof(state, 'fewTools') && i >= FEW_TOOLS_LIMIT) return false;
   return i === 0 || state.tiers[i - 1].bought > 0 || state.tiers[i].bought > 0;
 }
 
@@ -378,8 +454,9 @@ export function digitsLog(state, l = state.runTotal.log10()) {
   const over = l - CARRY_LOG10;
   let lg = DIGIT_POWER * Math.log10(1 + over / DIGIT_STEP);
   if (has(state, 'sexagesimal')) lg += Math.log10(SEXAGESIMAL_MULT);
-  lg += level(state, 'digitDouble') * Math.log10(DIGIT_DOUBLE_MULT);
+  if (!inProof(state, 'naive')) lg += level(state, 'digitDouble') * Math.log10(has(state, 'recurrence') ? RECURRENCE_MULT : DIGIT_DOUBLE_MULT);
   if (has(state, 'exponent')) lg += over / (has(state, 'scientific') ? SCIENTIFIC_DIVISOR : EXPONENT_DIVISOR);
+  if (has(state, 'googol')) lg += provenCount(state) * GOOGOL_LOG_PER_PROOF;
   if (has(state, 'arrow') && lg > 0) lg *= ARROW_POWER;
   return lg;
 }
@@ -412,6 +489,7 @@ export function nextDigitAt(state) {
 }
 
 export function carry(state) {
+  if (state.proof) return ZERO; // 証明中は completeProof か abandonProof で抜ける
   const gain = digitsOnCarry(state);
   if (gain.isZero()) return ZERO;
   state.digits = state.digits.add(gain);
@@ -447,7 +525,7 @@ export function autoCarryGuardTime(state) {
 function shouldAutoCarry(state) {
   if (!canCarry(state)) return false;
   if (state.readyTime === null) state.readyTime = state.runTime;
-  if (!autoCarryAvailable(state) || !state.autoCarry) return false;
+  if (!autoCarryAvailable(state) || !state.autoCarry || state.proof) return false;
   if (state.autoCarryMode === 'time') return state.runTime >= state.autoCarryTime;
   if (state.autoCarryMode === 'amount') {
     // 得られる桁 ≥ 所持している桁 × 指定の倍率（所持が 1 未満なら 1 として扱う）
@@ -507,6 +585,7 @@ export function canExpand(state) {
 export function upgradeState(state, u) {
   if (has(state, u.id)) return 'owned';
   if (!u.requires.every((id) => has(state, id))) return 'locked';
+  if (u.proofs && provenCount(state) < u.proofs) return 'locked';
   if (state.digits.gte(u.cost)) return 'affordable';
   return 'expensive';
 }
@@ -521,19 +600,26 @@ export function buyUpgrade(state, id) {
 
 // ---------- 繰り返し買える強化 ----------
 
-export function repeatableCost(r, lv) {
-  return Big.fromLog10(Math.log10(r.baseCost) + lv * Math.log10(r.growth));
+export function repeatableGrowth(state, r) {
+  return proven(state, 'naive') ? NAIVE_GROWTH[r.id] ?? r.growth : r.growth;
+}
+
+export function repeatableCost(r, lv, state = null) {
+  const growth = state ? repeatableGrowth(state, r) : r.growth;
+  const cap = state && has(state, 'googol') ? REPEATABLE_SOFTCAP_LEVEL_GOOGOL : REPEATABLE_SOFTCAP_LEVEL;
+  const over = Math.max(0, lv - cap);
+  return Big.fromLog10(Math.log10(r.baseCost) + lv * Math.log10(growth) + over * over * REPEATABLE_SOFTCAP_STEEPNESS);
 }
 
 export function repeatableState(state, r) {
   if (!r.requires.every((id) => has(state, id))) return 'locked';
-  return state.digits.gte(repeatableCost(r, level(state, r.id))) ? 'affordable' : 'expensive';
+  return state.digits.gte(repeatableCost(r, level(state, r.id), state)) ? 'affordable' : 'expensive';
 }
 
 export function buyRepeatable(state, id) {
   const r = REPEATABLES.find((x) => x.id === id);
   if (!r || repeatableState(state, r) !== 'affordable') return false;
-  state.digits = state.digits.sub(repeatableCost(r, level(state, id))).max(ZERO);
+  state.digits = state.digits.sub(repeatableCost(r, level(state, id), state)).max(ZERO);
   state.levels[id] = level(state, id) + 1;
   return true;
 }

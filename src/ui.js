@@ -1,12 +1,14 @@
 // 画面の組み立てと更新
 import { Big, format } from './big.js';
-import { TIERS, UPGRADES, REPEATABLES, CARRY_LOG10, HCN, EXPAND_DIGITS } from './data.js';
+import { TIERS, UPGRADES, REPEATABLES, PROOFS, CARRY_LOG10, HCN, EXPAND_DIGITS, FEW_TOOLS_LIMIT } from './data.js';
 import {
   tierCost, bulkCost, tierMult, tierProduction, countPerSec, isTierUnlocked, maxAffordable,
   buyByMode, canCarry, canExpand, nextPrime, digitsOnCarry, nextDigitAt, carry, digitBonus,
   upgradeState, buyUpgrade, hasAnyAuto, milestoneFactor, nextMilestone, milestonesPassed,
   divisorCount, isPrime, perfectPassed, has, autoCarryAvailable, countDigits,
   repeatableCost, repeatableState, buyRepeatable, level, autoCarryGuardTime,
+  proofsAvailable, proofUnlocked, proven, provenCount, activeProof, inProof, proofGoalReached,
+  startProof, abandonProof, completeProof,
 } from './logic.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -30,6 +32,7 @@ export class UI {
     this.buildTiers();
     this.buildUpgrades();
     this.buildRepeatables();
+    this.buildProofs();
     this.bindEvents();
   }
 
@@ -82,9 +85,9 @@ export class UI {
     this.upgradeEls = UPGRADES.map((u) => {
       const li = document.createElement('li');
       li.className = 'upgrade';
-      const req = u.requires.length
-        ? `必要：${u.requires.map((id) => UPGRADES.find((x) => x.id === id).name).join('・')}`
-        : '';
+      const reqs = u.requires.map((id) => UPGRADES.find((x) => x.id === id).name);
+      if (u.proofs) reqs.push(`証明 ${u.proofs} つ`);
+      const req = reqs.length ? `必要：${reqs.join('・')}` : '';
       li.innerHTML = `
         <div class="upgrade-body">
           <div class="upgrade-name">${u.name}</div>
@@ -111,6 +114,26 @@ export class UI {
         <button type="button" class="buy" data-repeatable="${r.id}"></button>`;
       list.appendChild(li);
       return { li, buy: li.querySelector('.buy'), level: li.querySelector('.upgrade-level'), r };
+    });
+  }
+
+  buildProofs() {
+    const list = $('#proofs');
+    list.innerHTML = '';
+    this.proofEls = PROOFS.map((p, i) => {
+      const li = document.createElement('li');
+      li.className = 'proof';
+      li.innerHTML = `
+        <div class="proof-head">
+          <span class="proof-name">${i + 1}. ${p.name}</span>
+          <span class="proof-status"></span>
+        </div>
+        <div class="proof-line"><b>制約</b>　${p.rule}</div>
+        <div class="proof-line"><b>目標</b>　この周で数えた合計 1e${p.goal}</div>
+        <div class="proof-line"><b>定理</b>　${p.reward}</div>
+        <button type="button" class="proof-start" data-proof="${p.id}">挑戦する</button>`;
+      list.appendChild(li);
+      return { li, status: li.querySelector('.proof-status'), btn: li.querySelector('.proof-start'), p };
     });
   }
 
@@ -210,6 +233,36 @@ export class UI {
       }
     });
 
+    $('#proofs').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-proof]');
+      if (!btn) return;
+      const p = PROOFS.find((x) => x.id === btn.dataset.proof);
+      const ok = window.confirm(
+        `「${p.name}」の証明を始めますか？\n今の周はリセットされ、桁はもらえません。\n制約：${p.rule}`,
+      );
+      if (!ok) return;
+      if (startProof(this.state, p.id)) {
+        this.game.save();
+        this.showTab('count');
+      }
+    });
+    $('#proof-complete').addEventListener('click', () => {
+      const p = activeProof(this.state);
+      if (!p || !proofGoalReached(this.state)) return;
+      completeProof(this.state);
+      this.game.save();
+      this.toast(`証明完成！ 定理「${p.name}」\n${p.reward}`, 4000);
+      this.render();
+    });
+    $('#proof-abandon').addEventListener('click', () => {
+      const p = activeProof(this.state);
+      if (!p) return;
+      if (!window.confirm(`「${p.name}」の証明をやめますか？\n今の周はリセットされ、桁はもらえません。`)) return;
+      abandonProof(this.state);
+      this.game.save();
+      this.render();
+    });
+
     $('#upgrades').addEventListener('click', (e) => {
       const btn = e.target.closest('[data-upgrade]');
       if (!btn) return;
@@ -294,6 +347,7 @@ export class UI {
     $('#count').textContent = format(s.count.floor());
     $('#rate').textContent = `+${format(countPerSec(s), 1)} /秒`;
 
+    this.renderProofBanner();
     this.renderGoal();
     this.renderTiers();
 
@@ -318,7 +372,12 @@ export class UI {
     digitsTab.classList.toggle('hidden', !(s.carries > 0 || canCarry(s)));
     digitsTab.classList.toggle('badge', s.carries > 0 && UPGRADES.some((u) => upgradeState(s, u) === 'affordable'));
 
+    const proofsTab = document.querySelector('[data-tab="proofs"]');
+    proofsTab.classList.toggle('hidden', !proofsAvailable(s));
+    proofsTab.classList.toggle('badge', proofsAvailable(s) && !s.proof && PROOFS.some((p) => !proven(s, p.id) && proofUnlocked(s, p.id)) && provenCount(s) === 0);
+
     if (document.querySelector('[data-panel="digits"]').classList.contains('active')) this.renderDigits();
+    if (document.querySelector('[data-panel="proofs"]').classList.contains('active')) this.renderProofs();
     if (document.querySelector('[data-panel="settings"]').classList.contains('active')) this.renderStats();
   }
 
@@ -344,12 +403,46 @@ export class UI {
       note = '桁の獲得効率が下がり始めたら繰り上がる。'
         + (guard === null ? '上がり続ける場合も、一定時間で繰り上がる' : `上がり続けても、この周の ${fmtTime(guard)} で繰り上がる`);
     }
+    if (s.proof) note = '証明中は自動繰り上がりが止まる';
     $('#carry-note').textContent = note;
+  }
+
+  renderProofBanner() {
+    const s = this.state;
+    const p = activeProof(s);
+    $('#proof-banner').classList.toggle('hidden', !p);
+    if (!p) return;
+    $('#proof-banner-name').textContent = p.name;
+    $('#proof-banner-rule').textContent = `制約：${p.rule}`;
+    const l = Math.max(0, s.runTotal.log10());
+    $('#proof-banner-text').textContent = `この周で数えた合計 ${format(s.runTotal.floor())} / 1e${p.goal}`;
+    $('#proof-banner-bar').style.width = `${Math.min(100, (l / p.goal) * 100)}%`;
+    $('#proof-complete').classList.toggle('hidden', !proofGoalReached(s));
+  }
+
+  renderProofs() {
+    const s = this.state;
+    this.proofEls.forEach(({ li, status, btn, p }) => {
+      const done = proven(s, p.id);
+      const active = inProof(s, p.id);
+      const open = proofUnlocked(s, p.id);
+      li.classList.toggle('proven', done);
+      li.classList.toggle('active', active);
+      li.classList.toggle('locked', !done && !open);
+      status.textContent = done ? '完成' : active ? '挑戦中' : open ? '挑戦できる' : '前の証明を完成させると開く';
+      btn.classList.toggle('hidden', done || active || !open || !!s.proof);
+    });
   }
 
   renderGoal() {
     const s = this.state;
     const btn = $('#carry');
+    if (s.proof) {
+      // 証明中は繰り上がりではなく、上の証明の表示で目標を見せる
+      btn.classList.add('hidden');
+      $('#goal').classList.add('hidden');
+      return;
+    }
     const can = canCarry(s);
     btn.classList.toggle('hidden', !can);
     if (can) {
@@ -386,6 +479,24 @@ export class UI {
     TIERS.forEach((t, i) => {
       const el = this.tierEls[i];
       const unlocked = isTierUnlocked(s, i);
+      // 「少ない道具」の証明中は、上の段を使えないことを 1 回だけ見せる
+      if (!unlocked && inProof(s, 'fewTools') && i >= FEW_TOOLS_LIMIT) {
+        if (i > FEW_TOOLS_LIMIT) {
+          el.li.classList.add('hidden');
+          return;
+        }
+        el.li.classList.remove('hidden');
+        el.li.classList.add('locked');
+        el.name.textContent = TIERS.slice(FEW_TOOLS_LIMIT).map((x) => x.name).join('・');
+        el.icon.textContent = '×';
+        el.mult.textContent = '';
+        el.count.textContent = '';
+        el.bought.textContent = '';
+        el.prod.textContent = 'この証明では使えない';
+        el.adapt.classList.add('hidden');
+        el.buy.classList.add('hidden');
+        return;
+      }
       // 未解放の段は、次の 1 つだけ「？」で見せる
       if (!unlocked) {
         if (shownLocked) {
@@ -416,7 +527,9 @@ export class UI {
       el.count.textContent = format(tier.count.floor());
       el.bought.textContent = `購入 ${tier.bought}${this.numberNote(tier.bought)}`;
       const target = i === 0 ? '数' : TIERS[i - 1].name;
-      el.prod.textContent = `毎秒 +${format(tierProduction(s, i), 1)} ${target}`;
+      el.prod.textContent = inProof(s, 'primeTheorem') && !isPrime(tier.bought)
+        ? '停止中（購入数が素数でない）'
+        : `毎秒 +${format(tierProduction(s, i), 1)} ${target}`;
 
       // 次の節目（高度合成数）
       const next = nextMilestone(tier.bought);

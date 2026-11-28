@@ -246,6 +246,51 @@ h2:first-child { margin-top: 4px; }
 .upgrade.owned .buy { background: transparent; color: var(--gene); border: 1px solid var(--gene); }
 .upgrade.locked { opacity: 0.45; }
 
+/* ---------- 証明 ---------- */
+.proof-banner {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--gene);
+  background: var(--surface);
+}
+.proof-banner-title { font-weight: 700; color: var(--gene); }
+.proof-banner-rule { font-size: 12px; color: var(--muted); margin: 2px 0 8px; }
+.proof-banner .bar-fill, .proof .bar-fill { background: var(--gene); }
+.proof-banner-actions { display: flex; gap: 8px; margin-top: 10px; }
+.proof-complete, .proof-start {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--gene);
+  color: var(--gene-ink);
+  font-weight: 700;
+}
+.proof-abandon {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.proofs { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.proof {
+  padding: 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.proof-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.proof-name { font-weight: 700; }
+.proof-status { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.proof-line { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+.proof-line b { color: var(--text); font-weight: 600; }
+.proof .proof-start { width: 100%; margin-top: 10px; }
+.proof.proven { border-color: var(--gene); }
+.proof.proven .proof-status { color: var(--gene); }
+.proof.locked { opacity: 0.45; }
+.proof.active { border-color: var(--accent); }
+
 /* ---------- 自動購入 ---------- */
 .auto-row { justify-content: flex-start; gap: 10px; }
 .auto-label { font-size: 12px; color: var(--muted); }
