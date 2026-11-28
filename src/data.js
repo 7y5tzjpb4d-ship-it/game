@@ -111,11 +111,67 @@ export const UPGRADES = [
     id: 'logarithm', name: '対数', cost: 1e40, requires: ['power'],
     desc: '累計の桁による数の生産ボーナスが ^3 になる',
   },
+  // ここから証明の数で開く（proofs: 必要な証明の数）
   {
-    id: 'arrow', name: '矢印表記', cost: 1e200, requires: ['logarithm'],
+    id: 'recurrence', name: '漸化式', cost: 1e60, requires: ['logarithm'], proofs: 3,
+    desc: '繰り返し強化「倍の桁」の効果が ×2 から ×3 になる',
+  },
+  {
+    id: 'googol', name: 'グーゴル', cost: 1e100, requires: ['recurrence'], proofs: 6,
+    desc: '完成した証明 1 つにつき、得られる桁 ×1e5。繰り返し強化の値段が急に上がり始めるレベルが 80 から 160 になる',
+  },
+  {
+    id: 'arrow', name: '矢印表記', cost: 1e200, requires: ['googol'], proofs: 6,
     desc: '得られる桁の指数部分 ×1.1（10^x 桁なら 10^(1.1x) 桁に）',
   },
 ];
+
+// 証明：対数を取ると挑戦できる、制約付きの周。
+// 開始すると今の周がリセットされ、この周で数えた合計が 10^goal に届くと完成。
+// 並びは難しさの目安順（シミュレーションで調整）
+// 完成すると定理（永続効果）が手に入り、通常の繰り上がりと同じだけ桁も得る
+export const PROOFS = [
+  {
+    id: 'primeTheorem', name: '素数定理', goal: 150,
+    rule: '購入数が素数でない段は生産しない',
+    reward: '素数の輝きが ×2 から ×5 になる',
+  },
+  {
+    id: 'perfectQuest', name: '完全数の探求', goal: 178,
+    rule: '数の生産が ^0.75 になる',
+    reward: '完全数の倍率が ×6 から ×28 になる',
+  },
+  {
+    id: 'forgetDigits', name: '桁を忘れて', goal: 135,
+    rule: '累計の桁による数の生産ボーナスがない',
+    reward: '累計の桁による数の生産ボーナスの指数 +0.5',
+  },
+  {
+    id: 'naive', name: '素朴な計算', goal: 280,
+    rule: '繰り返し強化（三倍の数・倍の桁）の効果がない',
+    reward: '繰り返し強化の値段の上がり方がゆるやかになる（×3 → ×2.8、×4 → ×3.6）',
+  },
+  {
+    id: 'divisorStudy', name: '約数の研究', goal: 360,
+    rule: '節目（高度合成数）のボーナスがない',
+    reward: '約数の力が ^0.25 から ^0.4 になる',
+  },
+  {
+    id: 'fewTools', name: '少ない道具', goal: 500,
+    rule: '使える道具は指から結び縄までの 4 段だけ',
+    reward: '粘土板・算木・そろばんの生産 ×1000',
+  },
+];
+export const PRIME_MULT_PROVEN = 5;
+export const DIVISOR_EXPONENT_PROVEN = 0.4;
+export const FEW_TOOLS_REWARD_MULT = 1000;
+export const NAIVE_GROWTH = { countTriple: 2.8, digitDouble: 3.6 };
+export const PERFECT_MULT_PROVEN = 28;
+export const PERFECT_QUEST_POWER = 0.75;
+export const FORGET_DIGITS_BONUS = 0.5;
+export const RECURRENCE_MULT = 3;
+export const GOOGOL_LOG_PER_PROOF = 5;
+export const FEW_TOOLS_LIMIT = 4;
 
 // 何度でも買える強化。値段は baseCost × growth^(レベル)
 export const REPEATABLES = [
@@ -143,8 +199,13 @@ export const EXPONENT_DIVISOR = 12;
 export const SCIENTIFIC_DIVISOR = 9;
 export const BONUS_EXPONENT_WEIGHT = 1;
 export const BONUS_EXPONENT_POWER = 2;
-export const BONUS_EXPONENT_LOG = 3;
+export const BONUS_EXPONENT_LOG = 2.5;
 export const ARROW_POWER = 1.1;
+// 繰り返し強化は SOFTCAP_LEVEL を超えると値段の上がり方が急になる：
+// 値段の log10 に (レベル − SOFTCAP_LEVEL)^2 × SOFTCAP_STEEPNESS を足す
+export const REPEATABLE_SOFTCAP_LEVEL = 80;
+export const REPEATABLE_SOFTCAP_LEVEL_GOOGOL = 160;
+export const REPEATABLE_SOFTCAP_STEEPNESS = 0.02;
 export const COUNT_TRIPLE_MULT = 3;
 export const DIGIT_DOUBLE_MULT = 2;
 

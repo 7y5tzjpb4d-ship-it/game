@@ -6,8 +6,10 @@ import {
   canCarry, carry, digitsOnCarry, buyUpgrade, divisorCount, isPrime, milestonesPassed, nextMilestone,
   buyBest, buyToPrime, primeAtMost, perfectPassed, tierMult,
   buyRepeatable, level, repeatableCost, canExpand, digitsLog, nextDigitAt,
+  startProof, abandonProof, completeProof, proofGoalReached, proven, proofUnlocked, tierProduction,
+  isTierUnlocked, upgradeState, provenCount,
 } from '../src/logic.js';
-import { REPEATABLES } from '../src/data.js';
+import { REPEATABLES, PROOFS, UPGRADES } from '../src/data.js';
 
 let passed = 0;
 const test = (name, fn) => { fn(); passed++; console.log(`ok  ${name}`); };
@@ -224,6 +226,60 @@ test('素数モードの自動購入は 0 個からでも始められる', () =>
   const s = newGame();
   s.count = Big.from(10);
   assert.equal(buyBest(s, 0, 'prime'), 1);
+});
+
+test('証明：対数を取ると 1 つ目から順に挑戦できる', () => {
+  const s = newGame();
+  assert.ok(!startProof(s, 'primeTheorem'), '対数がないと挑戦できない');
+  s.upgrades.logarithm = true;
+  assert.ok(proofUnlocked(s, PROOFS[0].id));
+  assert.ok(!proofUnlocked(s, PROOFS[1].id), '2 つ目は 1 つ目を完成させるまで開かない');
+  s.count = Big.from('1e50');
+  assert.ok(startProof(s, PROOFS[0].id));
+  assert.ok(s.count.lt('1e10'), '開始すると周がリセットされる');
+  assert.ok(!startProof(s, PROOFS[0].id), '証明中は別の証明を始められない');
+  assert.equal(carry(s).toNumber(), 0, '証明中は繰り上がれない');
+  assert.ok(abandonProof(s));
+  assert.equal(s.proof, null);
+});
+
+test('証明：目標に届くと完成し、定理と桁がもらえる', () => {
+  const s = newGame();
+  s.upgrades.logarithm = true;
+  const p = PROOFS[0];
+  startProof(s, p.id);
+  s.runTotal = Big.fromLog10(p.goal);
+  assert.ok(proofGoalReached(s));
+  const before = s.digits;
+  assert.ok(completeProof(s));
+  assert.ok(proven(s, p.id));
+  assert.ok(s.digits.gt(before), '通常の繰り上がりと同じだけ桁がもらえる');
+  assert.ok(proofUnlocked(s, PROOFS[1].id));
+  assert.equal(provenCount(s), 1);
+});
+
+test('証明の制約が効く', () => {
+  const s = newGame();
+  s.upgrades.logarithm = true;
+  s.tiers[0] = { count: Big.from(10), bought: 4 };
+  assert.ok(tierProduction(s, 0).gt(0));
+  s.proof = 'primeTheorem';
+  assert.ok(tierProduction(s, 0).isZero(), '購入数 4 は素数でないので止まる');
+  s.tiers[0].bought = 5;
+  assert.ok(tierProduction(s, 0).gt(0));
+  s.proof = 'fewTools';
+  s.tiers[3].bought = 1;
+  assert.ok(!isTierUnlocked(s, 4), '少ない道具では 5 段目以降を使えない');
+});
+
+test('証明の数で開く強化', () => {
+  const s = newGame();
+  Object.assign(s.upgrades, { logarithm: true });
+  s.digits = Big.from('1e70');
+  const rec = UPGRADES.find((u) => u.id === 'recurrence');
+  assert.equal(upgradeState(s, rec), 'locked');
+  for (const p of PROOFS.slice(0, rec.proofs)) s.proofs[p.id] = true;
+  assert.equal(upgradeState(s, rec), 'affordable');
 });
 
 console.log(`\n${passed} 件成功`);

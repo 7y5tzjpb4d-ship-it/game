@@ -25,6 +25,16 @@
   <main id="main">
     <!-- 数える（生産） -->
     <section class="panel active" data-panel="count">
+      <div class="proof-banner hidden" id="proof-banner">
+        <div class="proof-banner-title">証明中：<span id="proof-banner-name"></span></div>
+        <div class="proof-banner-rule" id="proof-banner-rule"></div>
+        <div class="goal-text" id="proof-banner-text"></div>
+        <div class="bar"><div class="bar-fill" id="proof-banner-bar"></div></div>
+        <div class="proof-banner-actions">
+          <button type="button" class="proof-complete hidden" id="proof-complete">証明を完成させる</button>
+          <button type="button" class="proof-abandon" id="proof-abandon">やめる</button>
+        </div>
+      </div>
       <div class="goal" id="goal">
         <div class="goal-text" id="goal-text"></div>
         <div class="bar"><div class="bar-fill" id="goal-bar"></div></div>
@@ -89,6 +99,12 @@
       </div>
     </section>
 
+    <!-- 証明（制約付きの周） -->
+    <section class="panel" data-panel="proofs">
+      <p class="note">証明を始めると、今の周がリセットされ（桁はもらえません）、制約付きの周になります。この周で数えた合計が目標に届けば完成。定理（永続的な効果）が手に入り、通常の繰り上がりと同じだけ桁ももらえます。証明は 1 つずつ順番に開きます。</p>
+      <ul class="proofs" id="proofs"></ul>
+    </section>
+
     <!-- 設定 -->
     <section class="panel" data-panel="settings">
       <h2>記録</h2>
@@ -111,6 +127,7 @@
   <nav class="tabs">
     <button type="button" class="active" data-tab="count"><span class="tab-icon">Σ</span>数える</button>
     <button type="button" class="hidden" data-tab="digits"><span class="tab-icon">0</span>桁</button>
+    <button type="button" class="hidden" data-tab="proofs"><span class="tab-icon">∴</span>証明</button>
     <button type="button" data-tab="settings"><span class="tab-icon">⚙&#xFE0E;</span>設定</button>
   </nav>
 
