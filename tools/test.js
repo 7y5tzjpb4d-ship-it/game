@@ -4,6 +4,7 @@ import { Big, format } from '../src/big.js';
 import {
   newGame, serialize, deserialize, tierCost, bulkCost, maxAffordable, buyTier, buyToMilestone, tick,
   canCarry, carry, digitsOnCarry, buyUpgrade, divisorCount, isPrime, milestonesPassed, nextMilestone,
+  buyBest, buyToPrime, primeAtMost, perfectPassed, tierMult,
 } from '../src/logic.js';
 
 let passed = 0;
@@ -95,11 +96,42 @@ test('繰り上がりと強化', () => {
   assert.equal(s.digits.toNumber(), 2);
 });
 
-test('繰り上がり 2 回目からは指 10 本で始まる', () => {
+test('手を開いて：繰り上がり後に指 10 本で始まる', () => {
   const s = newGame();
-  s.runTotal = Big.from('1e15'); carry(s);
+  s.upgrades.openHands = true;
   s.runTotal = Big.from('1e15'); carry(s);
   assert.equal(s.tiers[0].bought, 10);
+});
+
+test('素数の小道具', () => {
+  assert.equal(primeAtMost(100), 97);
+  assert.equal(primeAtMost(1), 0);
+  assert.deepEqual([0, 6, 27, 28, 500].map(perfectPassed), [0, 1, 1, 2, 3]);
+});
+
+test('自動購入の買い止め方', () => {
+  const s = newGame();
+  s.count = Big.from(1e6);
+  const maxN = maxAffordable(s, 0).n;
+  // 買える範囲でいちばん大きい高度合成数・素数で止まる
+  assert.equal(buyBest(s, 0, 'milestone'), [60, 48, 36, 24, 12].find((h) => h <= maxN));
+  const t = newGame();
+  t.count = Big.from(1e6);
+  assert.equal(buyBest(t, 0, 'prime'), primeAtMost(maxN));
+  assert.ok(isPrime(t.tiers[0].bought));
+  const u = newGame();
+  u.count = Big.from(1e6);
+  assert.equal(buyToPrime(u, 0), 2);
+});
+
+test('完全数は通過するたびに倍率', () => {
+  const s = newGame();
+  s.upgrades.perfect = true;
+  s.tiers[2].bought = 30;
+  s.tiers[2].count = Big.from(1);
+  const withPerfect = tierMult(s, 2).toNumber();
+  s.upgrades.perfect = false;
+  close(withPerfect / tierMult(s, 2).toNumber(), 36);
 });
 
 test('セーブの往復', () => {

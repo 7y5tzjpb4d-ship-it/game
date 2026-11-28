@@ -2,7 +2,7 @@
 // 「上の段から買えるだけ買い、1 秒あたりの桁の獲得効率が落ち始めたら繰り上がる」
 // プレイヤーを想定し、繰り上がりまでの時間と獲得量を表示する。
 // 使い方: node tools/sim.js [繰り上がり回数] [-v]
-import { newGame, tick, buyTier, canCarry, carry, digitsOnCarry, digitsContinuous, buyUpgrade, upgradeState, countPerSec } from '../src/logic.js';
+import { newGame, tick, buyTier, buyBest, has, canCarry, carry, digitsOnCarry, digitsContinuous, buyUpgrade, upgradeState, countPerSec } from '../src/logic.js';
 import { TIERS, UPGRADES } from '../src/data.js';
 import { format } from '../src/big.js';
 
@@ -20,7 +20,10 @@ for (let r = 0; r < runs; r++) {
   let readyAt = null;
   let bestRate = 0;
   while (t < 6 * 3600 && state.carries === carriesBefore) {
-    for (let i = TIERS.length - 1; i >= 0; i--) buyTier(state, i, 'max');
+    // 約数の力を取ったら節目（高度合成数）で買い止める
+    const mode = has(state, 'divisor') ? 'milestone' : 'max';
+    state.autoMode = mode;
+    for (let i = TIERS.length - 1; i >= 0; i--) buyBest(state, i, mode);
     tick(state, DT);
     t += DT;
     if (verbose) {
@@ -48,7 +51,7 @@ for (let r = 0; r < runs; r++) {
     gain = state.lastGain;
   }
   const auto = state.carries === carriesBefore + 1 && readyAt === null ? '（自動）' : '';
-  console.log(`繰り上がり ${String(r + 1).padStart(2)} 回目: ${fmtT(t).padStart(8)}  桁 +${format(gain)}${auto}  （累計 ${fmtT(total)}）`);
+  console.log(`繰り上がり ${String(r + 1).padStart(2)} 回目: ${fmtT(t).padStart(8)}  桁 +${format(gain)}${auto}  （累計の桁 ${format(state.digitsTotal)}、${fmtT(total)}）`);
   let bought = true;
   while (bought) {
     bought = false;

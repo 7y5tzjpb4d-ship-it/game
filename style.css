@@ -245,22 +245,30 @@ h2:first-child { margin-top: 4px; }
 .upgrade.owned .buy { background: transparent; color: var(--gene); border: 1px solid var(--gene); }
 .upgrade.locked { opacity: 0.45; }
 
-/* ---------- 繰り上がりの節目 ---------- */
-.milestones { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-.milestone {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 10px 12px;
+/* ---------- 自動購入 ---------- */
+.auto-row { justify-content: flex-start; gap: 10px; }
+.auto-label { font-size: 12px; color: var(--muted); }
+
+/* ---------- 次の層へ ---------- */
+.expand {
+  padding: 14px;
   border-radius: var(--radius);
   border: 1px dashed var(--border);
-  color: var(--muted);
+  background: var(--surface);
 }
-.milestone-at { flex: none; width: 44px; font-size: 13px; font-variant-numeric: tabular-nums; }
-.milestone-name { font-weight: 700; }
-.milestone-desc { font-size: 12px; margin-top: 2px; }
-.milestone.reached { border-style: solid; border-color: var(--gene); color: var(--text); }
-.milestone.reached .milestone-at { color: var(--gene); }
+.expand-title { font-weight: 700; margin-bottom: 4px; }
+.expand-desc { font-size: 12px; color: var(--muted); margin-bottom: 10px; line-height: 1.6; }
+.expand .bar-fill { background: var(--gene); }
+.expand-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--disabled);
+  color: var(--muted);
+  font-weight: 700;
+}
+.expand.ready { border-style: solid; border-color: var(--gene); }
 
 /* ---------- 設定 ---------- */
 .stats { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 14px; }

@@ -48,14 +48,22 @@ export const UPGRADES = [
   },
   {
     id: 'divisor', name: '約数の力', cost: 5, requires: ['tenFingers'],
-    desc: '各段の生産 ×(購入数の約数の個数)^0.25。約数の多い数で買い止めると強い',
+    desc: '各段の生産 ×(購入数の約数の個数)^0.25。高度合成数で買い止めると強い',
+  },
+  {
+    id: 'openHands', name: '手を開いて', cost: 6, requires: ['memory'],
+    desc: '繰り上がり後、指を 10 本持って始まる',
   },
   {
     id: 'autoCount', name: '自動計数', cost: 8, requires: ['memory'],
-    desc: '指・刻み目・小石を自動で購入する',
+    desc: '指・刻み目・小石を自動で購入する。買い止め方（最大・節目・素数）を選べる',
   },
   {
-    id: 'decimal', name: '十進法', cost: 12, requires: ['divisor'],
+    id: 'placeValue', name: '位取り', cost: 10, requires: ['divisor'],
+    desc: '数の生産 ×2',
+  },
+  {
+    id: 'decimal', name: '十進法', cost: 12, requires: ['placeValue'],
     desc: '数の桁数 1 つにつき、数の生産 ×1.05',
   },
   {
@@ -72,7 +80,11 @@ export const UPGRADES = [
   },
   {
     id: 'perfect', name: '完全数', cost: 50, requires: ['prime'],
-    desc: '購入数が完全数（6, 28, 496, 8128）の段は生産 ×6',
+    desc: '購入数が完全数（6, 28, 496, 8128）を通過するたびに、その段の生産 ×6',
+  },
+  {
+    id: 'autoCarry', name: '自動繰り上がり', cost: 60, requires: ['autoCount2'],
+    desc: '桁の獲得効率が落ち始めたら、自動で繰り上がる（ON/OFF 可）',
   },
   {
     id: 'sexagesimal', name: '六十進法', cost: 80, requires: ['hcn', 'autoCount2'],
@@ -81,7 +93,9 @@ export const UPGRADES = [
 ];
 
 export const MEMORY_START_COUNT = 1e3;
+export const START_FINGERS = 10;
 export const TEN_FINGERS_MULT = 5;
+export const PLACE_VALUE_MULT = 2;
 export const DECIMAL_MULT_PER_DIGIT = 1.05;
 export const DIVISOR_EXPONENT = 0.25;
 export const PRIME_MULT = 2;
@@ -89,16 +103,8 @@ export const PERFECT_NUMBERS = [6, 28, 496, 8128, 33550336];
 export const PERFECT_MULT = 6;
 export const SEXAGESIMAL_MULT = 2;
 
-// 繰り上がり回数の節目
-export const CARRY_MILESTONES = [
-  { at: 1, id: 'upgrades', name: '零の発見', desc: '桁で強化を買えるようになる' },
-  { at: 2, id: 'startFingers', name: '手を開いて', desc: '繰り上がり後、指を 10 本持って始まる' },
-  { at: 3, id: 'boost', name: '位取り', desc: '数の生産 ×2' },
-  { at: 5, id: 'autoCarry', name: '自動繰り上がり', desc: '桁の獲得効率が落ち始めたら、自動で繰り上がる（ON/OFF 可）' },
-  { at: 10, id: 'negative', name: '負の数の気配', desc: '第 2 層「整数」への入口（準備中）' },
-];
-export const START_FINGERS = 10;
-export const PLACE_VALUE_MULT = 2;
+// 第 2 層「整数」への拡張に必要な累計の桁
+export const EXPAND_DIGITS = 1000;
 
 // オフライン進行の上限（秒）
 export const OFFLINE_CAP_SEC = 24 * 60 * 60;

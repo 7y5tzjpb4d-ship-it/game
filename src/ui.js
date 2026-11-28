@@ -1,11 +1,11 @@
 // 画面の組み立てと更新
 import { format } from './big.js';
-import { TIERS, UPGRADES, CARRY_LOG10, CARRY_MILESTONES, HCN } from './data.js';
+import { TIERS, UPGRADES, CARRY_LOG10, HCN, EXPAND_DIGITS } from './data.js';
 import {
   tierCost, bulkCost, tierMult, tierProduction, countPerSec, isTierUnlocked, maxAffordable,
-  buyTier, buyToMilestone, canCarry, digitsOnCarry, nextDigitAt, carry, digitBonus,
+  buyByMode, canCarry, canExpand, nextPrime, digitsOnCarry, nextDigitAt, carry, digitBonus,
   upgradeState, buyUpgrade, hasAnyAuto, milestoneFactor, nextMilestone, milestonesPassed,
-  divisorCount, isPrime, isPerfect, has, autoCarryAvailable, milestoneReached, countDigits,
+  divisorCount, isPrime, perfectPassed, has, autoCarryAvailable, countDigits,
 } from './logic.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -28,7 +28,6 @@ export class UI {
     this.toastTimer = null;
     this.buildTiers();
     this.buildUpgrades();
-    this.buildMilestones();
     this.bindEvents();
   }
 
@@ -96,23 +95,6 @@ export class UI {
     });
   }
 
-  buildMilestones() {
-    const list = $('#milestones');
-    list.innerHTML = '';
-    this.milestoneEls = CARRY_MILESTONES.map((m) => {
-      const li = document.createElement('li');
-      li.className = 'milestone';
-      li.innerHTML = `
-        <div class="milestone-at">${m.at} 回</div>
-        <div class="milestone-body">
-          <div class="milestone-name">${m.name}</div>
-          <div class="milestone-desc">${m.desc}</div>
-        </div>`;
-      list.appendChild(li);
-      return { li, m };
-    });
-  }
-
   bindEvents() {
     // 購入ボタン：タップで 1 回、長押しで連続購入
     const tiers = $('#tiers');
@@ -150,9 +132,13 @@ export class UI {
       });
     });
 
-    $('#auto-toggle').addEventListener('click', () => {
-      this.state.auto = !this.state.auto;
-      this.render();
+    document.querySelectorAll('[data-automode]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.automode;
+        this.state.auto = mode !== 'off';
+        if (mode !== 'off') this.state.autoMode = mode;
+        this.render();
+      });
     });
     $('#auto-carry-toggle').addEventListener('click', () => {
       this.state.autoCarry = !this.state.autoCarry;
@@ -236,8 +222,7 @@ export class UI {
   }
 
   buy(i) {
-    if (this.state.buyMode === 'milestone') return buyToMilestone(this.state, i);
-    return buyTier(this.state, i);
+    return buyByMode(this.state, i);
   }
 
   showTab(name) {
@@ -265,11 +250,16 @@ export class UI {
     this.renderGoal();
     this.renderTiers();
 
+    // 素数を使うモードは「素数の輝き」を取ってから出す
+    const primeOn = has(s, 'prime');
+    if (!primeOn && s.buyMode === 'prime') s.buyMode = 'one';
+    if (!primeOn && s.autoMode === 'prime') s.autoMode = 'max';
+    document.querySelector('[data-buymode="prime"]').classList.toggle('hidden', !primeOn);
+    document.querySelector('[data-automode="prime"]').classList.toggle('hidden', !primeOn);
     document.querySelectorAll('[data-buymode]').forEach((b) => b.classList.toggle('active', b.dataset.buymode === s.buyMode));
-    const autoBtn = $('#auto-toggle');
-    autoBtn.classList.toggle('hidden', !hasAnyAuto(s));
-    autoBtn.classList.toggle('on', s.auto);
-    autoBtn.textContent = `自動購入 ${s.auto ? 'ON' : 'OFF'}`;
+    $('#auto-row').classList.toggle('hidden', !hasAnyAuto(s));
+    const autoActive = s.auto ? s.autoMode : 'off';
+    document.querySelectorAll('[data-automode]').forEach((b) => b.classList.toggle('active', b.dataset.automode === autoActive));
     const autoCarryBtn = $('#auto-carry-toggle');
     autoCarryBtn.classList.toggle('hidden', !autoCarryAvailable(s));
     autoCarryBtn.classList.toggle('on', s.autoCarry);
@@ -308,9 +298,9 @@ export class UI {
     const s = this.state;
     if (bought <= 0) return '';
     const notes = [];
-    if (has(s, 'perfect') && isPerfect(bought)) notes.push('完全数');
     if (has(s, 'prime') && isPrime(bought)) notes.push('素数');
     if (has(s, 'divisor')) notes.push(`約数${divisorCount(bought)}個`);
+    if (has(s, 'perfect') && perfectPassed(bought) > 0) notes.push(`完全数${perfectPassed(bought)}`);
     return notes.length ? ` · ${notes.join(' · ')}` : '';
   }
 
@@ -375,6 +365,9 @@ export class UI {
       } else if (s.buyMode === 'milestone' && next !== null) {
         n = next - tier.bought;
         cost = bulkCost(i, tier.bought, n);
+      } else if (s.buyMode === 'prime') {
+        n = nextPrime(tier.bought) - tier.bought;
+        cost = bulkCost(i, tier.bought, n);
       } else {
         n = 1;
         cost = tierCost(i, tier.bought);
@@ -397,9 +390,10 @@ export class UI {
       buy.classList.toggle('cant', st === 'expensive' || st === 'locked');
       buy.textContent = st === 'owned' ? '取得済み' : `${u.cost} 桁`;
     });
-    this.milestoneEls.forEach(({ li, m }) => {
-      li.classList.toggle('reached', milestoneReached(s, m.id));
-    });
+    const pct = Math.min(100, (s.digitsTotal.toNumber() / EXPAND_DIGITS) * 100);
+    $('#expand-text').textContent = `累計の桁 ${format(s.digitsTotal)} / ${format(EXPAND_DIGITS)}`;
+    $('#expand-bar').style.width = `${pct}%`;
+    $('#expand').classList.toggle('ready', canExpand(s));
   }
 
   renderStats() {
