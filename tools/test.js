@@ -293,8 +293,8 @@ test('拡張：第 1 層がリセットされ、整数がもらえる', () => {
   s.levels.countTriple = 50;
   s.proofs.primeTheorem = true;
   const g = expand(s);
-  assert.equal(g.toNumber(), 3, '最低 3 もらえる');
-  assert.equal(s.integers.toNumber(), 3);
+  assert.equal(g.toNumber(), 1, '1.8e308 桁ちょうど付近なら 1');
+  assert.equal(s.integers.toNumber(), 1);
   assert.equal(s.expansions, 1);
   assert.ok(s.digits.isZero() && s.digitsTotal.isZero());
   assert.deepEqual(s.upgrades, {});

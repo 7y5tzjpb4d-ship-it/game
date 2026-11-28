@@ -219,7 +219,7 @@ export const EXPAND_DIGITS = '1.8e308';
 // 得られる整数 = max(EXPAND_MIN_GAIN, 10^((log10(所持桁) − EXPAND_LOG10) / EXPAND_GAIN_DIVISOR) × (1 + 負のエネルギー)^EXPAND_NEG_EXPONENT)（切り捨て）
 export const EXPAND_LOG10 = Math.log10(1.8e308);
 export const EXPAND_GAIN_DIVISOR = 40;
-export const EXPAND_MIN_GAIN = 3; // 1 回の拡張で最低これだけもらえる
+export const EXPAND_MIN_GAIN = 1; // 1 回の拡張で最低これだけもらえる
 export const EXPAND_NEG_EXPONENT = 0.45;
 
 // 基礎の継承で、拡張後に最初から持っている強化（記数法の進化より前の 13 種）
@@ -244,8 +244,8 @@ export const NEG_DIGIT_EXPONENT = 4;
 
 // 整数で買う強化（1 回ずつ）
 export const INTEGER_UPGRADES = [
-  { id: 'startBasics', name: '基礎の継承', cost: 1, desc: '拡張後、記数法の進化より前の強化 13 種を持って始まる' },
-  { id: 'autoDigitUpgrades', name: '自動の公理', cost: 2, desc: '桁の強化と繰り返し強化を、自動で安い順に買う（ON/OFF 可）' },
+  { id: 'startBasics', name: '基礎の継承', cost: 2, desc: '拡張後、記数法の進化より前の強化 13 種を持って始まる' },
+  { id: 'autoDigitUpgrades', name: '自動の公理', cost: 3, desc: '桁の強化と繰り返し強化を、自動で安い順に買う（ON/OFF 可）' },
   { id: 'factoryBoost', name: '負の増幅', cost: 10, desc: '負の数の工場の生産 ×3' },
   { id: 'keepProofs', name: '定理の記憶', cost: 100, desc: '拡張しても証明の完成状態が残る' },
   { id: 'autoExpand', name: '自動拡張', cost: 25, desc: '拡張できるようになったら自動で拡張する（ON/OFF 可）' },
