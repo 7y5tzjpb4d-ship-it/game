@@ -9,6 +9,7 @@ import {
   startProof, abandonProof, completeProof, proofGoalReached, proven, proofUnlocked, tierProduction,
   isTierUnlocked, upgradeState, provenCount,
   expand, expandGain, buyFactory, factoryCost, buyIntegerUpgrade, negCountLog, countPerSec,
+  buyFactoryMax, interestRate, buyIntegerRepeatable, intLevel,
 } from '../src/logic.js';
 import { REPEATABLES, PROOFS, UPGRADES } from '../src/data.js';
 
@@ -364,6 +365,29 @@ test('セーブの往復（第 2 層）', () => {
   assert.equal(t.factory[1].bought, 7);
   assert.equal(t.negEnergy.cmp(s.negEnergy), 0);
   assert.ok(t.integerUpgrades.factoryBoost);
+});
+
+test('利息：所持している整数が毎秒増える（いちばん高い率だけ有効）', () => {
+  const s = newGame();
+  s.integers = Big.from('2e6');
+  assert.ok(buyIntegerUpgrade(s, 'interest1'));
+  assert.equal(interestRate(s), 0.02);
+  const before = s.integers.toNumber();
+  for (let k = 0; k < 10; k++) tick(s, 0.1);
+  close(s.integers.toNumber(), before * 1.02, 1e-6);
+  s.integerUpgrades.interest2 = true;
+  assert.equal(interestRate(s), 0.05);
+});
+
+test('工場の最大購入と繰り返し強化', () => {
+  const s = newGame();
+  s.integers = Big.from(1000);
+  const n = buyFactoryMax(s, 0);
+  assert.ok(n > 5);
+  assert.ok(s.integers.lt(factoryCost(0, s.factory[0].bought)), '1 個多いと買えない');
+  s.integers = Big.from(1e4);
+  assert.ok(buyIntegerRepeatable(s, 'factoryDouble'));
+  assert.equal(intLevel(s, 'factoryDouble'), 1);
 });
 
 console.log(`\n${passed} 件成功`);

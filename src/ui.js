@@ -14,7 +14,7 @@ import {
   startProof, abandonProof, completeProof,
   expand, expandGain, layer2Visible, hasInt, factoryCost, factoryUnlocked, buyFactory, factoryProduction,
   negCountLog, negDigitLog, integerUpgradeState, buyIntegerUpgrade,
-  intLevel, integerRepeatableCost, buyIntegerRepeatable, expandNegExponent,
+  intLevel, integerRepeatableCost, buyIntegerRepeatable, expandNegExponent, interestRate, buyFactoryMax,
 } from './logic.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -347,7 +347,9 @@ export class UI {
     $('#factory').addEventListener('click', (e) => {
       const btn = e.target.closest('[data-factory]');
       if (!btn) return;
-      if (buyFactory(this.state, Number(btn.dataset.factory))) this.render();
+      const i = Number(btn.dataset.factory);
+      const ok = this.state.factoryBuyMode === 'max' ? buyFactoryMax(this.state, i) > 0 : buyFactory(this.state, i);
+      if (ok) this.render();
     });
     $('#integer-upgrades').addEventListener('click', (e) => {
       const btn = e.target.closest('[data-int-upgrade]');
@@ -356,6 +358,12 @@ export class UI {
         this.game.save();
         this.render();
       }
+    });
+    document.querySelectorAll('[data-factorymode]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.state.factoryBuyMode = btn.dataset.factorymode;
+        this.render();
+      });
     });
     $('#integer-repeatables').addEventListener('click', (e) => {
       const btn = e.target.closest('[data-int-repeatable]');
@@ -722,8 +730,10 @@ export class UI {
     $('#integers').textContent = format(s.integers);
     $('#integers-sub').innerHTML = `負のエネルギー ${format(s.negEnergy, 1)}<br>`
       + `→ 数の生産 ×${format(Big.fromLog10(negCountLog(s)), 1)}、得られる桁 ×${format(Big.fromLog10(negDigitLog(s)), 1)}<br>`
-      + `→ 拡張で得られる整数 ×${format(Big.fromLog10(expandNegExponent(s) * s.negEnergy.add(1).log10()), 1)}（^${expandNegExponent(s)}）<br>`
+      + `→ 拡張で得られる整数 ×${format(Big.fromLog10(expandNegExponent(s) * s.negEnergy.add(1).log10()), 1)}<br>`
+      + (interestRate(s) > 0 ? `利息：所持している整数が毎秒 +${Math.round(interestRate(s) * 100)}%<br>` : '')
       + `拡張 ${s.expansions} 回`;
+    document.querySelectorAll('[data-factorymode]').forEach((b) => b.classList.toggle('active', b.dataset.factorymode === s.factoryBuyMode));
     let shownLocked = false;
     this.factoryEls.forEach((el, i) => {
       const unlocked = factoryUnlocked(s, i);

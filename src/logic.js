@@ -105,6 +105,7 @@ export function newGame() {
     factory: FACTORY.map(() => ({ count: ZERO, bought: 0 })),
     negEnergy: ZERO,
     autoExpand: true,
+    factoryBuyMode: 'one',
     autoDigitUpgrades: true,
     // 第 1 層
     digits: ZERO,
@@ -176,6 +177,7 @@ export function deserialize(text) {
   }));
   state.negEnergy = Big.from(raw.negEnergy);
   state.autoExpand = raw.autoExpand !== false;
+  state.factoryBuyMode = raw.factoryBuyMode === 'max' ? 'max' : 'one';
   state.autoDigitUpgrades = raw.autoDigitUpgrades !== false;
   state.tiers = TIERS.map((_, i) => ({
     count: Big.from(raw.tiers?.[i]?.count),
@@ -689,11 +691,16 @@ export function expandGain(state) {
   return g;
 }
 
-// 拡張で得られる整数に掛かる、負のエネルギーの指数（強化で上がる）
-export function expandNegExponent(state) {
-  let e = EXPAND_NEG_EXPONENT;
-  for (const u of INTEGER_UPGRADES) if (u.negExponent && hasInt(state, u.id)) e = Math.max(e, u.negExponent);
-  return e;
+// 拡張で得られる整数に掛かる、負のエネルギーの指数
+export function expandNegExponent() {
+  return EXPAND_NEG_EXPONENT;
+}
+
+// 利息：所持している整数が毎秒増える割合（いちばん高いものだけ有効）
+export function interestRate(state) {
+  let r = 0;
+  for (const u of INTEGER_UPGRADES) if (u.interest && hasInt(state, u.id)) r = Math.max(r, u.interest);
+  return r;
 }
 
 export function expand(state) {
@@ -737,6 +744,27 @@ export function buyFactory(state, i) {
   return true;
 }
 
+// 工場の段 i を、今の整数で買えるだけ買う。戻り値は買った数
+export function buyFactoryMax(state, i) {
+  if (!factoryUnlocked(state, i)) return 0;
+  const f = state.factory[i];
+  const g = FACTORY[i].growth;
+  const c0 = factoryCost(i, f.bought);
+  if (state.integers.lt(c0)) return 0;
+  // 等比数列の和 c0 (g^n - 1) / (g - 1) <= 所持 を n について解く
+  const x = state.integers.mul(g - 1).div(c0);
+  const lx = x.log10();
+  let n = Math.max(1, Math.floor((lx > 15 ? lx : Math.log10(1 + x.toNumber())) / Math.log10(g)));
+  const total = (k) => Big.fromLog10(c0.log10() + (k * Math.log10(g) > 15 ? k * Math.log10(g) : Math.log10(Math.expm1(k * Math.log10(g) * Math.LN10))) - Math.log10(g - 1));
+  while (n > 1 && total(n).gt(state.integers)) n -= 1;
+  const cost = total(n);
+  if (cost.gt(state.integers)) return 0;
+  state.integers = state.integers.sub(cost).max(ZERO);
+  f.count = f.count.add(n);
+  f.bought += n;
+  return n;
+}
+
 export function factoryMult(state) {
   let m = Big.fromLog10(intLevel(state, 'factoryDouble') * Math.log10(FACTORY_DOUBLE_MULT));
   if (hasInt(state, 'factoryBoost')) m = m.mul(FACTORY_BOOST_MULT);
@@ -770,6 +798,8 @@ export function buyIntegerRepeatable(state, id) {
 }
 
 function tickFactory(state, dt) {
+  const r = interestRate(state);
+  if (r > 0 && state.integers.gt(0)) state.integers = state.integers.mul(Big.fromLog10(dt * Math.log10(1 + r)));
   const prods = FACTORY.map((_, i) => factoryProduction(state, i));
   if (!prods[0].isZero()) state.negEnergy = state.negEnergy.add(prods[0].mul(dt));
   for (let i = 1; i < FACTORY.length; i++) {

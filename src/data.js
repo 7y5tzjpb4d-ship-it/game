@@ -217,7 +217,6 @@ export const EXPAND_DIGITS = '1.8e308';
 // 拡張：所持している桁が EXPAND_DIGITS に届くと実行でき、第 1 層の進行をリセットして「整数」を得る。
 // 証明の完成状態は拡張でリセットされる（整数の強化「定理の記憶」で残せる）。
 // 得られる整数 = max(EXPAND_MIN_GAIN, 10^((log10(所持桁) − EXPAND_LOG10) / EXPAND_GAIN_DIVISOR) × (1 + 負のエネルギー)^指数)（切り捨て）
-// 指数は EXPAND_NEG_EXPONENT から、整数の強化（負の二乗など）で上がる
 export const EXPAND_LOG10 = Math.log10(1.8e308);
 export const EXPAND_GAIN_DIVISOR = 40;
 export const EXPAND_MIN_GAIN = 1; // 1 回の拡張で最低これだけもらえる
@@ -252,11 +251,11 @@ export const INTEGER_UPGRADES = [
   { id: 'autoExpand', name: '自動拡張', cost: 25, desc: '拡張できるようになったら自動で拡張する（ON/OFF 可）' },
   { id: 'expandBoost', name: '拡張の効率', cost: 1000, desc: '拡張で得られる整数 ×2' },
   { id: 'softcapShift', name: '限界の突破', cost: 1e4, desc: '繰り返し強化の値段が急に上がり始めるレベル +40' },
-  // ここから拡張の式を強くする強化：拡張で得られる整数に掛かる「(1 + 負のエネルギー)^指数」の指数を上げる
-  { id: 'negSquare', name: '負の二乗', cost: 1e6, negExponent: 0.8, desc: '拡張で得られる整数への負のエネルギーの効き目 ^0.45 → ^0.8' },
-  { id: 'negCube', name: '負の三乗', cost: 1e20, negExponent: 1.2, desc: '負のエネルギーの効き目 ^0.8 → ^1.2' },
-  { id: 'negPower', name: '負の累乗', cost: 1e60, negExponent: 2, desc: '負のエネルギーの効き目 ^1.2 → ^2' },
-  { id: 'negTower', name: '負の塔', cost: 1e150, negExponent: 3, desc: '負のエネルギーの効き目 ^2 → ^3' },
+  // ここから「利息」：所持している整数が毎秒一定の割合で増える（後半の伸びの軸）
+  { id: 'interest1', name: '利息', cost: 1e6, interest: 0.02, desc: '所持している整数が毎秒 2% 増える' },
+  { id: 'interest2', name: '複利', cost: 1e20, interest: 0.05, desc: '所持している整数が毎秒 5% 増える（利息と重ならない）' },
+  { id: 'interest3', name: '連続複利', cost: 1e60, interest: 0.1, desc: '所持している整数が毎秒 10% 増える' },
+  { id: 'interest4', name: '指数関数', cost: 1e120, interest: 0.2, desc: '所持している整数が毎秒 20% 増える' },
 ];
 
 // 整数で何度でも買える強化。値段は baseCost × growth^(レベル)

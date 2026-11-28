@@ -6,6 +6,7 @@ import { UI } from './ui.js';
 const SAVE_KEY = 'kazu-save';
 const AUTOSAVE_MS = 10_000;
 const RENDER_MS = 100;
+const AUTO_TOAST_GAP_MS = 20_000;
 
 function fmtDuration(sec) {
   const h = Math.floor(sec / 3600);
@@ -21,6 +22,7 @@ class Game {
     this.ui = new UI(this);
     this.lastFrame = performance.now();
     this.lastRender = 0;
+    this.lastAutoToast = -Infinity;
   }
 
   load() {
@@ -106,13 +108,17 @@ class Game {
       } else if (dt > 0) {
         carries = tick(this.state, dt);
       }
+      // 自動の繰り上がり・拡張が続けて起きるときは、トーストを 20 秒に 1 回までに間引く
+      const quiet = now - this.lastAutoToast < AUTO_TOAST_GAP_MS;
       if (this.state.lastExpandGain) {
-        this.save();
-        this.ui.toast(`自動拡張！ 整数 +${format(this.state.lastExpandGain)}`);
+        if (!quiet) {
+          this.ui.toast(`自動拡張！ 整数 +${format(this.state.lastExpandGain)}`);
+          this.lastAutoToast = now;
+        }
         this.state.lastExpandGain = null;
-      } else if (carries > 0) {
-        this.save();
+      } else if (carries > 0 && !quiet) {
         this.ui.toast(`自動繰り上がり！ 桁 +${format(this.state.lastGain)}`);
+        this.lastAutoToast = now;
       }
       if (now - this.lastRender >= RENDER_MS) {
         this.lastRender = now;
